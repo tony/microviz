@@ -1,0 +1,50 @@
+---
+title: "@microviz/core"
+slug: core
+---
+
+Headless compute utilities and shared types for micro-visualizations.
+
+This package is SSR-safe and does not rely on DOM APIs.
+
+## Install
+
+```bash
+pnpm add @microviz/core
+```
+
+## Compute a `RenderModel`
+
+`computeModel()` is the canonical entry point. It is deterministic (same inputs → same outputs) and returns a serializable `RenderModel`.
+
+```ts
+import { computeModel } from "@microviz/core";
+
+const model = computeModel({
+  data: [6, 10, 7, 12, 9, 14],
+  size: { width: 200, height: 32 },
+  spec: { type: "sparkline" },
+});
+```
+
+## Diagnostics (catch “blank/incorrect render” early)
+
+Every model includes computed stats and warnings:
+
+```ts
+const warnings = model.stats?.warnings ?? [];
+if (warnings.length > 0) {
+  // BLANK_RENDER, NAN_COORDINATE, MARK_OUT_OF_BOUNDS, EMPTY_DATA, ...
+  console.log(warnings);
+}
+```
+
+## Chart types
+
+To list the available chart types (and their metadata):
+
+```ts
+import { getAllChartMeta } from "@microviz/core";
+
+const chartTypes = getAllChartMeta().map((meta) => meta.type);
+```

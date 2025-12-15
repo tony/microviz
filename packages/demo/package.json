@@ -1,0 +1,50 @@
+{
+  "name": "@microviz/demo",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:visual": "vitest run --config vitest.visual.config.ts",
+    "test:visual:update": "vitest run --config vitest.visual.config.ts --update",
+    "lint": "biome lint .",
+    "biome": "biome",
+    "format": "pnpm run biome check . --write; pnpm run biome format . --write",
+    "update": "pnpm update",
+    "ncu": "ncu"
+  },
+  "dependencies": {
+    "@andypf/json-viewer": "^2.2.0",
+    "@microviz/core": "workspace:*",
+    "@microviz/elements": "workspace:*",
+    "@microviz/react": "workspace:*",
+    "@microviz/renderers": "workspace:*",
+    "@microviz/themes": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.9",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/browser-playwright": "^4.0.16",
+    "playwright": "^1.57.0",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16",
+    "vitest-browser-react": "^2.0.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

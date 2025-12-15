@@ -1,0 +1,184 @@
+@layer microviz {
+  :root {
+    --mv-fg: oklch(0.24 0 0);
+    --mv-muted: oklch(0.55 0 0);
+    --mv-grid: oklch(0.9 0 0);
+    --mv-series-1: oklch(0.65 0.15 250);
+    --mv-series-2: oklch(0.7 0.15 150);
+    --mv-series-3: oklch(0.72 0.15 80);
+    --mv-series-4: oklch(0.72 0.12 30);
+    --mv-series-5: oklch(0.68 0.14 10);
+    --mv-series-6: oklch(0.67 0.16 295);
+    --mv-series-7: oklch(0.71 0.14 200);
+    --mv-series-8: oklch(0.73 0.13 120);
+
+    --mv-series-1-light: color-mix(in oklch, var(--mv-series-1), white 80%);
+    --mv-series-1-dark: color-mix(in oklch, var(--mv-series-1), black 30%);
+    --mv-series-2-light: color-mix(in oklch, var(--mv-series-2), white 80%);
+    --mv-series-2-dark: color-mix(in oklch, var(--mv-series-2), black 30%);
+    --mv-series-3-light: color-mix(in oklch, var(--mv-series-3), white 80%);
+    --mv-series-3-dark: color-mix(in oklch, var(--mv-series-3), black 30%);
+    --mv-series-4-light: color-mix(in oklch, var(--mv-series-4), white 80%);
+    --mv-series-4-dark: color-mix(in oklch, var(--mv-series-4), black 30%);
+    --mv-series-5-light: color-mix(in oklch, var(--mv-series-5), white 80%);
+    --mv-series-5-dark: color-mix(in oklch, var(--mv-series-5), black 30%);
+    --mv-series-6-light: color-mix(in oklch, var(--mv-series-6), white 80%);
+    --mv-series-6-dark: color-mix(in oklch, var(--mv-series-6), black 30%);
+    --mv-series-7-light: color-mix(in oklch, var(--mv-series-7), white 80%);
+    --mv-series-7-dark: color-mix(in oklch, var(--mv-series-7), black 30%);
+    --mv-series-8-light: color-mix(in oklch, var(--mv-series-8), white 80%);
+    --mv-series-8-dark: color-mix(in oklch, var(--mv-series-8), black 30%);
+
+    --mv-radius: 2px;
+    --mv-stroke-width: 1.5px;
+
+    --mv-font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --mv-font-size-label: 0.75rem;
+    --mv-font-size-tick: 0.625rem;
+  }
+
+  .mv-chart {
+    container-type: inline-size;
+    color: var(--mv-fg);
+    font-family: var(--mv-font-family);
+  }
+
+  @container (width < 80px) {
+    .mv-axis-label {
+      display: none;
+    }
+  }
+
+  @container (width < 40px) {
+    .mv-axis-tick {
+      display: none;
+    }
+  }
+
+  .mv-bar {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-sparkline-dot {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-step-line-dot {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-line {
+    fill: none;
+    stroke: var(--mv-series-1);
+    stroke-width: var(--mv-stroke-width);
+  }
+
+  .mv-range-band-band {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-range-band-line {
+    fill: none;
+    stroke: var(--mv-series-1);
+  }
+
+  .mv-range-band-dot {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-spark-area-line {
+    fill: none;
+    stroke: var(--mv-series-1);
+  }
+
+  .mv-spark-area-dot {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-histogram-bar {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-heatgrid-cell {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-dot-matrix-dot {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-barcode-bin {
+    shape-rendering: crispEdges;
+  }
+
+  .mv-pixel-grid-cell {
+    shape-rendering: crispEdges;
+  }
+
+  .mv-pixel-pill-seg {
+    shape-rendering: crispEdges;
+  }
+
+  .mv-pixel-column-seg {
+    shape-rendering: crispEdges;
+  }
+
+  .mv-pixel-treemap-cell {
+    shape-rendering: crispEdges;
+  }
+
+  .mv-bullet-delta-track {
+    fill: none;
+    stroke: var(--mv-muted);
+  }
+
+  .mv-bullet-delta-delta {
+    fill: none;
+    stroke: var(--mv-series-1);
+  }
+
+  .mv-bullet-delta-previous {
+    fill: var(--mv-muted);
+  }
+
+  .mv-bullet-delta-current {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-bullet-delta-arrow {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-dumbbell-track {
+    fill: none;
+    stroke: var(--mv-muted);
+  }
+
+  .mv-dumbbell-range {
+    fill: none;
+    stroke: var(--mv-series-1);
+  }
+
+  .mv-dumbbell-current {
+    fill: var(--mv-series-1);
+  }
+
+  .mv-dumbbell-target {
+    fill: var(--mv-series-1);
+    stroke: var(--mv-series-1);
+  }
+
+  .mv-area {
+    fill: var(--mv-series-1);
+    fill-opacity: 0.25;
+  }
+
+  .mv-text {
+    font-size: var(--mv-font-size-label);
+    fill: var(--mv-fg);
+  }
+
+  .mv-sparkline-bars-bar {
+    fill: var(--mv-series-1);
+  }
+}

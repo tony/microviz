@@ -1,0 +1,83 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.9/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on",
+        "useSortedKeys": "on",
+        "useSortedProperties": "on"
+      }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/.yarn",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/static",
+      "!**/public",
+      "!**/.docusaurus",
+      "!**/.astro",
+      "!**/playwright-report",
+      "!**/yarn-error.log",
+      "!**/docs",
+      "!**/package.json",
+      "!**/.vscode",
+      "!**/*.d.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "noInferrableTypes": "error",
+        "noParameterAssign": "error",
+        "noUnusedTemplateLiteral": "error",
+        "noUselessElse": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useNumberNamespace": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAtRules": "off"
+          }
+        }
+      }
+    }
+  ]
+}

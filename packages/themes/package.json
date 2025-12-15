@@ -1,0 +1,32 @@
+{
+  "name": "@microviz/themes",
+  "description": "CSS tokens and base styles for micro-visualizations.",
+  "version": "0.1.0-next.0",
+  "type": "module",
+  "files": ["*.css"],
+  "exports": {
+    "./base.css": "./base.css",
+    "./tokens.css": "./tokens.css"
+  },
+  "sideEffects": ["*.css"],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "check": "echo 'NOOP'",
+    "type-check": "echo 'NOOP'",
+    "test": "echo 'NOOP'",
+    "lint": "biome lint .",
+    "biome": "biome",
+    "format": "pnpm run biome check . --write; pnpm run biome format . --write",
+    "update": "pnpm update",
+    "ncu": "ncu"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.9"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

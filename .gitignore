@@ -1,0 +1,30 @@
+node_modules/
+/lib/
+/test/
+dist/
+build/
+/docs/
+yarn-error.log
+
+# yarn berry
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.pnp.*
+
+# biome
+biome-logs/
+
+# vitest browser mode artifacts
+.vitest-attachments/
+__traces__/
+
+# playwright
+playwright-report/
+
+# tsc
+*.tsbuildinfo
+
+# Claude code
+**/CLAUDE.local.md
+**/.claude/settings.local.json

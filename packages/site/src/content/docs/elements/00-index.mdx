@@ -1,0 +1,57 @@
+---
+title: "@microviz/elements"
+slug: elements
+---
+
+Web Components (custom elements) for micro-visualizations.
+
+This package is the framework-agnostic consumption surface.
+
+## Install
+
+```bash
+pnpm add @microviz/elements @microviz/themes
+```
+
+## Usage
+
+Import the base theme CSS (optional but recommended), then import elements to register all tags:
+
+```ts
+import "@microviz/themes/base.css";
+import "@microviz/elements";
+```
+
+Then use any chart element directly:
+
+```html
+<microviz-sparkline data="[6,10,7,12,9,14]" width="200" height="32"></microviz-sparkline>
+```
+
+If you already have a `RenderModel` (e.g. from `computeModel`), you can mount it via `.model`:
+
+```ts
+import { computeModel } from "@microviz/core";
+
+const el = document.querySelector("microviz-model");
+el.model = computeModel({
+  data: [1, 2, 3],
+  size: { width: 200, height: 32 },
+  spec: { type: "sparkline" },
+});
+```
+
+## Tag names
+
+For every `spec.type` registered in `@microviz/core`, there is a corresponding element:
+
+- Chart type `"sparkline"` → `<microviz-sparkline>`
+- Chart type `"pixel-treemap"` → `<microviz-pixel-treemap>`
+
+To list all available tags programmatically:
+
+```ts
+import { getAllChartMeta } from "@microviz/core";
+
+const tags = getAllChartMeta().map((meta) => `microviz-${meta.type}`);
+```
