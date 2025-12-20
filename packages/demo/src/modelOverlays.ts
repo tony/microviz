@@ -1,24 +1,17 @@
-import type { Def, RenderModel } from "@microviz/core";
+import {
+  createModelIdAllocator,
+  type Def,
+  type RenderModel,
+} from "@microviz/core";
 
 // Demo-only diagnostic overlay: apply a deterministic `turbulence → displacementMap`
 // filter to stress renderer parity (filter handling, transforms, clipping, compositing).
-function uniqueDefId(base: string, defs: readonly Def[] | undefined): string {
-  const used = new Set((defs ?? []).map((d) => d.id));
-  if (!used.has(base)) return base;
-
-  let i = 2;
-  for (;;) {
-    const id = `${base}-${i}`;
-    if (!used.has(id)) return id;
-    i++;
-  }
-}
-
 export function applyNoiseDisplacementOverlay(model: RenderModel): RenderModel {
   const needsOverlay = model.marks.some((mark) => mark.filter === undefined);
   if (!needsOverlay) return model;
 
-  const filterId = uniqueDefId("mv-overlay-noise-displacement", model.defs);
+  const { defId } = createModelIdAllocator(model);
+  const filterId = defId("mv-overlay-noise-displacement");
 
   const nextDefs: Def[] = [
     ...(model.defs ?? []),
