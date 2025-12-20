@@ -6,6 +6,9 @@ build/
 /docs/
 yarn-error.log
 
+# TanStack Router (tmp + generated artifacts)
+.tanstack/
+
 # yarn berry
 .yarn/*
 !.yarn/releases
