@@ -382,11 +382,11 @@ This section is *not* about turning microviz into a full charting suite. It’s 
 - **Responsive wrappers**: nivo’s “Responsive*” components are a good north star for `@microviz/elements` ergonomics: use `ResizeObserver` + container queries and keep `width/height` attributes as an escape hatch.
 
 ### Microviz-aligned backlog ideas (post-port)
-- ☐ Add **element-level tooltip primitives** (opt-in, CSS-first), with a small formatter API (`Intl.NumberFormat` friendly) and no core coupling.
-- ☐ Add **element-level legend primitives** (opt-in), leaning on existing mark `className` + CSS tokens.
-- ☐ Add **auto-size** mode to `@microviz/elements` via `ResizeObserver` (Baseline 2025), so micro charts can be truly “drop-in responsive”.
-- ☐ Add small **export utilities** (SVG string → file, Canvas → PNG) and document them.
-- ☐ Add **defs/fill-rule helpers** (in core/shared) inspired by nivo so charts can apply textures by match rule rather than bespoke wiring.
+- ✅ Add **element-level tooltip primitives** (opt-in): `interactive` + `microviz-hit` events (hit-testing) emitted by elements; UI stays in the demo/integration layer.
+- ✅ Add **element-level legend primitives** (opt-in): `<microviz-legend>` renders a small token-driven legend from JSON items.
+- ✅ Add **auto-size** mode to `@microviz/elements` via `ResizeObserver` (Baseline 2025): `<microviz-chart autosize ...>`.
+- ✅ Add small **export utilities** (SVG string → Blob/data URL, Canvas → Blob) and document them.
+- ✅ Add **defs/fill-rule helpers** (in core/shared) inspired by nivo so charts can apply textures by match rule rather than bespoke wiring.
 
 ### Explicitly out of scope (by constitution)
 - Polyfills / legacy browser support, non‑ESM builds, or DOM imports in `core`/`renderers`.
