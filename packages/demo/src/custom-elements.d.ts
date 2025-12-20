@@ -1,5 +1,21 @@
 import type * as React from "react";
 
+type BaseProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLElement>,
+  HTMLElement
+>;
+
+type MicrovizChartProps = BaseProps & {
+  autosize?: boolean;
+  data?: string;
+  interactive?: boolean;
+  spec?: string;
+};
+
+type MicrovizModelProps = BaseProps & {
+  interactive?: boolean;
+};
+
 declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
@@ -31,10 +47,7 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
-      "microviz-chart": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
+      "microviz-chart": MicrovizChartProps;
       "microviz-chevron": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
@@ -99,10 +112,7 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
-      "microviz-model": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
+      "microviz-model": MicrovizModelProps;
       "microviz-mosaic": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
