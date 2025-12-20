@@ -16,10 +16,17 @@ describe("bitfield", () => {
     const b = computeModel(input);
 
     expect(a).toEqual(b);
-    expect(a.marks.length).toBe(50);
+    expect(a.marks.length).toBe(2);
+    expect(a.defs?.length).toBe(1);
     expect(a.stats?.warnings).toBeUndefined();
-    expect(a.marks.every((m) => m.type === "circle")).toBe(true);
+    expect(a.marks.every((m) => m.type === "rect")).toBe(true);
     const first = a.marks[0];
-    if (first?.type === "circle") expect(first.fill).toBe("#1d4ed8");
+    if (first?.type === "rect") {
+      expect(first.fill).toBe("#1d4ed8");
+      expect(first.mask).toBe("mv-bitfield-mask");
+    }
+    const def = a.defs?.[0];
+    expect(def?.type).toBe("mask");
+    if (def?.type === "mask") expect(def.marks.length).toBe(50);
   });
 });
