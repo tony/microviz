@@ -59,8 +59,9 @@ export function applyFillRules(
   if (rules.length === 0) return [...marks];
 
   return marks.map((mark) => {
-    if (!("fill" in mark)) return mark;
-    if (!overwrite && mark.fill !== undefined) return mark;
+    if (mark.type === "line") return mark;
+    const fill = (mark as Mark & { fill?: string }).fill;
+    if (!overwrite && fill !== undefined) return mark;
 
     for (const rule of rules) {
       if (!matches(rule.match, mark)) continue;
