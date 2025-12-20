@@ -45,10 +45,7 @@ export const rankedLanesChart = {
     const classSuffix = spec.className ? ` ${spec.className}` : "";
 
     return segments.map((seg, i) => {
-      const w =
-        maxPct > 0
-          ? Math.max(0, (seg.pct / maxPct) * usableW)
-          : 0;
+      const w = maxPct > 0 ? Math.max(0, (seg.pct / maxPct) * usableW) : 0;
       const y = y0 + i * (laneHeight + gap);
       const rx = Math.min(laneHeight / 2, w / 2);
       return {

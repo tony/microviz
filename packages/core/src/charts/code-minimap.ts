@@ -109,9 +109,7 @@ export const codeMinimapChart = {
     for (let i = 0; i < lines; i++) {
       const value = values[i];
       const normalizedValue =
-        value === undefined
-          ? 0
-          : clamp((value - normalized.min) / denom, 0, 1);
+        value === undefined ? 0 : clamp((value - normalized.min) / denom, 0, 1);
 
       const token = widthPattern[i % widthPattern.length] ?? 0;
       const patternScale = clamp(Math.max(0, token) * scale, 0, 1);
@@ -121,8 +119,7 @@ export const codeMinimapChart = {
         1,
       );
       const baseW = combinedScale * availableW;
-      const w =
-        availableW <= 0 ? 0 : Math.max(1, Math.min(availableW, baseW));
+      const w = availableW <= 0 ? 0 : Math.max(1, Math.min(availableW, baseW));
       const y = y0 + i * (lineHeight + gapY);
 
       marks.push({
