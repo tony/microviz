@@ -826,9 +826,16 @@ export const MicrovizPlayground: FC<{
         spec: { type: "dumbbell" },
       },
       equalizer: {
-        data: segments,
+        data: series,
         size,
-        spec: { barWidth: 6, bins: 24, gap: 1, pad: 0, type: "equalizer" },
+        spec: {
+          barWidth: 6,
+          bins: 24,
+          colors: segments.map((segment) => segment.color),
+          gap: 1,
+          pad: 0,
+          type: "equalizer",
+        },
       },
       "faded-pyramid": {
         data: segments,

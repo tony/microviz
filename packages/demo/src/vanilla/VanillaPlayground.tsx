@@ -233,9 +233,16 @@ const demoInputBuilders = {
     spec: { pad: 6, type: "dumbbell" },
   }),
   equalizer: () => ({
-    data: DEMO_SEGMENTS,
+    data: DEMO_SERIES,
     size: CHART_SIZE,
-    spec: { barWidth: 6, bins: 24, gap: 1, pad: 0, type: "equalizer" },
+    spec: {
+      barWidth: 6,
+      bins: 24,
+      colors: DEMO_SEGMENTS.map((segment) => segment.color),
+      gap: 1,
+      pad: 0,
+      type: "equalizer",
+    },
   }),
   "faded-pyramid": () => ({
     data: DEMO_SEGMENTS,

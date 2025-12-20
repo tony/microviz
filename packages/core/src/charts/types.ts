@@ -850,12 +850,15 @@ export type EqualizerSpec = {
   bins?: number;
   gap?: number;
   barWidth?: number;
+  colors?: string[];
   className?: string;
 };
 
 export type NormalizedEqualizer = {
   type: "equalizer";
-  segments: Array<{ name?: string; pct: number; color: string }>;
+  series: number[];
+  min: number;
+  max: number;
 };
 
 export type SparklineBarsSpec = {

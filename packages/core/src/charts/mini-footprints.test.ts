@@ -39,11 +39,12 @@ describe("mini chart footprints", () => {
       },
       {
         input: {
-          data: SEGMENTS,
+          data: SERIES,
           size: { height: 32, width: 32 },
           spec: {
             barWidth: 4,
             bins: 6,
+            colors: SEGMENTS.map((segment) => segment.color),
             gap: 1,
             pad: 1,
             type: "equalizer" as const,
