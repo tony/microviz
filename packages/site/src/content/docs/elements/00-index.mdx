@@ -46,17 +46,18 @@ Then use any chart element directly:
 `<microviz-model>` and `<microviz-chart>` can emit high-level hit-test events when `interactive` is present:
 
 ```ts
+import type { MicrovizHitEvent } from "@microviz/elements";
+
 const el = document.querySelector("microviz-chart");
 el?.addEventListener("microviz-hit", (event) => {
-  const detail = (event as CustomEvent).detail as {
-    hit: { markId: string; markType: string } | null;
-    point?: { x: number; y: number };
-  };
+  const detail = (event as MicrovizHitEvent).detail;
 
   // `detail.hit` is null when not hovering a mark.
   console.log(detail.hit?.markId);
 });
 ```
+
+`detail.client` is in viewport pixels (`event.clientX/Y`); `detail.point` (when present) is in model coordinates (`0..width`, `0..height`).
 
 ## Skeleton mode (empty/loading state)
 
