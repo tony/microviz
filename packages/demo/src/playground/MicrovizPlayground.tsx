@@ -574,6 +574,16 @@ export const MicrovizPlayground: FC<{
   const [chartFilter, setChartFilter] = useState(
     () => initialUrlState.chartFilter,
   );
+  const randomizeSeed = useCallback(() => {
+    setSeed(`mv-${Math.floor(Math.random() * 10_000)}`);
+  }, []);
+  const handlePaletteModeChange = useCallback(
+    (next: PaletteMode) => {
+      setPaletteMode(next);
+      randomizeSeed();
+    },
+    [randomizeSeed],
+  );
 
   useEffect(() => {
     if (!urlState) return;
@@ -1678,7 +1688,7 @@ export const MicrovizPlayground: FC<{
                   <button
                     className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     onClick={() =>
-                      setSeed(`mv-${Math.floor(Math.random() * 10_000)}`)
+                      randomizeSeed()
                     }
                     title="Random seed"
                     type="button"
@@ -1707,7 +1717,7 @@ export const MicrovizPlayground: FC<{
               <ToggleGroup<PaletteMode>
                 columns={3}
                 label="Palette mapping"
-                onChange={setPaletteMode}
+                onChange={handlePaletteModeChange}
                 options={[
                   { id: "value", label: "By value" },
                   { id: "random", label: "Random" },
