@@ -39,6 +39,19 @@ microviz is not a full charting suite; it focuses on small, composable primitive
 <microviz-sparkline data="[10, 25, 15, 30, 20]"></microviz-sparkline>
 ```
 
+### Generic chart element (responsive layouts)
+
+If you want a single tag that can render any `spec.type` and auto-size via `ResizeObserver`:
+
+```html
+<microviz-chart
+  autosize
+  style="width: 240px; height: 64px"
+  spec='{"type":"sparkline"}'
+  data="[6,10,7,12,9,14]"
+></microviz-chart>
+```
+
 ### Tailwind v4 harmony (CSS-first)
 
 ```css
@@ -72,6 +85,17 @@ export function Dashboard() {
 }
 ```
 
+### Interaction events (tooltip primitives)
+
+When `interactive` is present, `<microviz-chart>` and `<microviz-model>` emit `microviz-hit` events:
+
+```ts
+const el = document.querySelector("microviz-chart");
+el?.addEventListener("microviz-hit", (event) => {
+  console.log((event as CustomEvent).detail.hit?.markId);
+});
+```
+
 ## Customizing styles
 
 Tweak tokens via CSS variables:
@@ -99,7 +123,7 @@ microviz follows a layered design with hard boundaries:
 
 - **Core (compute)**: deterministic-ish pure computation producing a serializable `RenderModel` (marks + IDs + optional a11y + stats). No DOM access.
 - **Measurement**: a pluggable text measurement strategy (e.g. OffscreenCanvas where supported).
-- **Renderers**: stateless transforms from `RenderModel` to SVG/Canvas (or other surfaces).
+- **Renderers**: stateless transforms from `RenderModel` to SVG/Canvas (or other surfaces) + small export utilities.
 - **Elements**: Web Components as a primary integration surface; event binding and native a11y wiring live here (not in core).
 - **Themes**: plain CSS tokens + layered defaults (`@layer microviz`). Tailwind v4 support is a separate CSS adapter via `@theme`.
 - **Adapters**: optional thin framework wrappers (future).
