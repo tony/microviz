@@ -50,6 +50,7 @@ export const microHeatlineChart = {
 
     const displaySegments = segments.slice(0, maxLines);
     const numLines = displaySegments.length;
+    const maxPct = Math.max(...displaySegments.map((seg) => seg.pct), 0);
 
     // Calculate total height needed and center vertically
     const totalLinesHeight = numLines * lineHeight + (numLines - 1) * gap;
@@ -63,7 +64,8 @@ export const microHeatlineChart = {
       const seg = displaySegments[i];
       if (!seg) continue;
 
-      const lineW = (seg.pct / 100) * usableW;
+      const lineW =
+        maxPct > 0 ? (seg.pct / maxPct) * usableW : 0;
       const lineY = yOffset + i * (lineHeight + gap);
 
       marks.push({

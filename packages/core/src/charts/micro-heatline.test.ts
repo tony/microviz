@@ -53,17 +53,17 @@ describe("micro-heatline", () => {
 
     expect(rects.length).toBe(2);
 
-    // First line should be 60% of width (normalized: 60/100*100 = 60)
+    // First line should fill width (max pct)
     const firstLine = rects[0];
     if (firstLine?.type === "rect") {
-      expect(firstLine.w).toBeCloseTo(60, 0);
+      expect(firstLine.w).toBeCloseTo(100, 0);
       expect(firstLine.h).toBe(2);
     }
 
-    // Second line should be 40% of width
+    // Second line should scale relative to max (40/60)
     const secondLine = rects[1];
     if (secondLine?.type === "rect") {
-      expect(secondLine.w).toBeCloseTo(40, 0);
+      expect(secondLine.w).toBeCloseTo(66.67, 1);
       expect(secondLine.h).toBe(2);
     }
   });

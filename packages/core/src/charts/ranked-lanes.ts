@@ -33,6 +33,7 @@ export const rankedLanesChart = {
     const maxLanes = spec.maxLanes ?? 6;
     const segments = normalized.segments.slice(0, maxLanes);
     if (segments.length === 0) return [];
+    const maxPct = Math.max(...segments.map((seg) => seg.pct), 0);
 
     const laneHeight = spec.laneHeight ?? 4;
     const totalLaneHeight = segments.length * laneHeight;
@@ -44,7 +45,10 @@ export const rankedLanesChart = {
     const classSuffix = spec.className ? ` ${spec.className}` : "";
 
     return segments.map((seg, i) => {
-      const w = Math.max(0, (seg.pct / 100) * usableW);
+      const w =
+        maxPct > 0
+          ? Math.max(0, (seg.pct / maxPct) * usableW)
+          : 0;
       const y = y0 + i * (laneHeight + gap);
       const rx = Math.min(laneHeight / 2, w / 2);
       return {
