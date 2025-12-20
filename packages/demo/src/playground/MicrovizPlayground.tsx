@@ -196,6 +196,13 @@ function useModels(
   const mainQueueRef = useRef<ChartId[]>([]);
   const mainQueuedSetRef = useRef<Set<ChartId>>(new Set());
   const mainRafRef = useRef<number | null>(null);
+  const workerPendingModelsRef = useRef<
+    Partial<Record<ChartId, RenderModel | null>>
+  >({});
+  const workerPendingTimingsRef = useRef<
+    Partial<Record<ChartId, number | null>>
+  >({});
+  const workerFlushRafRef = useRef<number | null>(null);
 
   computeModeRef.current = computeMode;
   inputsRef.current = inputs;
@@ -207,6 +214,11 @@ function useModels(
     mainQueuedSetRef.current.clear();
     if (mainRafRef.current !== null) cancelAnimationFrame(mainRafRef.current);
     mainRafRef.current = null;
+    workerPendingModelsRef.current = {};
+    workerPendingTimingsRef.current = {};
+    if (workerFlushRafRef.current !== null)
+      cancelAnimationFrame(workerFlushRafRef.current);
+    workerFlushRafRef.current = null;
 
     const chartIds = Object.keys(inputs) as ChartId[];
     computedRunIdsRef.current = Object.fromEntries(
@@ -220,6 +232,8 @@ function useModels(
   useEffect(() => {
     return () => {
       if (mainRafRef.current !== null) cancelAnimationFrame(mainRafRef.current);
+      if (workerFlushRafRef.current !== null)
+        cancelAnimationFrame(workerFlushRafRef.current);
     };
   }, []);
 
@@ -282,6 +296,26 @@ function useModels(
     mainRafRef.current = requestAnimationFrame(runChunk);
   }, []);
 
+  const scheduleWorkerFlush = useCallback(() => {
+    if (workerFlushRafRef.current !== null) return;
+
+    workerFlushRafRef.current = requestAnimationFrame(() => {
+      workerFlushRafRef.current = null;
+      const nextModels = workerPendingModelsRef.current;
+      const nextTimings = workerPendingTimingsRef.current;
+      workerPendingModelsRef.current = {};
+      workerPendingTimingsRef.current = {};
+
+      if (Object.keys(nextModels).length > 0) {
+        setModels((prev) => ({ ...prev, ...nextModels }));
+      }
+
+      if (Object.keys(nextTimings).length > 0) {
+        setTimingsMs((prev) => ({ ...prev, ...nextTimings }));
+      }
+    });
+  }, []);
+
   useEffect(() => {
     const chartIds = requestedChartIds;
     if (chartIds.length === 0) return;
@@ -324,11 +358,10 @@ function useModels(
           if (runId !== runIdRef.current) return;
           computedRunIdsRef.current[chartId] = runId;
 
-          setModels((prev) => ({ ...prev, [chartId]: model }));
-          setTimingsMs((prev) => ({
-            ...prev,
-            [chartId]: Math.round((end - start) * 1000) / 1000,
-          }));
+          workerPendingModelsRef.current[chartId] = model;
+          workerPendingTimingsRef.current[chartId] =
+            Math.round((end - start) * 1000) / 1000;
+          scheduleWorkerFlush();
         })
         .finally(() => {
           if (inFlightRef.current.get(chartId) !== runId) return;
@@ -341,6 +374,7 @@ function useModels(
     inputs,
     requestedChartIds,
     scheduleMainCompute,
+    scheduleWorkerFlush,
   ]);
 
   return { models, timingsMs };
@@ -348,17 +382,24 @@ function useModels(
 
 type WarningLike = { code: string; message: string };
 
-function hasDiagnosticsWarnings(model: RenderModel | null, renderer: Renderer) {
+type GetCanvasUnsupportedFilters = (model: RenderModel) => readonly string[];
+
+function hasDiagnosticsWarnings(
+  model: RenderModel | null,
+  renderer: Renderer,
+  getCanvasUnsupportedFilters: GetCanvasUnsupportedFilters,
+) {
   if (!model) return false;
   if ((model.stats?.warnings?.length ?? 0) > 0) return true;
   if (renderer === "canvas" || renderer === "offscreen-canvas")
-    return getCanvasUnsupportedFilterPrimitiveTypes(model).length > 0;
+    return getCanvasUnsupportedFilters(model).length > 0;
   return false;
 }
 
 function getDiagnosticsWarnings(
   model: RenderModel | null,
   renderer: Renderer,
+  getCanvasUnsupportedFilters: GetCanvasUnsupportedFilters,
 ): WarningLike[] {
   if (!model) return [];
 
@@ -368,7 +409,7 @@ function getDiagnosticsWarnings(
   }
 
   if (renderer === "canvas" || renderer === "offscreen-canvas") {
-    const unsupported = getCanvasUnsupportedFilterPrimitiveTypes(model);
+    const unsupported = getCanvasUnsupportedFilters(model);
     if (unsupported.length > 0) {
       warnings.push({
         code: "CANVAS_UNSUPPORTED_FILTER",
@@ -1275,20 +1316,36 @@ export const MicrovizPlayground: FC<{
     requestedChartIds,
   );
 
-  const effectiveModels = useMemo(() => {
-    if (!applyNoiseOverlay) return models;
-    const nextModels = createRecordFromKeys<ChartId, RenderModel | null>(
-      chartIds,
-      null,
-    );
+  const noiseOverlayCacheRef = useRef(new WeakMap<RenderModel, RenderModel>());
+  const canvasUnsupportedFiltersCacheRef = useRef(
+    new WeakMap<RenderModel, readonly string[]>(),
+  );
 
-    for (const chartId of chartIds) {
-      const model = models[chartId];
-      nextModels[chartId] = model ? applyNoiseDisplacementOverlay(model) : null;
-    }
+  const getEffectiveModel = useCallback(
+    (chartId: ChartId): RenderModel | null => {
+      const model = models[chartId] ?? null;
+      if (!model) return null;
+      if (!applyNoiseOverlay) return model;
 
-    return nextModels;
-  }, [applyNoiseOverlay, chartIds, models]);
+      const cached = noiseOverlayCacheRef.current.get(model);
+      if (cached) return cached;
+      const nextModel = applyNoiseDisplacementOverlay(model);
+      noiseOverlayCacheRef.current.set(model, nextModel);
+      return nextModel;
+    },
+    [applyNoiseOverlay, models],
+  );
+
+  const getCanvasUnsupportedFilters = useCallback(
+    (model: RenderModel): readonly string[] => {
+      const cached = canvasUnsupportedFiltersCacheRef.current.get(model);
+      if (cached) return cached;
+      const unsupported = getCanvasUnsupportedFilterPrimitiveTypes(model);
+      canvasUnsupportedFiltersCacheRef.current.set(model, unsupported);
+      return unsupported;
+    },
+    [],
+  );
 
   const fillStyle = "#2563eb";
   const strokeStyle = "#2563eb";
@@ -1303,7 +1360,7 @@ export const MicrovizPlayground: FC<{
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("diagnostics");
 
   function renderSurface(chartId: ChartId): ReactNode {
-    const model = effectiveModels[chartId];
+    const model = getEffectiveModel(chartId);
     const input = inputs[chartId];
     if (!model)
       return (
@@ -1318,7 +1375,7 @@ export const MicrovizPlayground: FC<{
 
     const canvasUnsupportedFilters =
       renderer === "canvas" || renderer === "offscreen-canvas"
-        ? getCanvasUnsupportedFilterPrimitiveTypes(model)
+        ? getCanvasUnsupportedFilters(model)
         : [];
     const shouldFallbackToSvg =
       fallbackSvgWhenCanvasUnsupported &&
@@ -1386,18 +1443,31 @@ export const MicrovizPlayground: FC<{
     return null;
   }
 
-  const selectedModel = effectiveModels[selectedChart] ?? null;
+  const selectedModel = getEffectiveModel(selectedChart);
   const selectedInput = inputs[selectedChart];
 
   const allWarnings = useMemo(() => {
+    if (inspectorTab !== "diagnostics")
+      return [] as Array<{ chartId: ChartId; warnings: WarningLike[] }>;
+
     const rows: Array<{ chartId: ChartId; warnings: WarningLike[] }> = [];
-    for (const chartId of Object.keys(effectiveModels) as ChartId[]) {
-      const model = effectiveModels[chartId];
-      const warnings = getDiagnosticsWarnings(model, renderer);
+    for (const chartId of chartIds) {
+      const model = getEffectiveModel(chartId);
+      const warnings = getDiagnosticsWarnings(
+        model,
+        renderer,
+        getCanvasUnsupportedFilters,
+      );
       if (warnings.length > 0) rows.push({ chartId, warnings });
     }
     return rows;
-  }, [effectiveModels, renderer]);
+  }, [
+    chartIds,
+    getCanvasUnsupportedFilters,
+    getEffectiveModel,
+    inspectorTab,
+    renderer,
+  ]);
 
   return (
     <div className="flex h-full min-h-0 w-full">
@@ -1777,8 +1847,7 @@ export const MicrovizPlayground: FC<{
                             }}
                           >
                             {block.charts.map((chart) => {
-                              const model =
-                                effectiveModels[chart.chartId] ?? null;
+                              const model = getEffectiveModel(chart.chartId);
                               return (
                                 <ChartCard
                                   active={selectedChart === chart.chartId}
@@ -1786,6 +1855,7 @@ export const MicrovizPlayground: FC<{
                                   hasWarnings={hasDiagnosticsWarnings(
                                     model,
                                     renderer,
+                                    getCanvasUnsupportedFilters,
                                   )}
                                   key={chart.chartId}
                                   model={model}
@@ -1807,8 +1877,7 @@ export const MicrovizPlayground: FC<{
                             }}
                           >
                             {block.charts.map((chart) => {
-                              const model =
-                                effectiveModels[chart.chartId] ?? null;
+                              const model = getEffectiveModel(chart.chartId);
                               return (
                                 <ChartCard
                                   active={selectedChart === chart.chartId}
@@ -1817,6 +1886,7 @@ export const MicrovizPlayground: FC<{
                                   hasWarnings={hasDiagnosticsWarnings(
                                     model,
                                     renderer,
+                                    getCanvasUnsupportedFilters,
                                   )}
                                   key={chart.chartId}
                                   model={model}
@@ -1833,8 +1903,7 @@ export const MicrovizPlayground: FC<{
                         <div className="pb-6">
                           <div className="flex flex-wrap gap-3">
                             {block.charts.map((chart) => {
-                              const model =
-                                effectiveModels[chart.chartId] ?? null;
+                              const model = getEffectiveModel(chart.chartId);
                               return (
                                 <ChartCard
                                   active={selectedChart === chart.chartId}
@@ -1843,6 +1912,7 @@ export const MicrovizPlayground: FC<{
                                   hasWarnings={hasDiagnosticsWarnings(
                                     model,
                                     renderer,
+                                    getCanvasUnsupportedFilters,
                                   )}
                                   key={chart.chartId}
                                   model={model}
@@ -1913,7 +1983,11 @@ export const MicrovizPlayground: FC<{
                 </div>
                 <div className="mt-2">
                   {formatWarningsList(
-                    getDiagnosticsWarnings(selectedModel ?? null, renderer),
+                    getDiagnosticsWarnings(
+                      selectedModel,
+                      renderer,
+                      getCanvasUnsupportedFilters,
+                    ),
                   )}
                 </div>
               </div>
