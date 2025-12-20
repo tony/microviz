@@ -14,7 +14,10 @@ import type {
   SparklineSpec,
 } from "@microviz/core";
 import { computeModel } from "@microviz/core";
-import type { RenderCanvasOptions } from "@microviz/renderers";
+import {
+  getCanvasUnsupportedFilterPrimitiveTypes,
+  type RenderCanvasOptions,
+} from "@microviz/renderers";
 import type { ReactNode } from "react";
 import {
   MicrovizCanvas,
@@ -26,10 +29,21 @@ import {
 } from "./model";
 
 export type MicrovizRenderer = "svg" | "svg-string" | "canvas";
+export type MicrovizFallbackRenderer = Exclude<MicrovizRenderer, "canvas">;
 
 export type MicrovizChartProps = {
   input: ComputeModelInput;
   renderer?: MicrovizRenderer;
+  /**
+   * If the Canvas renderer can’t represent the model (e.g. unsupported filter
+   * primitives), fall back to an SVG renderer instead of silently ignoring
+   * unsupported features.
+   */
+  fallbackSvgWhenCanvasUnsupported?: boolean;
+  /**
+   * Which SVG surface to use when falling back from Canvas.
+   */
+  fallbackRenderer?: MicrovizFallbackRenderer;
   canvasOptions?: RenderCanvasOptions;
   svgProps?: Omit<MicrovizSvgProps, "model">;
   svgStringProps?: Omit<MicrovizSvgStringProps, "model">;
@@ -39,6 +53,8 @@ export type MicrovizChartProps = {
 export function MicrovizChart({
   canvasOptions,
   canvasProps,
+  fallbackRenderer = "svg",
+  fallbackSvgWhenCanvasUnsupported = true,
   input,
   renderer = "svg",
   svgProps,
@@ -46,8 +62,16 @@ export function MicrovizChart({
 }: MicrovizChartProps): ReactNode {
   const model = computeModel(input);
 
-  if (renderer === "svg") return <MicrovizSvg model={model} {...svgProps} />;
-  if (renderer === "svg-string")
+  const shouldFallbackToSvg =
+    renderer === "canvas" &&
+    fallbackSvgWhenCanvasUnsupported &&
+    getCanvasUnsupportedFilterPrimitiveTypes(model).length > 0;
+
+  const effectiveRenderer = shouldFallbackToSvg ? fallbackRenderer : renderer;
+
+  if (effectiveRenderer === "svg")
+    return <MicrovizSvg model={model} {...svgProps} />;
+  if (effectiveRenderer === "svg-string")
     return <MicrovizSvgString model={model} {...svgStringProps} />;
   return (
     <MicrovizCanvas model={model} options={canvasOptions} {...canvasProps} />
