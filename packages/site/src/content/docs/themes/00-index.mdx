@@ -37,3 +37,36 @@ To keep the preset palette but render on a transparent surface (no preset backgr
   <microviz-sparkline data="[6,10,7,12,9,14]"></microviz-sparkline>
 </div>
 ```
+
+## What are `white/g10/g90/g100`?
+
+These names are **Carbon-inspired surface steps** (a convenient shared vocabulary for “what background is this chart sitting on?”).
+
+In microviz, presets are just bundles of CSS variables (set by `variants.css`) for a coherent chart surface:
+
+- `--mv-bg`: surface background
+- `--mv-fg`, `--mv-muted`, `--mv-grid`: text + grid contrast tokens
+- `--mv-series-*`: chart palette (notably adjusted in `g90`/`g100` for readability)
+
+Preset meanings:
+
+- `white`: pure white surface
+- `g10`: subtle light-gray surface (great for cards on a white page)
+- `g90`: dark-gray surface
+- `g100`: near-black surface
+
+## Presets vs. color scheme (dark mode)
+
+Your app’s color scheme (`prefers-color-scheme`, or framework “dark mode”) is about the **surrounding UI**.
+Microviz presets are about the **chart surface + token palette**.
+
+They are intentionally decoupled: you can render a `g10` chart inside a dark UI, or a `g100` chart on a light page, if that matches the host surface.
+
+If you want them to track each other, treat it as an app decision (there is no CSS “auto” preset). For example:
+
+```ts
+const theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+  ? "g100"
+  : "white";
+document.documentElement.dataset.mvTheme = theme;
+```
