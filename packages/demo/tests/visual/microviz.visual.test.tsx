@@ -63,7 +63,7 @@ test("microviz patterns render (visual)", async () => {
         </div>
 
         <div className={VIZ_CLASS} data-testid="waveform">
-          <WaveformBars data={DEMO_DISTRIBUTION} />
+          <WaveformBars series={SERIES} />
         </div>
 
         <div className={VIZ_CLASS} data-testid="dot-cascade">

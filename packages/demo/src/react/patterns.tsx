@@ -680,9 +680,9 @@ export const BarcodeStrip: FC<{ data: Segment[] }> = ({ data }) => {
 };
 
 // 32. Waveform Bars
-export const WaveformBars: FC<{ data: Segment[] }> = ({ data }) => {
+export const WaveformBars: FC<{ series: number[] }> = ({ series }) => {
   const model = computeModel({
-    data,
+    data: series,
     size: { height: 32, width: 200 },
     spec: { type: "waveform" },
   });
@@ -1278,7 +1278,6 @@ export const MicroVizDemo: FC<{
       ),
     [rawData],
   );
-
   // Transform months to series for SVG charts
   const monthSeries = useMemo(() => {
     if (months.length === 0) return [];
@@ -1501,7 +1500,7 @@ export const MicroVizDemo: FC<{
               <BarcodeStrip data={data} />
             </VizCard>
             <VizCard tags={["Discrete"]} title="Waveform">
-              <WaveformBars data={data} />
+              <WaveformBars series={monthSeries} />
             </VizCard>
             <VizCard tags={["Scatter"]} title="Dot Cascade">
               <RankedDotCascade data={data} />

@@ -1132,9 +1132,16 @@ export const MicrovizPlayground: FC<{
         spec: { pad: 0, type: "vertical-stack" },
       },
       waveform: {
-        data: segments,
+        data: series,
         size,
-        spec: { barWidth: 6, bins: 24, gap: 1, pad: 0, type: "waveform" },
+        spec: {
+          barWidth: 6,
+          bins: 24,
+          colors: segments.map((segment) => segment.color),
+          gap: 1,
+          pad: 0,
+          type: "waveform",
+        },
       },
     }),
     [bandSeed, opacities, segments, series, size, sizeFor],
