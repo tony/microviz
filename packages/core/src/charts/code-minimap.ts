@@ -1,17 +1,17 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { Mark } from "../model";
-import { interleaveCounts } from "../utils/math";
 import type { ChartDefinition } from "./chart-definition";
 import {
-  allocateUnitsByPct,
+  clamp,
   coerceFiniteInt,
   coerceFiniteNonNegative,
-  normalizeSegments,
+  isFiniteNumber,
+  resampleSeries,
 } from "./shared";
 import type {
-  BitfieldData,
   CodeMinimapSpec,
   NormalizedCodeMinimap,
+  SparklineData,
 } from "./types";
 
 const DEFAULT_WIDTH_PATTERN = [28, 20, 30, 16, 24, 28, 12, 22] as const;
@@ -19,9 +19,9 @@ const DEFAULT_WIDTH_PATTERN = [28, 20, 30, 16, 24, 28, 12, 22] as const;
 export const codeMinimapChart = {
   a11y(_spec, normalized, _layout) {
     return {
-      label: a11yLabelWithSegmentsSummary(
+      label: a11yLabelWithSeriesSummary(
         "Code minimap chart",
-        normalized.segments,
+        normalized.series,
       ),
       role: "img",
     };
@@ -29,13 +29,13 @@ export const codeMinimapChart = {
   category: "bars" as const,
   defaultPad: 0,
   displayName: "Code minimap",
-  emptyDataWarningMessage: "No segments data.",
+  emptyDataWarningMessage: "No series data.",
   isEmpty(normalized) {
-    return normalized.segments.length === 0;
+    return normalized.series.length === 0;
   },
   marks(spec, normalized, layout, _state, _theme, warnings) {
-    const segments = normalized.segments;
-    if (segments.length === 0) return [];
+    const series = normalized.series;
+    if (series.length === 0) return [];
 
     const linesRequested = coerceFiniteInt(
       spec.lines ?? 8,
@@ -91,32 +91,43 @@ export const codeMinimapChart = {
     const lines = Math.min(linesRequested, maxLinesByHeight);
     if (lines <= 0) return [];
 
-    const counts = allocateUnitsByPct(segments, lines);
-    const order = interleaveCounts(counts);
+    const values = resampleSeries(series, lines);
+    const denom = normalized.max - normalized.min || 1;
 
     const widthPattern =
       spec.widthPattern && spec.widthPattern.length > 0
         ? spec.widthPattern
         : DEFAULT_WIDTH_PATTERN;
     const maxToken = Math.max(...widthPattern.map((w) => Math.max(0, w)), 0);
-    const scale = maxToken === 0 ? 0 : availableW / maxToken;
+    const scale = maxToken === 0 ? 0 : 1 / maxToken;
 
     const classSuffix = spec.className ? ` ${spec.className}` : "";
+    const colors = spec.colors;
+    const fallbackColor = colors?.[colors.length - 1];
 
     const marks: Mark[] = [];
     for (let i = 0; i < lines; i++) {
-      const segIdx = order[i];
-      const segment =
-        segIdx === undefined ? segments[segments.length - 1] : segments[segIdx];
-      if (!segment) continue;
+      const value = values[i];
+      const normalizedValue =
+        value === undefined
+          ? 0
+          : clamp((value - normalized.min) / denom, 0, 1);
 
       const token = widthPattern[i % widthPattern.length] ?? 0;
-      const w = Math.max(0, Math.min(availableW, Math.max(0, token) * scale));
+      const patternScale = clamp(Math.max(0, token) * scale, 0, 1);
+      const combinedScale = clamp(
+        normalizedValue * 0.75 + patternScale * 0.25,
+        0,
+        1,
+      );
+      const baseW = combinedScale * availableW;
+      const w =
+        availableW <= 0 ? 0 : Math.max(1, Math.min(availableW, baseW));
       const y = y0 + i * (lineHeight + gapY);
 
       marks.push({
         className: `mv-code-minimap-line${classSuffix}`,
-        fill: segment.color,
+        fill: colors ? (colors[i] ?? fallbackColor) : undefined,
         h: lineHeight,
         id: `code-minimap-line-${i}`,
         rx: lineRadius,
@@ -131,14 +142,16 @@ export const codeMinimapChart = {
     return marks;
   },
   normalize(_spec, data) {
-    const segments = normalizeSegments(data);
-    return { segments, type: "code-minimap" as const };
+    const series = data.filter(isFiniteNumber);
+    const min = series.length > 0 ? Math.min(...series) : 0;
+    const max = series.length > 0 ? Math.max(...series) : 1;
+    return { max, min, series, type: "code-minimap" as const };
   },
   preferredAspectRatio: "square" as const,
   type: "code-minimap",
 } satisfies ChartDefinition<
   "code-minimap",
   CodeMinimapSpec,
-  BitfieldData,
+  SparklineData,
   NormalizedCodeMinimap
 >;

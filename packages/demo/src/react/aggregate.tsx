@@ -816,11 +816,15 @@ export const CodeMinimap: FC<{ slices: PieSlice[] }> = ({ slices }) => {
     name: slice.name,
     pct: slice.percentage,
   }));
+  const series = segments.map((segment) => segment.pct);
 
   const model = computeModel({
-    data: segments,
+    data: series,
     size: { height: 32, width: 32 },
-    spec: { type: "code-minimap" },
+    spec: {
+      colors: segments.map((segment) => segment.color),
+      type: "code-minimap",
+    },
   });
 
   return (
