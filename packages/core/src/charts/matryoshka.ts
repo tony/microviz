@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, normalizeSegments } from "./shared";
@@ -8,8 +9,14 @@ import type {
 } from "./types";
 
 export const matryoshkaChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Matryoshka chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Matryoshka chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

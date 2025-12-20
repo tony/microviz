@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import { interleaveCounts } from "../utils/math";
 import type { ChartDefinition } from "./chart-definition";
@@ -13,8 +14,11 @@ import {
 import type { BarcodeSpec, BitfieldData, NormalizedBarcode } from "./types";
 
 export const barcodeChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Barcode chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary("Barcode chart", normalized.segments),
+      role: "img",
+    };
   },
   category: "grids" as const,
   defaultPad: 0,

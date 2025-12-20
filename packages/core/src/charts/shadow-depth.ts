@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -19,8 +20,14 @@ function filterId(index: number): string {
 }
 
 export const shadowDepthChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Shadow depth chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Shadow depth chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -14,8 +15,14 @@ import type {
 const SEPARATOR_PATTERN_ID = "mv-perforated-sep-dots";
 
 export const perforatedChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Perforated chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Perforated chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

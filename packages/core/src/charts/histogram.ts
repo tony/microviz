@@ -1,3 +1,4 @@
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { Def } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -13,8 +14,11 @@ import type {
 } from "./types";
 
 export const histogramChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Histogram chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSeriesSummary("Histogram chart", normalized.series),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 3,

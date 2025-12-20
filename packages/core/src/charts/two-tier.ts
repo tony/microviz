@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -8,8 +9,14 @@ import {
 import type { BitfieldData, NormalizedTwoTier, TwoTierSpec } from "./types";
 
 export const twoTierChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Two-tier chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Two-tier chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

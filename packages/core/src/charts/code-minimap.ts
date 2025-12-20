@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import { interleaveCounts } from "../utils/math";
 import type { ChartDefinition } from "./chart-definition";
@@ -16,8 +17,14 @@ import type {
 const DEFAULT_WIDTH_PATTERN = [28, 20, 30, 16, 24, 28, 12, 22] as const;
 
 export const codeMinimapChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Code minimap chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Code minimap chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

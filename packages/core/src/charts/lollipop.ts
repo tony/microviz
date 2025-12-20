@@ -1,11 +1,18 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { normalizeSegments } from "./shared";
 import type { BitfieldData, LollipopSpec, NormalizedLollipop } from "./types";
 
 export const lollipopChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Lollipop chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Lollipop chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 2,

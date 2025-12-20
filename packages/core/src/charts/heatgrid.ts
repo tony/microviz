@@ -1,10 +1,14 @@
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteInt, isFiniteNumber, normalizedPct } from "./shared";
 import type { HeatgridData, HeatgridSpec, NormalizedHeatgrid } from "./types";
 
 export const heatgridChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Heatgrid chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSeriesSummary("Heatgrid chart", normalized.series),
+      role: "img",
+    };
   },
   category: "grids" as const,
   defaultPad: 0,
