@@ -726,7 +726,7 @@ export const MicrovizPlayground: FC<{
       },
       "hand-of-cards": {
         data: segments,
-        size: { height: Math.max(height, 60), width },
+        size,
         spec: {
           cardHeightPct: 70,
           cardWidthPct: 35,
@@ -779,7 +779,7 @@ export const MicrovizPlayground: FC<{
       },
       matryoshka: {
         data: segments,
-        size: { height: Math.max(height, 50), width },
+        size,
         spec: { cornerRadius: 4, pad: 0, type: "matryoshka" },
       },
       "micro-heatline": {
@@ -1011,7 +1011,7 @@ export const MicrovizPlayground: FC<{
         spec: { barWidth: 6, bins: 24, gap: 1, pad: 0, type: "waveform" },
       },
     }),
-    [bandSeed, opacities, segments, series, size, sizeFor, height, width],
+    [bandSeed, opacities, segments, series, size, sizeFor],
   );
 
   const chartIds = useMemo(() => Object.keys(inputs) as ChartId[], [inputs]);
@@ -1213,7 +1213,10 @@ export const MicrovizPlayground: FC<{
     const input = inputs[chartId];
     if (!model)
       return (
-        <div className="h-8 w-[200px] animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div
+          className="animate-pulse rounded bg-slate-200 dark:bg-slate-800"
+          style={{ height: input.size.height, width: input.size.width }}
+        />
       );
 
     if (wrapper === "elements") {
