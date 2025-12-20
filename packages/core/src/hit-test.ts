@@ -225,6 +225,202 @@ function getStrokeTolerancePx(mark: { strokeWidth?: number }, slop: number) {
   return halfStroke + Math.max(0, slop);
 }
 
+type HitTestCanvasContext =
+  | CanvasRenderingContext2D
+  | OffscreenCanvasRenderingContext2D;
+
+let hitTestCtx2d: HitTestCanvasContext | null | undefined;
+
+function getHitTestCtx2d(): HitTestCanvasContext | null {
+  if (hitTestCtx2d !== undefined) return hitTestCtx2d;
+
+  const OffscreenCanvasCtor = (
+    globalThis as unknown as {
+      OffscreenCanvas?: new (w: number, h: number) => OffscreenCanvas;
+    }
+  ).OffscreenCanvas;
+
+  if (OffscreenCanvasCtor) {
+    const canvas = new OffscreenCanvasCtor(1, 1);
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      hitTestCtx2d = ctx;
+      return ctx;
+    }
+  }
+
+  const doc = (globalThis as unknown as { document?: Document }).document;
+  if (doc && typeof doc.createElement === "function") {
+    const canvas = doc.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      hitTestCtx2d = ctx;
+      return ctx;
+    }
+  }
+
+  hitTestCtx2d = null;
+  return null;
+}
+
+function getLineWidthForStrokeHitTest(
+  strokeWidth: number | undefined,
+  slop: number,
+): number {
+  const base = Math.max(0, strokeWidth ?? 1);
+  return base + Math.max(0, slop) * 2;
+}
+
+function parseDasharray(value: string | undefined): number[] {
+  if (!value) return [];
+  return value
+    .split(/[\s,]+/)
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n >= 0);
+}
+
+function wantsFillHitTest(mark: {
+  fill?: string;
+  fillOpacity?: number;
+}): boolean {
+  if (mark.fill === "none") return false;
+  // Only treat as a filled shape when fill is explicitly provided. Many marks
+  // rely on CSS (e.g. `fill: none`) for line charts.
+  return mark.fill !== undefined || mark.fillOpacity !== undefined;
+}
+
+function wantsStrokeHitTest(mark: {
+  stroke?: string;
+  strokeWidth?: number;
+  strokeOpacity?: number;
+  strokeLinecap?: string;
+  strokeLinejoin?: string;
+  strokeDasharray?: string;
+  strokeDashoffset?: string;
+}): boolean {
+  if (mark.stroke === "none") return false;
+  // If any stroke-related props are present, assume a stroke is intended even
+  // when the stroke color is supplied via CSS.
+  return (
+    mark.stroke !== undefined ||
+    mark.strokeWidth !== undefined ||
+    mark.strokeOpacity !== undefined ||
+    mark.strokeLinecap !== undefined ||
+    mark.strokeLinejoin !== undefined ||
+    mark.strokeDasharray !== undefined ||
+    mark.strokeDashoffset !== undefined
+  );
+}
+
+function tryHitTestWithCanvasPath2D(
+  mark: {
+    d: string;
+    fill?: string;
+    fillOpacity?: number;
+    stroke?: string;
+    strokeWidth?: number;
+    strokeOpacity?: number;
+    strokeLinecap?: string;
+    strokeLinejoin?: string;
+    strokeDasharray?: string;
+    strokeDashoffset?: string;
+  },
+  point: Point,
+  strokeSlopPx: number,
+): boolean | null {
+  if (typeof Path2D === "undefined") return null;
+  const ctx = getHitTestCtx2d();
+  if (!ctx) return null;
+  if (typeof ctx.isPointInPath !== "function") return null;
+  if (typeof ctx.isPointInStroke !== "function") return null;
+
+  let path: Path2D;
+  try {
+    path = new Path2D(mark.d);
+  } catch {
+    return null;
+  }
+
+  const wantsFill = wantsFillHitTest(mark);
+  if (wantsFill && ctx.isPointInPath(path, point.x, point.y)) return true;
+
+  const wantsStroke = wantsStrokeHitTest(mark);
+  if (!wantsStroke) return null;
+
+  const prevLineWidth = ctx.lineWidth;
+  const prevLineCap = ctx.lineCap;
+  const prevLineJoin = ctx.lineJoin;
+  const prevDash = ctx.getLineDash();
+  const prevDashOffset = ctx.lineDashOffset;
+
+  ctx.lineWidth = getLineWidthForStrokeHitTest(mark.strokeWidth, strokeSlopPx);
+  if (mark.strokeLinecap) ctx.lineCap = mark.strokeLinecap as CanvasLineCap;
+  if (mark.strokeLinejoin) ctx.lineJoin = mark.strokeLinejoin as CanvasLineJoin;
+
+  const dashes = parseDasharray(mark.strokeDasharray);
+  if (dashes.length > 0) ctx.setLineDash(dashes);
+  if (mark.strokeDashoffset !== undefined)
+    ctx.lineDashOffset = Number(mark.strokeDashoffset) || 0;
+
+  const hit = ctx.isPointInStroke(path, point.x, point.y);
+
+  ctx.lineWidth = prevLineWidth;
+  ctx.lineCap = prevLineCap;
+  ctx.lineJoin = prevLineJoin;
+  ctx.setLineDash(prevDash);
+  ctx.lineDashOffset = prevDashOffset;
+
+  return hit;
+}
+
+function tryHitTestCircleStrokeWithCanvas(
+  mark: {
+    cx: number;
+    cy: number;
+    r: number;
+    strokeWidth?: number;
+    strokeLinecap?: string;
+    strokeLinejoin?: string;
+    strokeDasharray?: string;
+    strokeDashoffset?: string;
+  },
+  point: Point,
+  strokeSlopPx: number,
+): boolean | null {
+  if (typeof Path2D === "undefined") return null;
+  const ctx = getHitTestCtx2d();
+  if (!ctx) return null;
+  if (typeof ctx.isPointInStroke !== "function") return null;
+
+  const path = new Path2D();
+  path.arc(mark.cx, mark.cy, mark.r, 0, Math.PI * 2);
+
+  const prevLineWidth = ctx.lineWidth;
+  const prevLineCap = ctx.lineCap;
+  const prevLineJoin = ctx.lineJoin;
+  const prevDash = ctx.getLineDash();
+  const prevDashOffset = ctx.lineDashOffset;
+
+  ctx.lineWidth = getLineWidthForStrokeHitTest(mark.strokeWidth, strokeSlopPx);
+  if (mark.strokeLinecap) ctx.lineCap = mark.strokeLinecap as CanvasLineCap;
+  if (mark.strokeLinejoin) ctx.lineJoin = mark.strokeLinejoin as CanvasLineJoin;
+
+  const dashes = parseDasharray(mark.strokeDasharray);
+  if (dashes.length > 0) ctx.setLineDash(dashes);
+  if (mark.strokeDashoffset !== undefined)
+    ctx.lineDashOffset = Number(mark.strokeDashoffset) || 0;
+
+  const hit = ctx.isPointInStroke(path, point.x, point.y);
+
+  ctx.lineWidth = prevLineWidth;
+  ctx.lineCap = prevLineCap;
+  ctx.lineJoin = prevLineJoin;
+  ctx.setLineDash(prevDash);
+  ctx.lineDashOffset = prevDashOffset;
+
+  return hit;
+}
+
 export function hitTest(
   model: RenderModel,
   point: Point,
@@ -244,8 +440,27 @@ export function hitTest(
     }
 
     if (mark.type === "circle") {
-      if (pointInCircle(point, mark))
+      const wantsFill = mark.fill !== "none";
+      if (wantsFill && pointInCircle(point, mark))
         return { markId: mark.id, markType: mark.type };
+
+      const wantsStroke =
+        mark.fill === "none" ||
+        mark.strokeWidth !== undefined ||
+        mark.strokeDasharray !== undefined ||
+        mark.strokeDashoffset !== undefined;
+      if (wantsStroke) {
+        const hit = tryHitTestCircleStrokeWithCanvas(mark, point, strokeSlopPx);
+        if (hit === true) return { markId: mark.id, markType: mark.type };
+
+        // Fallback approximation: treat as a full ring.
+        const tol = getStrokeTolerancePx(mark, strokeSlopPx);
+        const dx = point.x - mark.cx;
+        const dy = point.y - mark.cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (Math.abs(dist - mark.r) <= tol)
+          return { markId: mark.id, markType: mark.type };
+      }
     }
 
     if (mark.type === "line") {
@@ -255,10 +470,13 @@ export function hitTest(
     }
 
     if (mark.type === "path") {
+      const hit = tryHitTestWithCanvasPath2D(mark, point, strokeSlopPx);
+      if (hit === true) return { markId: mark.id, markType: mark.type };
+
       const parsed = parseSimplePath(mark.d);
       if (!parsed) continue;
 
-      const wantsFill = mark.fill !== "none";
+      const wantsFill = wantsFillHitTest(mark);
       if (wantsFill) {
         for (const poly of parsed.subpaths) {
           if (pointInPolygon(point, poly))
@@ -266,7 +484,7 @@ export function hitTest(
         }
       }
 
-      const wantsStroke = mark.stroke !== undefined && mark.stroke !== "none";
+      const wantsStroke = wantsStrokeHitTest(mark);
       if (wantsStroke) {
         const tol = getStrokeTolerancePx(mark, strokeSlopPx);
         for (let sp = 0; sp < parsed.subpaths.length; sp++) {
