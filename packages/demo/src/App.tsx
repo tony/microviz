@@ -11,6 +11,12 @@ import {
   writeColorSchemePreference,
 } from "./ui/colorScheme";
 import {
+  applyMicrovizBackgroundPreference,
+  type MicrovizBackgroundPreference,
+  readMicrovizBackgroundPreference,
+  writeMicrovizBackgroundPreference,
+} from "./ui/microvizBg";
+import {
   applyMicrovizTheme,
   type MicrovizThemePreference,
   readMicrovizThemePreference,
@@ -29,6 +35,10 @@ export const App: FC = () => {
     );
   const [microvizThemePreference, setMicrovizThemePreference] =
     useState<MicrovizThemePreference>(() => readMicrovizThemePreference());
+  const [microvizBackgroundPreference, setMicrovizBackgroundPreference] =
+    useState<MicrovizBackgroundPreference>(() =>
+      readMicrovizBackgroundPreference(),
+    );
 
   useEffect(() => {
     writeColorSchemePreference(colorSchemePreference);
@@ -70,6 +80,11 @@ export const App: FC = () => {
     );
     applyMicrovizTheme(resolvedTheme);
   }, [microvizThemePreference, resolvedColorScheme]);
+
+  useEffect(() => {
+    writeMicrovizBackgroundPreference(microvizBackgroundPreference);
+    applyMicrovizBackgroundPreference(microvizBackgroundPreference);
+  }, [microvizBackgroundPreference]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -161,6 +176,31 @@ export const App: FC = () => {
               <option value="g100">G100</option>
             </select>
           </label>
+
+          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
+            <button
+              className={tabButton({
+                active: microvizBackgroundPreference === "transparent",
+                className: "active:scale-[0.98]",
+                size: "xs",
+              })}
+              onClick={() => setMicrovizBackgroundPreference("transparent")}
+              type="button"
+            >
+              Transparent
+            </button>
+            <button
+              className={tabButton({
+                active: microvizBackgroundPreference === "solid",
+                className: "active:scale-[0.98]",
+                size: "xs",
+              })}
+              onClick={() => setMicrovizBackgroundPreference("solid")}
+              type="button"
+            >
+              Solid
+            </button>
+          </div>
         </div>
       </header>
 
