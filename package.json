@@ -12,6 +12,7 @@
     "format": "pnpm run --recursive format",
     "format:check": "biome format .",
     "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
     "ncu": "pnpm run --recursive ncu",
     "ncu-local": "ncu",
     "reinstall": "rm -rf node_modules; rm -rf packages/*/node_modules; pnpm i",
