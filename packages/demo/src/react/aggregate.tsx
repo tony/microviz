@@ -397,37 +397,14 @@ export const SegmentedPill: FC<{ slices: PieSlice[] }> = ({ slices }) => {
     pct: slice.percentage,
   }));
 
-  const baseModel = computeModel({
+  const model = computeModel({
     data: segments,
     size: { height: 8, width: 32 },
     spec: {
       className: "transition-all duration-500 ease-out",
-      type: "stacked-bar",
+      type: "segmented-pill",
     },
   });
-
-  const segmentRects = baseModel.marks
-    .filter(
-      (mark): mark is Extract<Mark, { type: "rect" }> =>
-        mark.type === "rect" && /^stacked-bar-seg-\d+$/.test(mark.id),
-    )
-    .sort((a, b) => a.x - b.x);
-
-  const separators: Mark[] = segmentRects.slice(0, -1).map((seg, i) => ({
-    id: `segmented-pill-sep-${i}`,
-    stroke: "rgba(255,255,255,0.2)",
-    strokeWidth: 0.5,
-    type: "line",
-    x1: seg.x + seg.w,
-    x2: seg.x + seg.w,
-    y1: seg.y,
-    y2: seg.y + seg.h,
-  }));
-
-  const model: RenderModel = {
-    ...baseModel,
-    marks: [...baseModel.marks, ...separators],
-  };
 
   return (
     <MicrovizSvg
@@ -573,7 +550,7 @@ export const StackedChips: FC<{ slices: PieSlice[] }> = ({ slices }) => {
 
   const model = computeModel({
     data: segments,
-    size: { height: 12, width: 48 },
+    size: { height: 12, width: 32 },
     spec: {
       className: "transition-all duration-500 text-white dark:text-slate-800",
       maxChips: 4,
