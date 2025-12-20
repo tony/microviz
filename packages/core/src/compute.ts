@@ -15,6 +15,7 @@ import {
   MAX_DIAGNOSTIC_WARNINGS,
   pushWarning,
 } from "./charts/shared";
+import { validateDefReferences } from "./diagnostics";
 import type {
   A11yTree,
   Def,
@@ -526,6 +527,7 @@ export function computeModel<S extends ChartSpec>(
       message: "No marks produced.",
     });
   validateMarks(marks, layout.width, layout.height, warnings);
+  validateDefReferences(marks, defs, warnings);
 
   const model: RenderModel = {
     ...(defs.length > 0 ? { defs } : {}),
