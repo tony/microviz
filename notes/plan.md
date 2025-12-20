@@ -27,6 +27,19 @@ We’re “ready” when:
   - Tier 0: core model tests (fast)
   - Tier 2: selective visual checks (slower, authoritative)
 
+## Derivative charts are first‑class
+
+microviz isn’t “one chart per file forever.” We explicitly support **derivative/composite charts**:
+- Compute a base `RenderModel` (often by reusing an existing `spec.type`).
+- Add/modify `marks` and/or `defs` (separators, overlays, tracks, gloss, filters).
+- When a derivative pattern proves itself, promote it to a first‑class `spec.type` entry in core (with Tier‑0 tests + element wrapper).
+
+Examples already used in the demo:
+- **Segmented Pill**: `stacked-bar` + separator `line` marks.
+- **Pixel Pill (glossy)**: `pixel-pill` + `linearGradient` + overlay `rect`.
+- **Orbital**: `segmented-ring` + background/core/track marks.
+- **Noise Displacement fixture**: `stacked-bar` + `filter` defs (`turbulence → displacementMap`).
+
 ---
 
 ## Current status (2025-12-18)
