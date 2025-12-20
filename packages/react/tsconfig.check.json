@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "paths": {
+      "@microviz/core": ["../core/src/index.ts"],
+      "@microviz/core/*": ["../core/src/*"],
+      "@microviz/renderers": ["../renderers/src/index.ts"],
+      "@microviz/renderers/*": ["../renderers/src/*"]
+    },
+    "rootDir": ".."
+  },
+  "extends": "./tsconfig.json"
+}

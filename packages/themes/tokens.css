@@ -1,0 +1,39 @@
+@layer microviz {
+  :root {
+    --mv-fg: oklch(0.24 0 0);
+    --mv-muted: oklch(0.55 0 0);
+    --mv-grid: oklch(0.9 0 0);
+    --mv-series-1: oklch(0.65 0.15 250);
+    --mv-series-2: oklch(0.7 0.15 150);
+    --mv-series-3: oklch(0.72 0.15 80);
+    --mv-series-4: oklch(0.72 0.12 30);
+    --mv-series-5: oklch(0.68 0.14 10);
+    --mv-series-6: oklch(0.67 0.16 295);
+    --mv-series-7: oklch(0.71 0.14 200);
+    --mv-series-8: oklch(0.73 0.13 120);
+
+    --mv-series-1-light: color-mix(in oklch, var(--mv-series-1), white 80%);
+    --mv-series-1-dark: color-mix(in oklch, var(--mv-series-1), black 30%);
+    --mv-series-2-light: color-mix(in oklch, var(--mv-series-2), white 80%);
+    --mv-series-2-dark: color-mix(in oklch, var(--mv-series-2), black 30%);
+    --mv-series-3-light: color-mix(in oklch, var(--mv-series-3), white 80%);
+    --mv-series-3-dark: color-mix(in oklch, var(--mv-series-3), black 30%);
+    --mv-series-4-light: color-mix(in oklch, var(--mv-series-4), white 80%);
+    --mv-series-4-dark: color-mix(in oklch, var(--mv-series-4), black 30%);
+    --mv-series-5-light: color-mix(in oklch, var(--mv-series-5), white 80%);
+    --mv-series-5-dark: color-mix(in oklch, var(--mv-series-5), black 30%);
+    --mv-series-6-light: color-mix(in oklch, var(--mv-series-6), white 80%);
+    --mv-series-6-dark: color-mix(in oklch, var(--mv-series-6), black 30%);
+    --mv-series-7-light: color-mix(in oklch, var(--mv-series-7), white 80%);
+    --mv-series-7-dark: color-mix(in oklch, var(--mv-series-7), black 30%);
+    --mv-series-8-light: color-mix(in oklch, var(--mv-series-8), white 80%);
+    --mv-series-8-dark: color-mix(in oklch, var(--mv-series-8), black 30%);
+
+    --mv-radius: 2px;
+    --mv-stroke-width: 1.5px;
+
+    --mv-font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --mv-font-size-label: 0.75rem;
+    --mv-font-size-tick: 0.625rem;
+  }
+}

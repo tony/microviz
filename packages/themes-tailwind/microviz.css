@@ -1,0 +1,41 @@
+/*
+  Tailwind v4 theme adapter for Microviz.
+
+  This file intentionally does not import Tailwind; the consuming app owns:
+  - `@import "tailwindcss";`
+  - import order (including `@source` scanning)
+
+  Typical usage:
+    @import "tailwindcss";
+    @import "@microviz/themes/base.css";
+    @import "@microviz/themes-tailwind/microviz.css";
+*/
+
+@theme {
+  --color-mv-fg: var(--mv-fg, oklch(0.24 0 0));
+  --color-mv-muted: var(--mv-muted, oklch(0.55 0 0));
+  --color-mv-grid: var(--mv-grid, oklch(0.9 0 0));
+  --color-mv-series-1: var(--mv-series-1, oklch(0.65 0.15 250));
+  --color-mv-series-2: var(--mv-series-2, oklch(0.7 0.15 150));
+  --color-mv-series-3: var(--mv-series-3, oklch(0.72 0.15 80));
+  --color-mv-series-4: var(--mv-series-4, oklch(0.72 0.12 30));
+  --color-mv-series-5: var(--mv-series-5, oklch(0.68 0.14 10));
+  --color-mv-series-6: var(--mv-series-6, oklch(0.67 0.16 295));
+  --color-mv-series-7: var(--mv-series-7, oklch(0.71 0.14 200));
+  --color-mv-series-8: var(--mv-series-8, oklch(0.73 0.13 120));
+
+  --radius-mv: var(--mv-radius, 2px);
+  --spacing-mv-gap: 0.25rem;
+  --spacing-mv-padding: 0.5rem;
+
+  --text-mv-label: var(--mv-font-size-label, 0.75rem);
+  --text-mv-tick: var(--mv-font-size-tick, 0.625rem);
+  --font-mv: var(
+    --mv-font-family,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    sans-serif
+  );
+}

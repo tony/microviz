@@ -1,0 +1,24 @@
+---
+import Default from "@astrojs/starlight/components/Footer.astro";
+---
+
+<Default {...Astro.props}><slot /></Default>
+
+<footer class="sl-flex text-center items-center">
+  <div class="kudos sl-flex">
+    Copyright © 2025 microviz.
+  </div>
+</footer>
+
+<style>
+	footer {
+		flex-direction: column;
+	}
+	.kudos {
+		align-items: center;
+		margin: 0.5rem auto;
+		font-size: var(--sl-text-xs);
+		text-decoration: none;
+		color: var(--sl-color-gray-3);
+	}
+</style>

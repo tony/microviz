@@ -1,0 +1,46 @@
+---
+import Default from "@astrojs/starlight/components/Search.astro";
+---
+
+<div class="flex flex-wrap items-start flex-start w-full gap-1 md:gap-3 lg:gap-5 p-3 lg:p-0">
+  <div class="flex flex-col items-start">
+    <a href="/elements" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 font-bold no-underline">
+      <span class="block lg:hidden">elements</span>
+      <span class="hidden lg:block"><code>@microviz/elements</code></span>
+    </a>
+    <span class="text-xs text-gray-600 dark:text-gray-400 hidden md:block no-underline">
+      (<a href="https://www.npmjs.com/package/@microviz/elements" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 no-underline">NPM</a>)
+    </span>
+  </div>
+
+  <div class="flex flex-col items-start">
+    <a href="/core" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 font-bold no-underline">
+      <span class="block lg:hidden">core</span>
+      <span class="hidden lg:block"><code>@microviz/core</code></span>
+    </a>
+    <span class="text-xs text-gray-600 dark:text-gray-400 hidden md:block">
+      (<a href="https://www.npmjs.com/package/@microviz/core" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 no-underline">NPM</a>)
+    </span>
+  </div>
+
+  <div class="flex flex-col items-start">
+    <a href="/renderers" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 font-bold no-underline">
+      <span class="block lg:hidden">renderers</span>
+      <span class="hidden lg:block"><code>@microviz/renderers</code></span>
+    </a>
+    <span class="text-xs text-gray-600 dark:text-gray-400 hidden md:block">
+      (<a href="https://www.npmjs.com/package/@microviz/renderers" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 no-underline">NPM</a>)
+    </span>
+  </div>
+
+  <div class="flex flex-col items-start">
+    <a href="/gallery" class="text-blue-600 hover:text-blue-500 dark:text-gray-100 dark:hover:text-blue-300 font-bold no-underline">
+      <span class="block lg:hidden">gallery</span>
+      <span class="hidden lg:block">Gallery</span>
+    </a>
+  </div>
+</div>
+
+<div class="items-center w-full hidden lg:flex justify-end">
+  <Default {...Astro.props}><slot /></Default>
+</div>

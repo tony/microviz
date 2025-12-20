@@ -1,0 +1,62 @@
+---
+title: "@microviz/renderers"
+slug: renderers
+---
+
+Framework-agnostic renderers for converting a `RenderModel` into SVG/Canvas output.
+
+## Install
+
+```bash
+pnpm add @microviz/renderers
+```
+
+## Render to SVG (string)
+
+Useful for SSR, email, snapshots, and anywhere you want plain markup.
+
+```ts
+import { computeModel } from "@microviz/core";
+import { renderSvgString } from "@microviz/renderers";
+
+const model = computeModel({
+  data: [6, 10, 7, 12, 9, 14],
+  size: { width: 200, height: 32 },
+  spec: { type: "sparkline" },
+});
+
+const svg = renderSvgString(model);
+```
+
+## Render to Canvas
+
+Canvas supports `CanvasRenderingContext2D` and `OffscreenCanvasRenderingContext2D`.
+
+```ts
+import { renderCanvas } from "@microviz/renderers";
+
+renderCanvas(ctx, model, {
+  fillStyle: "#2563eb",
+  strokeStyle: "#2563eb",
+  strokeWidth: 2.2,
+});
+```
+
+## Capability notes
+
+`@microviz/renderers` supports the core mark types (`rect`, `path`, `text`, `circle`, `line`) and common defs (`linearGradient`, `clipRect`, `pattern`, `mask`, `filter`).
+
+SVG filters:
+- SVG renderers support `dropShadow`, `gaussianBlur`, `turbulence`, and `displacementMap`.
+- Canvas supports `dropShadow` and `gaussianBlur` today (other primitives are ignored).
+
+To detect filter primitives that Canvas will ignore:
+
+```ts
+import { getCanvasUnsupportedFilterPrimitiveTypes } from "@microviz/renderers";
+
+const unsupported = getCanvasUnsupportedFilterPrimitiveTypes(model);
+if (unsupported.length > 0) {
+  // e.g. ["displacementMap", "turbulence"]
+}
+```

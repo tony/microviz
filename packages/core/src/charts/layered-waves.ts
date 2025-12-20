@@ -1,0 +1,100 @@
+import type { Mark } from "../model";
+import type { ChartDefinition } from "./chart-definition";
+import { coerceFiniteNonNegative, normalizeSegments } from "./shared";
+import type {
+  BitfieldData,
+  LayeredWavesSpec,
+  NormalizedLayeredWaves,
+} from "./types";
+
+export const layeredWavesChart = {
+  a11y(_spec, _normalized, _layout) {
+    return { label: "Layered waves chart", role: "img" };
+  },
+  category: "bars" as const,
+  defaultPad: 0,
+  displayName: "Layered waves",
+  emptyDataWarningMessage: "No segments data.",
+  isEmpty(normalized) {
+    return normalized.segments.length === 0;
+  },
+  marks(spec, normalized, layout, _state, _theme, warnings) {
+    const { segments } = normalized;
+    if (segments.length === 0) return [];
+
+    const { width, height, pad } = layout;
+    const usableW = Math.max(0, width - pad * 2);
+    const usableH = Math.max(0, height - pad * 2);
+    const x0 = pad;
+    const y0 = pad;
+
+    const waveOffset = coerceFiniteNonNegative(
+      spec.waveOffset ?? 12,
+      12,
+      warnings,
+      "Non-finite layered-waves waveOffset; defaulted to 12.",
+    );
+
+    const baseOpacity = coerceFiniteNonNegative(
+      spec.baseOpacity ?? 0.6,
+      0.6,
+      warnings,
+      "Non-finite layered-waves baseOpacity; defaulted to 0.6.",
+    );
+
+    const cornerRadius = coerceFiniteNonNegative(
+      spec.cornerRadius ?? 8,
+      8,
+      warnings,
+      "Non-finite layered-waves cornerRadius; defaulted to 8.",
+    );
+
+    const classSuffix = spec.className ? ` ${spec.className}` : "";
+
+    // Create overlapping wave layers from back to front
+    // Each wave starts further right and has different opacity
+    const marks: Mark[] = [];
+    const count = segments.length;
+
+    for (const [i, seg] of segments.entries()) {
+      // Calculate offset for this wave (back waves start at 0, front waves offset right)
+      const xOffset = i * waveOffset;
+      const waveW = usableW - xOffset;
+
+      if (waveW <= 0) continue;
+
+      // Opacity varies by layer (back = more transparent, front = more opaque)
+      const layerOpacity =
+        baseOpacity + ((1 - baseOpacity) * i) / Math.max(1, count - 1);
+
+      const rx = Math.min(cornerRadius, waveW / 2, usableH / 2);
+      const ry = rx;
+
+      marks.push({
+        className: `mv-layered-waves-wave${classSuffix}`,
+        fill: seg.color,
+        fillOpacity: layerOpacity,
+        h: usableH,
+        id: `layered-waves-wave-${i}`,
+        rx,
+        ry,
+        type: "rect" as const,
+        w: waveW,
+        x: x0 + xOffset,
+        y: y0,
+      });
+    }
+
+    return marks;
+  },
+  normalize(_spec, data) {
+    const segments = normalizeSegments(data);
+    return { segments, type: "layered-waves" as const };
+  },
+  type: "layered-waves",
+} satisfies ChartDefinition<
+  "layered-waves",
+  LayeredWavesSpec,
+  BitfieldData,
+  NormalizedLayeredWaves
+>;

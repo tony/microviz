@@ -1,0 +1,38 @@
+{
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @microviz/core build && pnpm --filter @microviz/renderers build && pnpm --filter @microviz/elements build && pnpm --filter @microviz/react build",
+    "build:watch": "pnpm run --recursive build:watch",
+    "clean": "pnpm run --recursive clean",
+    "distclean": "pnpm run --recursive distclean",
+    "dev:loop": "node scripts/dev-loop.mjs",
+    "docs": "pnpm --filter @microviz/site dev",
+    "docs:serve": "pnpm --filter @microviz/site preview",
+    "format": "pnpm run --recursive format",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "ncu": "pnpm run --recursive ncu",
+    "ncu-local": "ncu",
+    "reinstall": "rm -rf node_modules; rm -rf packages/*/node_modules; pnpm i",
+    "test": "pnpm run --recursive test",
+    "test:core": "pnpm --filter @microviz/core test",
+    "test:core:watch": "pnpm --filter @microviz/core test:watch",
+    "test:watch": "pnpm run --recursive test:watch",
+    "type-check": "pnpm -r run check",
+    "update": "pnpm run --recursive update",
+    "update:all": "ncu -u; pnpm --recursive run 'ncu' -u",
+    "update:reset": "pnpm update:all; pnpm reinstall; pnpm update",
+    "biome": "biome"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@10.26.0",
+  "dependencies": {
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.9"
+  }
+}

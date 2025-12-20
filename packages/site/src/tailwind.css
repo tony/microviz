@@ -1,0 +1,104 @@
+@layer base, starlight, theme, components, utilities;
+
+@import "@astrojs/starlight-tailwind";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  /* Font configuration using Astro's experimental fonts API */
+  --font-mono: var(--font-ibm-plex-mono);
+  --font-sans: var(--font-ibm-plex-sans);
+
+  /* Define slate colors for use in dark mode */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+}
+
+/* Target small displays like phones */
+:root {
+  --sl-content-width: 100%;
+}
+
+@media (min-width: 640px) {
+  /* Target small displays like tablets */
+  :root {
+    --sl-content-width: calc(
+      100% -
+      (var(--sl-content-pad-x) * 2)
+    ); /* Make it wider on small screens */
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Target larger displays like desktops */
+  :root {
+    --sl-content-width: calc(100% - (var(--sl-content-pad-x) * 7));
+  }
+}
+
+/** Content regions: More room on smaller displays */
+.main-pane .sl-container {
+  max-width: 100%;
+  margin-inline: unset;
+}
+
+@media (min-width: 1024px) {
+  .main-pane .sl-container {
+    max-width: var(--sl-content-width);
+    margin-inline: var(--sl-content-margin-inline, auto);
+  }
+}
+
+/** <pre> Headers on READMEs **/
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) code {
+  font-size: 40%; /* Base font size for extra-small screens (default) */
+}
+
+@media (min-width: 480px) {
+  /* Target small displays like phones */
+  .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) code {
+    font-size: 50%;
+  }
+}
+
+@media (min-width: 640px) {
+  /* Target medium displays like tablets */
+  .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) code {
+    font-size: 70%;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Target larger displays like desktops */
+  .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) code {
+    font-size: inherit; /* Default or larger font size */
+  }
+}
+
+/** For code embeds on example pages **/
+.sl-markdown-content :is(video, iframe):not(:where(.not-content *)) {
+  height: revert-layer;
+  min-height: 600px;
+}
+
+@layer utilities {
+  /* Override gray colors with slate colors in dark mode */
+  :root {
+    --sl-color-gray-1: var(--color-slate-200);
+    --sl-color-gray-2: var(--color-slate-300);
+    --sl-color-gray-3: var(--color-slate-400);
+    --sl-color-gray-4: var(--color-slate-600);
+    --sl-color-gray-5: var(--color-slate-700);
+    --sl-color-gray-6: var(--color-slate-800);
+    --sl-color-black: var(--color-slate-900);
+  }
+}
