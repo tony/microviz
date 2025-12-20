@@ -33,7 +33,7 @@ import { orbitalDotsChart } from "./orbital-dots";
 import { paretoChart } from "./pareto";
 import { patternTilesChart } from "./pattern-tiles";
 import { perforatedChart } from "./perforated";
-import { pipelineChart } from "./pipeline-chart";
+import { pipelineChart } from "./pipeline";
 import { pixelColumnChart } from "./pixel-column";
 import { pixelGridChart } from "./pixel-grid";
 import { pixelPillChart } from "./pixel-pill";
