@@ -2,12 +2,13 @@ import { hitTest, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { clearSvgFromShadowRoot, renderSvgIntoShadowRoot } from "./render";
+import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
 
 type Point = { x: number; y: number };
 
 export class MicrovizModel extends HTMLElement {
-  static observedAttributes = ["interactive"];
+  static observedAttributes = ["interactive", "skeleton"];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
@@ -110,8 +111,13 @@ export class MicrovizModel extends HTMLElement {
       return;
     }
 
-    applyMicrovizA11y(this, this.#internals, this.#model);
-    const svg = renderSvgString(this.#model);
+    const model = this.#model;
+    applyMicrovizA11y(this, this.#internals, model);
+
+    const svg =
+      this.hasAttribute("skeleton") && shouldRenderSkeleton(model)
+        ? renderSkeletonSvg({ height: model.height, width: model.width })
+        : renderSvgString(model);
     renderSvgIntoShadowRoot(this.#root, svg);
   }
 }

@@ -9,6 +9,7 @@ import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseNumber } from "./parse";
 import { clearSvgFromShadowRoot, renderSvgIntoShadowRoot } from "./render";
+import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
 
 type Size = { width: number; height: number };
@@ -45,6 +46,7 @@ export class MicrovizChart extends HTMLElement {
     "pad",
     "autosize",
     "interactive",
+    "skeleton",
   ];
 
   readonly #internals: ElementInternals | null;
@@ -229,7 +231,10 @@ export class MicrovizChart extends HTMLElement {
     this.#model = model;
 
     applyMicrovizA11y(this, this.#internals, model);
-    const svg = renderSvgString(model);
+    const svg =
+      this.hasAttribute("skeleton") && shouldRenderSkeleton(model)
+        ? renderSkeletonSvg(size)
+        : renderSvgString(model);
     renderSvgIntoShadowRoot(this.#root, svg);
   }
 }
