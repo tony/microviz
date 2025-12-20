@@ -6,6 +6,15 @@ Source inventory:
 - `packages/demo/src/react/patterns.tsx`: “Patterns” gallery (51 cards)
 - `packages/demo/src/react/aggregate.tsx`: “Aggregate” gallery (29 cards)
 
+Local reference repos (for patterns + implementation ideas):
+- TanStack Router: `~/study/typescript/tanstack-router/`
+- TanStack Virtual: `~/study/typescript/tanstack-virtual/`
+- TanStack Table: `~/study/typescript/tanstack-table/`
+- TanStack Devtools: `~/study/typescript/tanstack-devtools/`
+- TanStack Store: `~/study/typescript/tanstack-store/`
+- Chart system references: `~/study/typescript/{carbon-charts,carbon,billboard.js,plotly.js,nivo}/`
+- Prior art (in-house): `~/work/cv/packages/react/` (Router + Virtual patterns)
+
 ---
 
 ## What “ready to port the full suite” means
@@ -109,6 +118,20 @@ These exist as first-class `spec.type` values in `@microviz/core` and are covere
 - ✅ De-dupe tiny math helpers (2025-12-16): extract cycle-safe `packages/core/src/utils/*` so `packages/core/src/index.ts` and `packages/core/src/charts/shared.ts` share the same implementations.
 - ✅ Demo wiring (2025-12-16): derive the demo chart ID lists (sidebar/options) from core chart types to prevent “new chart missing” regressions.
 - ✅ Elements coverage (2025-12-17): add chart-specific custom elements for more charts and keep the demo “Elements” surface rendering (chart element when available, otherwise `<microviz-model>`).
+
+### Next pragmatic wins (demo UX + performance: TanStack)
+These don’t change the rendering pipeline, but they make the demo a better engineering tool:
+
+- 🟡 **Route-level code splitting:** use TanStack Router so Playground doesn’t eagerly bundle the large gallery modules.
+  - Goal: fast reloads + faster first paint in the playground.
+  - Reference: `~/study/typescript/tanstack-router/` and `~/work/cv/packages/react/src/router.tsx`.
+- 🟡 **Shareable repro links:** encode Playground state into typed URL search params (seed, selected chart, wrapper/renderer/compute mode, sizes, filters, debug toggles).
+  - Goal: copy/paste a link that reproduces a rendering/perf issue.
+  - Reference: `~/work/cv/packages/react/src/hud/url-state.ts` (compact encoding + zod adapter).
+- 🟡 **Virtualize the chart grid:** use TanStack Virtual to render only visible chart cards.
+  - Goal: reduce DOM/render work and unlock “compute models only for visible charts (+ overscan)” later.
+  - Reference: `~/study/typescript/tanstack-virtual/` and `~/work/cv/packages/react/src/HUD.tsx` (`useVirtualizer`).
+- 🟡 **Optional:** virtualize long gallery pages (patterns/aggregate) if scroll perf becomes a problem (often unnecessary once code-split).
 
 ---
 
