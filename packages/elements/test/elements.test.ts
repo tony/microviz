@@ -10,6 +10,7 @@ describe("@microviz/elements", () => {
   it("registerMicrovizElements is idempotent", () => {
     expect(() => registerMicrovizElements()).not.toThrow();
     expect(customElements.get("microviz-bar")).toBeTruthy();
+    expect(customElements.get("microviz-segmented-pill")).toBeTruthy();
     expect(() => registerMicrovizElements()).not.toThrow();
   });
 
@@ -28,6 +29,29 @@ describe("@microviz/elements", () => {
     el.setAttribute("value", "75");
     const rect2 = el.shadowRoot?.querySelector("rect#bar-fill");
     expect(rect2?.getAttribute("width")).toBe("60");
+  });
+
+  it("renders and updates from attributes (microviz-segmented-pill)", () => {
+    const el = document.createElement("microviz-segmented-pill");
+    el.setAttribute("width", "32");
+    el.setAttribute("height", "8");
+    el.setAttribute(
+      "data",
+      JSON.stringify([
+        { color: "#ef4444", name: "A", pct: 40 },
+        { color: "#22c55e", name: "B", pct: 60 },
+      ]),
+    );
+    document.body.append(el);
+
+    expect(
+      el.shadowRoot?.querySelector("line#segmented-pill-sep-0"),
+    ).not.toBeNull();
+
+    el.setAttribute("separator-stroke-width", "0");
+    expect(
+      el.shadowRoot?.querySelector("line#segmented-pill-sep-0"),
+    ).toBeNull();
   });
 
   it("parses boolean attributes (microviz-step-line show-dot)", () => {
