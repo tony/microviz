@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "@microviz/themes/base.css";
+@import "@microviz/themes/variants.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   button,
