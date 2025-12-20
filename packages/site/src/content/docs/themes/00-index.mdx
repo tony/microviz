@@ -29,3 +29,11 @@ import "@microviz/themes/variants.css";
   <microviz-sparkline data="[6,10,7,12,9,14]"></microviz-sparkline>
 </div>
 ```
+
+To keep the preset palette but render on a transparent surface (no preset background), add `data-mv-bg="transparent"`:
+
+```html
+<div data-mv-theme="g100" data-mv-bg="transparent" class="rounded-md p-2">
+  <microviz-sparkline data="[6,10,7,12,9,14]"></microviz-sparkline>
+</div>
+```
