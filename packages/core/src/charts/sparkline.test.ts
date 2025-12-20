@@ -15,6 +15,7 @@ describe("sparkline", () => {
     expect(a).toEqual(b);
     expect(a.marks.length).toBeGreaterThan(0);
     expect(a.stats?.warnings).toBeUndefined();
+    expect(a.a11y?.label).toBe("Sparkline chart (min 10, max 30, last 20)");
 
     const first = a.marks[0];
     expect(first?.type).toBe("path");

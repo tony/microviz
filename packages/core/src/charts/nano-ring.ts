@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, normalizeSegments } from "./shared";
@@ -8,8 +9,14 @@ import type { BitfieldData, NanoRingSpec, NormalizedNanoRing } from "./types";
  * Uses thinner strokes and smaller gaps for 16x16 to 32x32 displays.
  */
 export const nanoRingChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Nano ring chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Nano ring chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "lines" as const,
   defaultPad: 1,

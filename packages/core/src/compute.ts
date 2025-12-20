@@ -323,7 +323,7 @@ export function computeA11y(
   layout: Layout,
 ): A11yTree {
   if (spec.type !== normalized.type)
-    return { label: "Sparkline chart", role: "img" };
+    return { label: `Chart (${spec.type})`, role: "img" };
   return getChartDefinition(spec.type).a11y(spec, normalized, layout);
 }
 

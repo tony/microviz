@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { computeModel } from "./compute";
+import type { ChartSpec, NormalizedSparkline } from "./compute";
+import { computeA11y, computeModel } from "./compute";
 
 describe("computeModel pipeline", () => {
   test("defaults chart padding via registry", () => {
@@ -64,5 +65,23 @@ describe("computeModel pipeline", () => {
     expect(
       model.stats?.warnings?.some((w) => w.code === "NAN_COORDINATE"),
     ).toBe(true);
+  });
+
+  test("computeA11y uses a generic label when spec and normalized mismatch", () => {
+    const spec: ChartSpec = { type: "bar" };
+    const normalized: NormalizedSparkline = {
+      max: 1,
+      min: 0,
+      series: [0, 1],
+      type: "sparkline",
+    };
+
+    const a11y = computeA11y(spec, normalized, {
+      height: 10,
+      pad: 0,
+      width: 10,
+    });
+
+    expect(a11y.label).toBe("Chart (bar)");
   });
 });

@@ -1,3 +1,4 @@
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, isFiniteNumber } from "./shared";
 import type {
@@ -12,8 +13,14 @@ import type {
  * The bar chart equivalent of a sparkline.
  */
 export const sparklineBarsChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Sparkline bars chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSeriesSummary(
+        "Sparkline bars chart",
+        normalized.series,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 2,
