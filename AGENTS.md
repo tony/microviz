@@ -224,6 +224,7 @@ class MicrovizChart extends HTMLElement {
 
 **Debugging blank renders:**
 Check `model.stats.warnings` for diagnostics:
+- `BLANK_RENDER`: Chart produced no marks
 - `NAN_COORDINATE`: Invalid data produced NaN
 - `MARK_OUT_OF_BOUNDS`: Marks outside viewport
 - `EMPTY_DATA`: No data provided
