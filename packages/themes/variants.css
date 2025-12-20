@@ -1,0 +1,41 @@
+@layer microviz {
+  .mv-theme-white,
+  [data-mv-theme="white"] {
+    --mv-bg: oklch(1 0 0);
+    --mv-fg: oklch(0.24 0 0);
+    --mv-muted: oklch(0.55 0 0);
+    --mv-grid: oklch(0.9 0 0);
+    color: var(--mv-fg);
+    background: var(--mv-bg);
+  }
+
+  .mv-theme-g10,
+  [data-mv-theme="g10"] {
+    --mv-bg: oklch(0.97 0 0);
+    --mv-fg: oklch(0.22 0 0);
+    --mv-muted: oklch(0.52 0 0);
+    --mv-grid: oklch(0.88 0 0);
+    color: var(--mv-fg);
+    background: var(--mv-bg);
+  }
+
+  .mv-theme-g90,
+  [data-mv-theme="g90"] {
+    --mv-bg: oklch(0.25 0 0);
+    --mv-fg: oklch(0.94 0 0);
+    --mv-muted: oklch(0.76 0 0);
+    --mv-grid: oklch(0.42 0 0);
+    color: var(--mv-fg);
+    background: var(--mv-bg);
+  }
+
+  .mv-theme-g100,
+  [data-mv-theme="g100"] {
+    --mv-bg: oklch(0.2 0 0);
+    --mv-fg: oklch(0.95 0 0);
+    --mv-muted: oklch(0.78 0 0);
+    --mv-grid: oklch(0.36 0 0);
+    color: var(--mv-fg);
+    background: var(--mv-bg);
+  }
+}

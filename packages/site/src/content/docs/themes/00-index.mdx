@@ -5,3 +5,27 @@ slug: themes
 
 Base CSS tokens and layered defaults (`@layer microviz`) for styling microviz output.
 
+## Files
+
+- `@microviz/themes/tokens.css`: token variables only (`--mv-*`).
+- `@microviz/themes/base.css`: tokens + default class styles (wrapped in `@layer microviz`).
+- `@microviz/themes/variants.css`: optional theme presets (Carbon-inspired `white/g10/g90/g100`).
+
+## Theme presets
+
+Import `variants.css`, then apply either a class or a `data-mv-theme` attribute:
+
+```ts
+import "@microviz/themes/base.css";
+import "@microviz/themes/variants.css";
+```
+
+```html
+<div class="mv-theme-g90 rounded-md p-2">
+  <microviz-sparkline data="[6,10,7,12,9,14]"></microviz-sparkline>
+</div>
+
+<div data-mv-theme="g10" class="rounded-md p-2">
+  <microviz-sparkline data="[6,10,7,12,9,14]"></microviz-sparkline>
+</div>
+```
