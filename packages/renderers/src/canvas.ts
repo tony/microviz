@@ -63,6 +63,15 @@ function canRenderNoiseDisplacement(): boolean {
 }
 
 /**
+ * Returns true when the Canvas renderer can apply the targeted
+ * `turbulence → displacementMap` approximation (requires `OffscreenCanvas`
+ * + ImageData APIs).
+ */
+export function canRenderCanvasNoiseDisplacement(): boolean {
+  return canRenderNoiseDisplacement();
+}
+
+/**
  * Returns filter primitive types that are currently ignored by `renderCanvas`.
  */
 export function getCanvasUnsupportedFilterPrimitiveTypes(
