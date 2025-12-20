@@ -715,6 +715,11 @@ type NoiseDisplacementPipeline = {
   dropShadow?: DropShadowPrimitive;
 };
 
+/**
+ * Canvas cannot implement arbitrary SVG filter graphs. We support a targeted,
+ * deterministic approximation of the common `turbulence → displacementMap` pipeline
+ * by rasterizing to ImageData and applying pixel displacement.
+ */
 function resolveNoiseDisplacementPipeline(
   filter: FilterDef,
 ): NoiseDisplacementPipeline | null {
@@ -912,6 +917,8 @@ function applyNoiseDisplacement(
   w: number,
   h: number,
 ): void {
+  // NOTE: This is an approximation intended for parity/diagnostics. It does not
+  // claim pixel-perfect equivalence with SVG filter output.
   const scale = pipeline.displacement.scale ?? 0;
   if (!Number.isFinite(scale) || Math.abs(scale) < 1e-6) {
     output.data.set(source.data);
