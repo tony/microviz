@@ -578,10 +578,14 @@ function applyMask(
   if (!(w > 0 && h > 0)) return didSave;
   if (typeof ctx.setTransform !== "function") return didSave;
 
+  const prevTransform =
+    typeof ctx.getTransform === "function" ? ctx.getTransform() : null;
+
   if (!didSave) ctx.save();
   ctx.transform(w, 0, 0, h, bounds.minX, bounds.minY);
   ctx.clip(maskPath);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (prevTransform) ctx.setTransform(prevTransform);
+  else ctx.setTransform(1, 0, 0, 1, 0, 0);
   return true;
 }
 
