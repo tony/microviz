@@ -1,3 +1,7 @@
+// Demo Microviz background preference.
+// Theme presets paint a surface via `background: var(--mv-bg)`. When you want the palette but
+// *not* a painted background (e.g. your card already has one), force `--mv-bg: transparent` by
+// setting `data-mv-bg="transparent"`.
 export type MicrovizBackgroundPreference = "solid" | "transparent";
 
 const STORAGE_KEY = "microviz:demo:microviz-bg";

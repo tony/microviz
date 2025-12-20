@@ -1,5 +1,11 @@
 import type { ResolvedColorScheme } from "./colorScheme";
 
+// Demo Microviz theme presets.
+// `@microviz/themes/variants.css` ships Carbon-inspired surface steps (`white/g10/g90/g100`) that
+// bundle `--mv-*` tokens (including `--mv-bg`) so charts can be tested against common surfaces.
+//
+// `auto` is a demo convenience: it maps the resolved UI color scheme to a sensible preset
+// (`white` for light UI, `g100` for dark UI).
 export type MicrovizThemePreference = "auto" | "g10" | "g100" | "g90" | "white";
 export type MicrovizThemePreset = Exclude<MicrovizThemePreference, "auto">;
 

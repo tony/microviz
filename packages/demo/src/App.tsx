@@ -128,6 +128,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setColorSchemePreference("system")}
+              title="UI theme: follow system. (Microviz Auto will track this.)"
               type="button"
             >
               System
@@ -139,6 +140,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setColorSchemePreference("light")}
+              title="UI theme: force light. (Microviz Auto will track this.)"
               type="button"
             >
               Light
@@ -150,6 +152,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setColorSchemePreference("dark")}
+              title="UI theme: force dark. (Microviz Auto will track this.)"
               type="button"
             >
               Dark
@@ -167,6 +170,7 @@ export const App: FC = () => {
                   event.target.value as MicrovizThemePreference,
                 )
               }
+              title="Microviz theme preset (CSS tokens). Independent of UI theme unless set to Auto."
               value={microvizThemePreference}
             >
               <option value="auto">Auto</option>
@@ -185,6 +189,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setMicrovizBackgroundPreference("transparent")}
+              title="Microviz surface: keep palette, but don't paint a background (--mv-bg = transparent)."
               type="button"
             >
               Transparent
@@ -196,6 +201,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setMicrovizBackgroundPreference("solid")}
+              title="Microviz surface: paint the preset background (--mv-bg) behind charts."
               type="button"
             >
               Solid
