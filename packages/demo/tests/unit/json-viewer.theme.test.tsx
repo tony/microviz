@@ -15,23 +15,6 @@ const SAMPLE_DATA = {
   str: "hello",
 };
 
-function createMatchMedia(matches: boolean): typeof window.matchMedia {
-  return (query: string) => {
-    const list = {
-      addEventListener: () => {},
-      addListener: () => {},
-      dispatchEvent: () => false,
-      matches: query.includes("prefers-color-scheme") ? matches : false,
-      media: query,
-      onchange: null,
-      removeEventListener: () => {},
-      removeListener: () => {},
-    };
-
-    return list as unknown as MediaQueryList;
-  };
-}
-
 function findThemeStyleText(viewer: Element): string {
   const styles = viewer.shadowRoot?.querySelectorAll("style");
   if (!styles) throw new Error("Expected json-viewer shadow styles");
@@ -47,7 +30,7 @@ function findThemeStyleText(viewer: Element): string {
 
 let root: Root | null = null;
 let container: HTMLElement | null = null;
-let originalMatchMedia: typeof window.matchMedia | null = null;
+let originalRootClassName: string | null = null;
 
 afterEach(async () => {
   if (root) {
@@ -59,21 +42,15 @@ afterEach(async () => {
   root = null;
   container = null;
 
-  if (originalMatchMedia) {
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: originalMatchMedia,
-    });
+  if (originalRootClassName !== null) {
+    document.documentElement.className = originalRootClassName;
+    originalRootClassName = null;
   }
-  originalMatchMedia = null;
 });
 
 test("JsonViewer applies the microviz light theme", async () => {
-  originalMatchMedia = window.matchMedia;
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: createMatchMedia(false),
-  });
+  originalRootClassName = document.documentElement.className;
+  document.documentElement.classList.remove("dark");
 
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -99,11 +76,8 @@ test("JsonViewer applies the microviz light theme", async () => {
 });
 
 test("JsonViewer applies the microviz dark theme", async () => {
-  originalMatchMedia = window.matchMedia;
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: createMatchMedia(true),
-  });
+  originalRootClassName = document.documentElement.className;
+  document.documentElement.classList.add("dark");
 
   container = document.createElement("div");
   document.body.appendChild(container);
