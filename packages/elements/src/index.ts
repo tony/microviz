@@ -23,6 +23,7 @@ import { MicrovizHeatgrid } from "./heatgrid";
 import { MicrovizHistogram } from "./histogram";
 import { MicrovizInterlocking } from "./interlocking";
 import { MicrovizLayeredWaves } from "./layered-waves";
+import { MicrovizLegend } from "./legend";
 import { MicrovizLollipop } from "./lollipop";
 import { MicrovizMaskedWave } from "./masked-wave";
 import { MicrovizMatryoshka } from "./matryoshka";
@@ -91,6 +92,7 @@ export {
   MicrovizHistogram,
   MicrovizInterlocking,
   MicrovizLayeredWaves,
+  MicrovizLegend,
   MicrovizLollipop,
   MicrovizMaskedWave,
   MicrovizMatryoshka,
@@ -137,6 +139,10 @@ export {
 export function registerMicrovizElements(): void {
   if (!customElements.get("microviz-chart")) {
     customElements.define("microviz-chart", MicrovizChart);
+  }
+
+  if (!customElements.get("microviz-legend")) {
+    customElements.define("microviz-legend", MicrovizLegend);
   }
 
   if (!customElements.get("microviz-model")) {
