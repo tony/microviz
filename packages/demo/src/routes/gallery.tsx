@@ -1,0 +1,25 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { MicroVizAggregateDemo } from "../react/aggregate";
+import { MicroVizDemo } from "../react/patterns";
+
+export const Route = createFileRoute("/gallery")({
+  component: GalleryComponent,
+});
+
+function GalleryComponent() {
+  return (
+    <div className="h-full overflow-auto">
+      <div className="mx-auto max-w-6xl space-y-16 px-4 py-8">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="mb-4 text-lg font-semibold">Patterns gallery</h2>
+          <MicroVizDemo />
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="mb-4 text-lg font-semibold">Aggregate gallery</h2>
+          <MicroVizAggregateDemo />
+        </section>
+      </div>
+    </div>
+  );
+}
