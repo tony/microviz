@@ -32,6 +32,7 @@ import {
   useState,
 } from "react";
 import { buildPaletteColors } from "../demoPalette";
+import { getDemoRange } from "../demoRange";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import {
   chartCard,
@@ -709,6 +710,7 @@ export const MicrovizPlayground: FC<{
     () => buildSeries(`${seed}:series`, seriesLength, seriesPreset),
     [seed, seriesLength, seriesPreset],
   );
+  const seriesRange = useMemo(() => getDemoRange(series), [series]);
   const opacities = useMemo(() => buildOpacities(series), [series]);
   const segments = useMemo(
     () => buildSegments(`${seed}:segments`, segmentCount),
@@ -764,9 +766,9 @@ export const MicrovizPlayground: FC<{
       },
       "bullet-delta": {
         data: {
-          current: series[series.length - 1] ?? 0,
+          current: seriesRange.max,
           max: 100,
-          previous: series[series.length - 2] ?? series[series.length - 1] ?? 0,
+          previous: seriesRange.min,
         },
         size,
         spec: { type: "bullet-delta" },
@@ -859,9 +861,9 @@ export const MicrovizPlayground: FC<{
       },
       dumbbell: {
         data: {
-          current: series[series.length - 1] ?? 0,
+          current: seriesRange.max,
           max: 100,
-          target: series[series.length - 2] ?? series[series.length - 1] ?? 0,
+          target: seriesRange.min,
         },
         size,
         spec: { type: "dumbbell" },
@@ -1192,7 +1194,17 @@ export const MicrovizPlayground: FC<{
         },
       },
     };
-  }, [bandSeed, opacities, paletteMode, segments, seed, series, size, sizeFor]);
+  }, [
+    bandSeed,
+    opacities,
+    paletteMode,
+    segments,
+    seed,
+    series,
+    seriesRange,
+    size,
+    sizeFor,
+  ]);
 
   const chartIds = useMemo(() => Object.keys(inputs) as ChartId[], [inputs]);
   const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
