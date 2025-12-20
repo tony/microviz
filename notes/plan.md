@@ -185,7 +185,7 @@ Legend:
 - Step Line — SVG-easy (path) → Unlock 1 ✅
 
 #### 3) Texture & Creative
-- Bitfield — SVG-easy rewrite (circle grid) → Unlock 1–2 ✅ (mask/pattern parity still optional)
+- Bitfield — Defs (mask-backed dot grid) → Unlock 3 ✅
 - Stripe Density — Defs (pattern) or CSS-heavy → Unlock 3 (preferred) / Unlock 5 ✅
 - Gradient Fade — Defs (linearGradient) or CSS-heavy → Unlock 3 / Unlock 5 ✅
 - Perforated — Defs (pattern/mask) or CSS-heavy → Unlock 3 / Unlock 5 ✅
