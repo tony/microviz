@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   clamp,
@@ -16,6 +16,10 @@ import type {
 export const rangeBandChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "range-band-point",
+        labelPrefix: "Point",
+      }),
       label: a11yLabelWithSeriesSummary("Range band chart", normalized.series),
       role: "img",
     };
