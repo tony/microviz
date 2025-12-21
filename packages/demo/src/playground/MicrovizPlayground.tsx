@@ -1857,6 +1857,18 @@ export const MicrovizPlayground: FC<{
   const diagnosticsCopyTimeoutRef = useRef<number | null>(null);
   const [exportingPng, setExportingPng] = useState(false);
   const selectedModel = getEffectiveModel(selectedChart);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+  const exportNoticeTimeoutRef = useRef<number | null>(null);
+
+  const flashExportNotice = useCallback((message: string) => {
+    setExportNotice(message);
+    if (exportNoticeTimeoutRef.current !== null) {
+      window.clearTimeout(exportNoticeTimeoutRef.current);
+    }
+    exportNoticeTimeoutRef.current = window.setTimeout(() => {
+      setExportNotice(null);
+    }, 1400);
+  }, []);
 
   const downloadBlob = useCallback((blob: Blob, filename: string) => {
     if (typeof document === "undefined") return;
@@ -1872,7 +1884,8 @@ export const MicrovizPlayground: FC<{
     if (!selectedModel) return;
     const svg = renderSvgString(selectedModel);
     downloadBlob(svgStringToBlob(svg), `microviz-${selectedChart}.svg`);
-  }, [downloadBlob, selectedChart, selectedModel]);
+    flashExportNotice("SVG downloaded");
+  }, [downloadBlob, flashExportNotice, selectedChart, selectedModel]);
 
   const handleDownloadPng = useCallback(async () => {
     if (!selectedModel || exportingPng) return;
@@ -1886,12 +1899,20 @@ export const MicrovizPlayground: FC<{
       renderCanvas(ctx, selectedModel, canvasOptions);
       const blob = await canvasToBlob(canvas, { type: "image/png" });
       downloadBlob(blob, `microviz-${selectedChart}.png`);
+      flashExportNotice("PNG downloaded");
     } catch {
-      // ignore
+      flashExportNotice("PNG export failed");
     } finally {
       setExportingPng(false);
     }
-  }, [canvasOptions, downloadBlob, exportingPng, selectedChart, selectedModel]);
+  }, [
+    canvasOptions,
+    downloadBlob,
+    exportingPng,
+    flashExportNotice,
+    selectedChart,
+    selectedModel,
+  ]);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -2035,6 +2056,9 @@ export const MicrovizPlayground: FC<{
       }
       if (diagnosticsCopyTimeoutRef.current !== null) {
         window.clearTimeout(diagnosticsCopyTimeoutRef.current);
+      }
+      if (exportNoticeTimeoutRef.current !== null) {
+        window.clearTimeout(exportNoticeTimeoutRef.current);
       }
     };
   }, []);
@@ -2945,6 +2969,11 @@ export const MicrovizPlayground: FC<{
                     {exportingPng ? "Exporting PNG…" : "Download PNG"}
                   </button>
                 </div>
+                {exportNotice && (
+                  <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400">
+                    {exportNotice}
+                  </div>
+                )}
                 <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                   PNG export renders with the Canvas pipeline.
                 </div>
