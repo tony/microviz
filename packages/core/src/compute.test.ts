@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import type { ChartSpec, NormalizedSparkline } from "./compute";
 import { computeA11y, computeModel } from "./compute";
+import { validateDefReferences } from "./diagnostics";
+import type { Def, DiagnosticWarning, Mark } from "./model";
 
 describe("computeModel pipeline", () => {
   test("defaults chart padding via registry", () => {
@@ -83,5 +85,97 @@ describe("computeModel pipeline", () => {
     });
 
     expect(a11y.label).toBe("Chart (bar)");
+  });
+
+  test("emits MISSING_DEF when marks reference missing defs", () => {
+    const marks: Mark[] = [
+      {
+        clipPath: "clip-missing",
+        h: 1,
+        id: "a",
+        type: "rect",
+        w: 1,
+        x: 0,
+        y: 0,
+      },
+      { h: 1, id: "b", mask: "mask-missing", type: "rect", w: 1, x: 0, y: 0 },
+      {
+        filter: "filter-missing",
+        h: 1,
+        id: "c",
+        type: "rect",
+        w: 1,
+        x: 0,
+        y: 0,
+      },
+      {
+        fill: "url(#pat-missing)",
+        h: 1,
+        id: "d",
+        type: "rect",
+        w: 1,
+        x: 0,
+        y: 0,
+      },
+      {
+        fill: "url('#clip-ok')",
+        h: 1,
+        id: "e",
+        type: "rect",
+        w: 1,
+        x: 0,
+        y: 0,
+      },
+      {
+        fill: "url(#pat-missing)",
+        h: 1,
+        id: "f",
+        type: "rect",
+        w: 1,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const defs: Def[] = [
+      { h: 1, id: "clip-ok", type: "clipRect", w: 1, x: 0, y: 0 },
+      {
+        id: "grad-ok",
+        stops: [{ color: "#000", offset: 0 }],
+        type: "linearGradient",
+      },
+    ];
+
+    const warnings: DiagnosticWarning[] = [];
+    validateDefReferences(marks, defs, warnings);
+
+    const missing = warnings.filter((w) => w.code === "MISSING_DEF");
+    expect(missing).toHaveLength(5);
+    expect(
+      missing.filter((w) => w.message.includes("#pat-missing")),
+    ).toHaveLength(1);
+    expect(
+      missing.some(
+        (w) =>
+          w.message.includes("clipPath") && w.message.includes("#clip-missing"),
+      ),
+    ).toBe(true);
+    expect(
+      missing.some(
+        (w) =>
+          w.message.includes("mask") && w.message.includes("#mask-missing"),
+      ),
+    ).toBe(true);
+    expect(
+      missing.some(
+        (w) =>
+          w.message.includes("filter") && w.message.includes("#filter-missing"),
+      ),
+    ).toBe(true);
+    expect(
+      missing.some(
+        (w) => w.message.includes("fill") && w.message.includes("#clip-ok"),
+      ),
+    ).toBe(true);
   });
 });
