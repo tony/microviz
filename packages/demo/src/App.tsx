@@ -170,7 +170,7 @@ export const App: FC = () => {
                   event.target.value as MicrovizThemePreference,
                 )
               }
-              title="Microviz theme preset (CSS tokens). Independent of UI theme unless set to Auto."
+              title="Microviz theme preset (White/G10/G90/G100). Carbon-inspired surfaces + chart token palette. Independent of UI theme unless set to Auto."
               value={microvizThemePreference}
             >
               <option value="auto">Auto</option>
