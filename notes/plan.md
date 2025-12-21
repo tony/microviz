@@ -144,7 +144,7 @@ These don’t change the rendering pipeline, but they make the demo a better eng
 - ✅ **Virtualize the chart grid:** TanStack Virtual is used to render only visible chart cards (`packages/demo/src/playground/MicrovizPlayground.tsx`).
   - Goal: reduce DOM/render work and unlock “compute models only for visible charts (+ overscan)” later.
   - Reference: `~/study/typescript/tanstack-virtual/` and `~/work/cv/packages/react/src/HUD.tsx` (`useVirtualizer`).
-- ✅ **Optional:** virtualize long gallery pages (patterns/aggregate) to keep scroll perf smooth (`packages/demo/src/routes/gallery.lazy.tsx`).
+- ✅ **Virtualize long gallery pages:** patterns/aggregate galleries now render virtualized rows for smooth scroll (`packages/demo/src/react/patterns.tsx`, `packages/demo/src/react/aggregate.tsx`).
 
 ---
 
