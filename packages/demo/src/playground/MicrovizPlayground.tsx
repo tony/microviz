@@ -38,7 +38,6 @@ import {
   useState,
 } from "react";
 import { buildPaletteColors } from "../demoPalette";
-import { getDemoRange } from "../demoRange";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import {
   chartCard,
@@ -64,6 +63,7 @@ import {
 } from "./playgroundUrlState";
 import { ResizablePane } from "./ResizablePane";
 import {
+  buildCompareRange,
   buildOpacities,
   buildSegments,
   buildSeries,
@@ -919,7 +919,10 @@ export const MicrovizPlayground: FC<{
     () => buildSeries(`${seed}:series`, seriesLength, seriesPreset),
     [seed, seriesLength, seriesPreset],
   );
-  const seriesRange = useMemo(() => getDemoRange(series), [series]);
+  const compareRange = useMemo(
+    () => buildCompareRange(`${seed}:compare`),
+    [seed],
+  );
   const opacities = useMemo(() => buildOpacities(series), [series]);
   const segments = useMemo(
     () => buildSegments(`${seed}:segments`, segmentCount),
@@ -975,9 +978,9 @@ export const MicrovizPlayground: FC<{
       },
       "bullet-delta": {
         data: {
-          current: seriesRange.max,
-          max: 100,
-          previous: seriesRange.min,
+          current: compareRange.current,
+          max: compareRange.max,
+          previous: compareRange.reference,
         },
         size,
         spec: { type: "bullet-delta" },
@@ -1070,9 +1073,9 @@ export const MicrovizPlayground: FC<{
       },
       dumbbell: {
         data: {
-          current: seriesRange.max,
-          max: 100,
-          target: seriesRange.min,
+          current: compareRange.current,
+          max: compareRange.max,
+          target: compareRange.reference,
         },
         size,
         spec: { type: "dumbbell" },
@@ -1403,12 +1406,12 @@ export const MicrovizPlayground: FC<{
     };
   }, [
     bandSeed,
+    compareRange,
     opacities,
     paletteMode,
     segments,
     seed,
     series,
-    seriesRange,
     size,
     sizeFor,
   ]);
