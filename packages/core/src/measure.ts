@@ -1,3 +1,11 @@
+/**
+ * Text measurement utilities for future charts that emit `text` marks.
+ *
+ * Today, none of the built-in chart registry entries emit text marks, but this
+ * module is kept intentionally for:
+ * - label/truncation work (Baseline 2025; no polyfills)
+ * - Worker-safe measurement via `OffscreenCanvas` where available
+ */
 export type TextMetricsLite = {
   width: number;
   ascent?: number;

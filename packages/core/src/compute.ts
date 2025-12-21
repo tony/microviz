@@ -213,6 +213,12 @@ export type ComputeModelInput<S extends ChartSpec = ChartSpec> = {
   spec: S;
   data: ChartDataBySpec<S>;
   size: Size;
+  /**
+   * Optional theme overrides for chart computation.
+   *
+   * Note: built-in charts are currently CSS-first and do not consume these
+   * tokens; prefer CSS variables (`--mv-*`) for styling.
+   */
   theme?: ThemeTokens;
   state?: InteractionState;
 };

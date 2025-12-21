@@ -6,6 +6,13 @@ export type InteractionState = {
 };
 
 export type ThemeTokens = {
+  /**
+   * Optional theme overrides for chart computation.
+   *
+   * Today, built-in charts are CSS-first and do not consume these tokens.
+   * Prefer CSS variables (`--mv-*`) and renderer defaults (e.g. Canvas
+   * `fillStyle`/`strokeStyle`) for styling.
+   */
   series1?: string;
 };
 
