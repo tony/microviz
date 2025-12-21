@@ -64,14 +64,25 @@ export const layeredWavesChart = {
     const classSuffix = spec.className ? ` ${spec.className}` : "";
 
     // Create overlapping wave layers from back to front
-    // Each wave starts further right and has different opacity
+    // Each wave starts further right, but widths reflect cumulative segment pct.
     const marks: Mark[] = [];
     const count = segments.length;
+    const totalPct = segments.reduce((sum, s) => sum + s.pct, 0) || 1;
+    const cumulativeFromEnd: number[] = [];
+    let runningTotal = 0;
+    for (let i = segments.length - 1; i >= 0; i--) {
+      runningTotal += segments[i]?.pct ?? 0;
+      cumulativeFromEnd[i] = runningTotal;
+    }
 
     for (const [i, seg] of segments.entries()) {
       // Calculate offset for this wave (back waves start at 0, front waves offset right)
       const xOffset = i * waveOffset;
-      const waveW = usableW - xOffset;
+      const availableW = usableW - xOffset;
+      if (availableW <= 0) continue;
+      const cumPct = cumulativeFromEnd[i] ?? 0;
+      const pctW = (cumPct / totalPct) * usableW;
+      const waveW = Math.min(pctW, availableW);
 
       if (waveW <= 0) continue;
 

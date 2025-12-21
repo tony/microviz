@@ -47,11 +47,11 @@ describe("layered-waves", () => {
     }
   });
 
-  test("waves offset progressively from left", () => {
+  test("waves offset progressively from left and respect proportions", () => {
     const input = {
       data: [
-        { color: "#ef4444", name: "A", pct: 50 },
-        { color: "#22c55e", name: "B", pct: 50 },
+        { color: "#ef4444", name: "A", pct: 70 },
+        { color: "#22c55e", name: "B", pct: 30 },
       ],
       size: { height: 32, width: 100 },
       spec: { pad: 0, type: "layered-waves" as const, waveOffset: 20 },
@@ -64,9 +64,9 @@ describe("layered-waves", () => {
       // First wave starts at 0, second at offset
       expect(rects[0].x).toBe(0);
       expect(rects[1].x).toBe(20);
-      // First wave is full width, second is smaller
+      // First wave is full width, second uses the remaining segment pct
       expect(rects[0].w).toBe(100);
-      expect(rects[1].w).toBe(80);
+      expect(rects[1].w).toBe(30);
     }
   });
 
