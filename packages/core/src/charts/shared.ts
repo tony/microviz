@@ -122,6 +122,30 @@ export function sparkAreaGradientId(series: readonly number[]): string {
   return `mv-spark-area-grad-${seriesHashHex(series)}`;
 }
 
+export function resampleSeries(
+  series: readonly number[],
+  count: number,
+): number[] {
+  if (count <= 0) return [];
+  if (series.length === 0) return [];
+  if (series.length === 1) {
+    return Array.from({ length: count }, () => series[0] ?? 0);
+  }
+  if (count === 1) return [series[0] ?? 0];
+
+  const last = series.length - 1;
+  return Array.from({ length: count }, (_, i) => {
+    const t = count === 1 ? 0 : i / (count - 1);
+    const idx = t * last;
+    const lo = Math.floor(idx);
+    const hi = Math.min(last, Math.ceil(idx));
+    const frac = idx - lo;
+    const a = series[lo] ?? 0;
+    const b = series[hi] ?? a;
+    return a + (b - a) * frac;
+  });
+}
+
 export function allocateUnitsByPct(
   segments: readonly NormalizedSegment[],
   totalUnits: number,

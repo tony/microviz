@@ -541,9 +541,16 @@ const demoInputBuilders = {
     spec: { pad: 0, type: "vertical-stack" },
   }),
   waveform: () => ({
-    data: DEMO_SEGMENTS,
+    data: DEMO_SERIES,
     size: CHART_SIZE,
-    spec: { barWidth: 6, bins: 24, gap: 1, pad: 0, type: "waveform" },
+    spec: {
+      barWidth: 6,
+      bins: 24,
+      colors: DEMO_SEGMENTS.map((segment) => segment.color),
+      gap: 1,
+      pad: 0,
+      type: "waveform",
+    },
   }),
 } satisfies Record<ChartId, DemoInputBuilder>;
 
