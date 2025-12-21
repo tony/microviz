@@ -1357,7 +1357,13 @@ export const MicrovizPlayground: FC<{
 
   const inspectorTabOptions = ["diagnostics", "model", "data"] as const;
   type InspectorTab = (typeof inspectorTabOptions)[number];
-  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("diagnostics");
+  const inspectorTabLabels: Record<InspectorTab, string> = {
+    data: "Data",
+    diagnostics: "Diagnostics",
+    model: "Model",
+  };
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
+  const [inspectorTabTouched, setInspectorTabTouched] = useState(false);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -1444,6 +1450,20 @@ export const MicrovizPlayground: FC<{
   }
 
   const selectedModel = getEffectiveModel(selectedChart);
+  const selectedWarnings = getDiagnosticsWarnings(
+    selectedModel,
+    renderer,
+    getCanvasUnsupportedFilters,
+  );
+
+  useEffect(() => {
+    if (inspectorTabTouched) return;
+    if (selectedWarnings.length > 0) {
+      setInspectorTab("diagnostics");
+    } else {
+      setInspectorTab("model");
+    }
+  }, [inspectorTabTouched, selectedWarnings.length]);
   const selectedInput = inputs[selectedChart];
 
   const allWarnings = useMemo(() => {
@@ -1960,7 +1980,10 @@ export const MicrovizPlayground: FC<{
                       variant: "muted",
                     })}
                     key={tab}
-                    onClick={() => setInspectorTab(tab)}
+                    onClick={() => {
+                      setInspectorTabTouched(true);
+                      setInspectorTab(tab);
+                    }}
                     role="tab"
                     title={
                       tab === "diagnostics"
@@ -1971,7 +1994,7 @@ export const MicrovizPlayground: FC<{
                     }
                     type="button"
                   >
-                    {tab}
+                    {inspectorTabLabels[tab]}
                   </button>
                 );
               })}
@@ -1991,13 +2014,7 @@ export const MicrovizPlayground: FC<{
                   Selected warnings
                 </div>
                 <div className="mt-2">
-                  {formatWarningsList(
-                    getDiagnosticsWarnings(
-                      selectedModel,
-                      renderer,
-                      getCanvasUnsupportedFilters,
-                    ),
-                  )}
+                  {formatWarningsList(selectedWarnings)}
                 </div>
               </div>
 
