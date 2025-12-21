@@ -9,6 +9,28 @@ svg {
   display: block;
 }
 
+@keyframes mv-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.18;
+  }
+}
+
+.mv-skeleton {
+  fill: var(--mv-muted, currentColor);
+  animation: mv-skeleton-pulse 1.25s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-skeleton {
+    animation: none;
+    opacity: 0.14;
+  }
+}
+
 .mv-line {
   stroke: var(--mv-series-1, currentColor);
   stroke-width: var(--mv-stroke-width, 1.5px);
