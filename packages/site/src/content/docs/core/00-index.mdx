@@ -39,6 +39,33 @@ if (warnings.length > 0) {
 }
 ```
 
+## Hit testing
+
+`hitTest()` lets you map pointer coordinates to a mark ID/type. Coordinates are
+in **model space** (same as the SVG `viewBox`: `0..width`, `0..height`):
+
+```ts
+import { hitTest } from "@microviz/core";
+
+const hit = hitTest(model, { x: 42, y: 12 }, { strokeSlopPx: 2 });
+if (hit) console.log(hit.markId, hit.markType);
+```
+
+## Def fill rules (nivo-inspired)
+
+When you have defs (patterns/gradients) and want to apply them via match rules:
+
+```ts
+import { applyFillRules, computeModel } from "@microviz/core";
+
+const model = computeModel({ data, size, spec });
+const marks = applyFillRules(model.marks, [
+  { id: "pat-1", match: { className: /mv-stripe-density/ } },
+]);
+
+const withFills = { ...model, marks };
+```
+
 ## Chart types
 
 To list the available chart types (and their metadata):
