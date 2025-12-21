@@ -88,7 +88,17 @@ export function buildOpacities(
   series: readonly number[],
   lightThreshold = 35,
 ): number[] {
-  return series.map((v) => (v < lightThreshold ? 0.35 : 1));
+  if (series.length === 0) return [];
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const denom = max - min || 1;
+
+  return series.map((v) => {
+    const t = clamp((v - min) / denom, 0, 1);
+    const base = 0.25 + t * 0.75;
+    if (v < lightThreshold) return Math.min(base, 0.6);
+    return base;
+  });
 }
 
 export type BitfieldSegment = { name: string; pct: number; color: string };
