@@ -3212,7 +3212,7 @@ const FieldNumberWithRange: FC<{
 const HtmlPreview: FC<{ html: string }> = ({ html }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const host = hostRef.current;
     if (!host) return;
     if (!html) {
@@ -3238,7 +3238,7 @@ const HtmlSvgOverlayPreview: FC<{ html: string; svg: string }> = ({
   const htmlRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const host = htmlRef.current;
     if (!host) return;
     if (!html) {
@@ -3252,7 +3252,7 @@ const HtmlSvgOverlayPreview: FC<{ html: string; svg: string }> = ({
     if (el) host.replaceChildren(el);
   }, [html]);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const host = svgRef.current;
     if (!host) return;
     if (!svg) {
@@ -3281,7 +3281,7 @@ const HtmlSvgOverlayPreview: FC<{ html: string; svg: string }> = ({
 const SvgStringPreview: FC<{ svg: string }> = ({ svg }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const host = hostRef.current;
     if (!host) return;
     if (!svg) {
@@ -3303,7 +3303,7 @@ const SvgStringPreview: FC<{ svg: string }> = ({ svg }) => {
 const SvgDomPreview: FC<{ model: RenderModel }> = ({ model }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     if (!hostRef.current) return;
     hostRef.current.replaceChildren(renderSvgElement(model));
   }, [model]);
@@ -3319,7 +3319,7 @@ const CanvasPreview: FC<{
 }> = ({ model, options }) => {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -3349,7 +3349,7 @@ const ElementPreview: FC<{ model: RenderModel; showHoverTooltip: boolean }> = ({
     y: number;
   } | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const el = ref.current;
     if (!el) return;
     el.model = model;
