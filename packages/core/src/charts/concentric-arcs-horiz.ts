@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -17,8 +18,14 @@ function fmt(x: number): string {
 }
 
 export const concentricArcsHorizChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Concentric arcs (horizontal) chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Concentric arcs (horizontal) chart",
+        normalized.arcs,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

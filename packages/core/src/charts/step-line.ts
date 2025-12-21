@@ -1,3 +1,4 @@
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, isFiniteNumber } from "./shared";
@@ -46,8 +47,11 @@ function stepLineSeries(
 }
 
 export const stepLineChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Step line chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSeriesSummary("Step line chart", normalized.series),
+      role: "img",
+    };
   },
   category: "lines" as const,
   defaultPad: 3,

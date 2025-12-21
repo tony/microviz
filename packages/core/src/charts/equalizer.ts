@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   allocateUnitsByPct,
@@ -13,8 +14,14 @@ import type { BitfieldData, EqualizerSpec, NormalizedEqualizer } from "./types";
  * Unlike waveform which centers bars vertically, equalizer bars are anchored at the bottom.
  */
 export const equalizerChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Equalizer chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Equalizer chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

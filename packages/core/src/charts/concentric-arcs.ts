@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteInt, coerceFiniteNonNegative } from "./shared";
@@ -8,8 +9,14 @@ import type {
 } from "./types";
 
 export const concentricArcsChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Concentric arcs chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Concentric arcs chart",
+        normalized.arcs,
+      ),
+      role: "img",
+    };
   },
   category: "lines" as const,
   defaultPad: 2,
