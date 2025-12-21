@@ -132,9 +132,18 @@ function extractUrlRefId(value: string | undefined): string | null {
   return match?.[2] ?? null;
 }
 
+function resolveDefId(value: string | undefined): string | null {
+  if (!value) return null;
+  return extractUrlRefId(value) ?? value;
+}
+
 function isHtmlSafeMark(mark: Mark, defsById: Map<string, Def>): boolean {
   if (!HTML_SAFE_MARK_TYPES.has(mark.type)) return false;
-  if ("clipPath" in mark && mark.clipPath) return false;
+  if ("clipPath" in mark && mark.clipPath) {
+    const clipId = resolveDefId(mark.clipPath);
+    const clipDef = clipId ? defsById.get(clipId) : null;
+    if (!clipDef || clipDef.type !== "clipRect") return false;
+  }
   if ("mask" in mark && mark.mask) return false;
   if ("filter" in mark && mark.filter) return false;
   if ("strokeDasharray" in mark && mark.strokeDasharray) return false;

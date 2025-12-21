@@ -13,7 +13,7 @@ export const HTML_SUPPORTED_MARK_TYPES = [
   "text",
 ] as const;
 
-const HTML_SUPPORTED_DEF_TYPES = ["linearGradient"] as const;
+const HTML_SUPPORTED_DEF_TYPES = ["linearGradient", "clipRect"] as const;
 const HTML_SUPPORTED_DEF_TYPE_SET = new Set<Def["type"]>(
   HTML_SUPPORTED_DEF_TYPES,
 );
@@ -27,8 +27,9 @@ const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
  * - Supports only rect/circle/line/text marks.
  * - Ignores path marks entirely.
  * - Supports linearGradient defs for rect fills.
- * - Ignores other defs (patterns, masks, filters, clip paths).
- * - Ignores mark effects: clipPath, mask, filter, strokeDash.
+ * - Supports clipRect defs for rect clipPath.
+ * - Ignores other defs (patterns, masks, filters).
+ * - Ignores mark effects: mask, filter, strokeDash (clipPath only via clipRect).
  * - Use SVG/Canvas for full-fidelity output.
  */
 export const HTML_RENDERER_POLICY = {
@@ -37,7 +38,7 @@ export const HTML_RENDERER_POLICY = {
   supportedDefs: HTML_SUPPORTED_DEF_TYPES,
   supportedMarkTypes: HTML_SUPPORTED_MARK_TYPES,
   unsupportedDefs: "most",
-  unsupportedMarkEffects: ["clipPath", "mask", "filter", "strokeDash"],
+  unsupportedMarkEffects: ["mask", "filter", "strokeDash"],
   unsupportedMarkTypes: ["path"],
 } as const;
 
@@ -67,9 +68,16 @@ export function getHtmlUnsupportedDefTypes(model: RenderModel): Def["type"][] {
 export function getHtmlUnsupportedMarkEffects(
   model: RenderModel,
 ): HtmlUnsupportedMarkEffect[] {
+  const defsById = new Map<string, Def>(
+    model.defs?.map((def) => [def.id, def]) ?? [],
+  );
   const effects = new Set<HtmlUnsupportedMarkEffect>();
   for (const mark of model.marks) {
-    if ("clipPath" in mark && mark.clipPath) effects.add("clipPath");
+    if ("clipPath" in mark && mark.clipPath) {
+      const clipId = extractUrlRefId(mark.clipPath) ?? mark.clipPath;
+      const clipDef = defsById.get(clipId);
+      if (!clipDef || clipDef.type !== "clipRect") effects.add("clipPath");
+    }
     if ("mask" in mark && mark.mask) effects.add("mask");
     if ("filter" in mark && mark.filter) effects.add("filter");
     if (
@@ -191,11 +199,19 @@ function renderRect(
   const strokeWidth = mark.strokeWidth ?? 0;
   const rx = mark.rx ?? 0;
   const ry = mark.ry ?? rx;
+  const clipId = mark.clipPath
+    ? (extractUrlRefId(mark.clipPath) ?? mark.clipPath)
+    : null;
+  const clipDef = clipId ? defsById.get(clipId) : null;
+  const clipRect = clipDef?.type === "clipRect" ? clipDef : null;
 
-  const styles = [
+  const offsetX = clipRect?.x ?? 0;
+  const offsetY = clipRect?.y ?? 0;
+
+  const rectStyles = [
     stylePair("position", "absolute"),
-    stylePair("left", px(mark.x)),
-    stylePair("top", px(mark.y)),
+    stylePair("left", px(mark.x - offsetX)),
+    stylePair("top", px(mark.y - offsetY)),
     stylePair("width", px(mark.w)),
     stylePair("height", px(mark.h)),
     stylePair("background", fill ?? "transparent"),
@@ -206,7 +222,26 @@ function renderRect(
       : "",
   ].join("");
 
-  return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}></div>`;
+  const rect = `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", rectStyles)}></div>`;
+
+  if (!clipRect) return rect;
+
+  const clipRx = clipRect.rx ?? 0;
+  const clipRy = clipRect.ry ?? clipRx;
+  const clipStyles = [
+    stylePair("position", "absolute"),
+    stylePair("left", px(clipRect.x)),
+    stylePair("top", px(clipRect.y)),
+    stylePair("width", px(clipRect.w)),
+    stylePair("height", px(clipRect.h)),
+    stylePair("overflow", "hidden"),
+    stylePair(
+      "border-radius",
+      clipRx || clipRy ? `${clipRx}px / ${clipRy}px` : undefined,
+    ),
+  ].join("");
+
+  return `<div${attr("style", clipStyles)}>${rect}</div>`;
 }
 
 function renderCircle(mark: Extract<Mark, { type: "circle" }>): string {
