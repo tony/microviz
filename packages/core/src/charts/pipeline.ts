@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -45,6 +45,11 @@ function pipelinePath(options: {
 export const pipelineChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "pipeline-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Pipeline chart",
         normalized.segments,

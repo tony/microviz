@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
@@ -14,6 +14,11 @@ import type {
 export const fadedPyramidChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "faded-pyramid-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Faded pyramid chart",
         normalized.segments,

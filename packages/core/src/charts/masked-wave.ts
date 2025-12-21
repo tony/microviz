@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { layoutSegmentsByPct, normalizeSegments } from "./shared";
@@ -14,6 +14,11 @@ const WAVE_PATH = "M0 0.5 Q0.25 0 0.5 0.5 T1 0.5 L1 1 L0 1 Z";
 export const maskedWaveChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "masked-wave-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Masked wave chart",
         normalized.segments,

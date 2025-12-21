@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import { interleaveCounts } from "../utils/math";
 import type { ChartDefinition } from "./chart-definition";
@@ -16,6 +16,11 @@ import type { BitfieldData, NormalizedPixelGrid, PixelGridSpec } from "./types";
 export const pixelGridChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "pixel-grid-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Pixel grid chart",
         normalized.segments,

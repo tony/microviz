@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { layoutSegmentsByPct, normalizeSegments } from "./shared";
@@ -7,6 +7,11 @@ import type { BitfieldData, DnaHelixSpec, NormalizedDnaHelix } from "./types";
 export const dnaHelixChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "dna-helix-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "DNA helix chart",
         normalized.segments,
