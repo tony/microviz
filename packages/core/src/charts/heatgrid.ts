@@ -86,7 +86,7 @@ export const heatgridChart = {
     const opacities = data.opacities?.filter(isFiniteNumber);
     return { opacities, series, type: "heatgrid" };
   },
-  preferredAspectRatio: "wide" as const,
+  preferredAspectRatio: "square" as const,
   type: "heatgrid",
 } satisfies ChartDefinition<
   "heatgrid",
