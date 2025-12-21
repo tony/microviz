@@ -15,6 +15,7 @@ import {
   PipelineBar,
   PixelGrid,
   RankedDotCascade,
+  ShadowDepth,
   SplitRibbon,
   StripeDensity,
   VIZ_CLASS,
@@ -56,6 +57,10 @@ test("microviz patterns render (visual)", async () => {
 
         <div className={VIZ_CLASS} data-testid="perforated">
           <PerforatedBar data={DEMO_DISTRIBUTION} />
+        </div>
+
+        <div className={VIZ_CLASS} data-testid="shadow-depth">
+          <ShadowDepth data={DEMO_DISTRIBUTION} />
         </div>
 
         <div className={VIZ_CLASS} data-testid="pixel-grid">
@@ -121,6 +126,9 @@ test("microviz patterns render (visual)", async () => {
     "gradient-fade",
   );
   await expect(page.getByTestId("perforated")).toMatchScreenshot("perforated");
+  await expect(page.getByTestId("shadow-depth")).toMatchScreenshot(
+    "shadow-depth",
+  );
 
   await expect(page.getByTestId("pixel-grid")).toMatchScreenshot("pixel-grid");
   await expect(page.getByTestId("waveform")).toMatchScreenshot("waveform");
