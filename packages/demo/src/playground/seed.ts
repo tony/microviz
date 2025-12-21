@@ -52,6 +52,12 @@ function clamp(value: number, lo: number, hi: number): number {
 }
 
 export type SeriesPreset = "trend" | "seasonal" | "spiky" | "random-walk";
+export type DataPreset =
+  | "balanced"
+  | "time-series"
+  | "distribution"
+  | "compare"
+  | "ranking";
 
 export type CompareRange = {
   current: number;
@@ -88,6 +94,77 @@ export function buildSeries(
   }
 
   return out.map((x) => Math.round(x * 100) / 100);
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function buildDistributionSeries(seed: string, length: number): number[] {
+  const rng = createSeededRng(seed);
+  const n = Math.max(1, Math.floor(length));
+  const skew = 1.4 + rng.float() * 1.6;
+  const center = 35 + rng.float() * 30;
+  const spread = 10 + rng.float() * 28;
+  const out: number[] = [];
+
+  for (let i = 0; i < n; i++) {
+    const magnitude = rng.float() ** skew;
+    const direction = rng.float() < 0.5 ? -1 : 1;
+    const value = center + direction * magnitude * spread;
+    out.push(clamp(value, 0, 100));
+  }
+
+  return out.map(round2);
+}
+
+function buildCompareSeries(
+  seed: string,
+  length: number,
+  compareRange: CompareRange,
+): number[] {
+  const rng = createSeededRng(seed);
+  const n = Math.max(1, Math.floor(length));
+  const low = Math.min(compareRange.current, compareRange.reference);
+  const high = Math.max(compareRange.current, compareRange.reference);
+  const gap = Math.max(1, high - low);
+  const jitter = Math.max(4, Math.round(gap * 0.18));
+  const split = Math.max(1, Math.round(n * (0.4 + rng.float() * 0.3)));
+  const out: number[] = [];
+
+  for (let i = 0; i < n; i++) {
+    const base = i < split ? low : high;
+    const value = base + (rng.float() * 2 - 1) * jitter;
+    out.push(clamp(value, 0, 100));
+  }
+
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = rng.int(0, i);
+    [out[i], out[j]] = [out[j] ?? 0, out[i] ?? 0];
+  }
+
+  return out.map(round2);
+}
+
+export function buildSeriesForPreset(
+  seed: string,
+  length: number,
+  preset: SeriesPreset,
+  dataPreset: DataPreset,
+  options?: { compareRange?: CompareRange },
+): number[] {
+  if (dataPreset === "distribution")
+    return buildDistributionSeries(`${seed}:distribution`, length);
+
+  if (dataPreset === "compare") {
+    const compare =
+      options?.compareRange ?? buildCompareRange(`${seed}:compare`);
+    return buildCompareSeries(`${seed}:compare`, length, compare);
+  }
+
+  const base = buildSeries(seed, length, preset);
+  if (dataPreset === "ranking") return [...base].sort((a, b) => b - a);
+  return base;
 }
 
 export function buildCompareRange(
@@ -158,16 +235,17 @@ const DEFAULT_SEGMENT_COLORS: readonly string[] = [
 export function buildSegments(
   seed: string,
   count: number,
-  options?: { palette?: readonly string[] },
+  options?: { palette?: readonly string[]; weightSkew?: number },
 ): BitfieldSegment[] {
   const rng = createSeededRng(seed);
   const n = clamp(Math.floor(count), 1, 8);
   const palette = options?.palette ?? DEFAULT_SEGMENT_COLORS;
+  const weightSkew = clamp(options?.weightSkew ?? 1, 0.4, 3);
 
   const weights: number[] = [];
   let total = 0;
   for (let i = 0; i < n; i++) {
-    const w = 0.4 + rng.float() * 1.6;
+    const w = (0.4 + rng.float() * 1.6) ** weightSkew;
     total += w;
     weights.push(w);
   }
@@ -189,4 +267,22 @@ export function buildSegments(
       pct,
     }))
     .filter((s) => s.pct > 0);
+}
+
+export function buildSegmentsForPreset(
+  seed: string,
+  count: number,
+  preset: DataPreset,
+  options?: { palette?: readonly string[] },
+): BitfieldSegment[] {
+  const weightSkew =
+    preset === "distribution" ? 1.8 : preset === "compare" ? 1.2 : 1;
+  const segments = buildSegments(seed, count, {
+    palette: options?.palette,
+    weightSkew,
+  });
+
+  if (preset === "ranking") return [...segments].sort((a, b) => b.pct - a.pct);
+
+  return segments;
 }
