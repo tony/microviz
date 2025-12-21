@@ -23,6 +23,7 @@ import type {
   Mark,
   RenderModel,
 } from "./model";
+import { inferA11ySummary } from "./a11y";
 
 export type { InteractionState, Layout, ThemeTokens } from "./charts/context";
 export type {
@@ -338,7 +339,10 @@ export function computeA11y(
 ): A11yTree {
   if (spec.type !== normalized.type)
     return { label: `Chart (${spec.type})`, role: "img" };
-  return getChartDefinition(spec.type).a11y(spec, normalized, layout);
+  const tree = getChartDefinition(spec.type).a11y(spec, normalized, layout);
+  if (tree.summary) return tree;
+  const summary = inferA11ySummary(normalized);
+  return summary ? { ...tree, summary } : tree;
 }
 
 type Bounds = { maxX: number; maxY: number; minX: number; minY: number };
