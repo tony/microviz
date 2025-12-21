@@ -153,7 +153,7 @@ Keep core deterministic and data-only; push semantics to elements and tokens to 
 
 - ✅ **Core a11y summary:** extend `A11yTree` with a structured summary (min/max/last/trend, count, series/segment totals) computed in core and stored in `RenderModel.a11y`.
 - ✅ **Per-mark a11y items:** optional `a11y.items[]` entries with `{ id, label, value, series, rank }` for screen readers and keyboard focus; still data-only.
-- 🟡 **Elements wiring:** map `a11y` to `ElementInternals` (`role`, `aria-label`, `aria-description`), add SR-only summary/table, and implement roving tabindex + arrow-key focus; still need focused item → `InteractionState.focusedMarkId` sync.
+- ✅ **Elements wiring:** map `a11y` to `ElementInternals` (`role`, `aria-label`, `aria-description`), add SR-only summary/table, and implement roving tabindex + arrow-key focus, including focused item → `InteractionState.focusedMarkId` sync.
 - ✅ **Theme tokens:** add focus-ring tokens + `prefers-contrast: more` and `prefers-reduced-motion` support in `@microviz/themes` (no polyfills).
 - ✅ **Warnings:** when renderers omit marks/defs, emit `aria-live="polite"` warnings in elements/demo (no auto-fallback).
 - ✅ **Tests:** Tier‑0 for a11y summaries/labels; Tier‑1 for element ARIA wiring and keyboard focus paths.
