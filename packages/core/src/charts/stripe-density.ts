@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
@@ -16,6 +16,11 @@ import type {
 export const stripeDensityChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "stripe-density-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Stripe density chart",
         normalized.segments,

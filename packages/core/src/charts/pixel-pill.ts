@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -64,6 +64,11 @@ function allocateCounts(
 export const pixelPillChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "pixel-pill-seg",
+
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Pixel pill chart",
         normalized.segments,
