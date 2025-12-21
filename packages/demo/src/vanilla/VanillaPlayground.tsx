@@ -419,6 +419,11 @@ const demoInputBuilders = {
     size: CHART_SIZE,
     spec: { gap: 2, type: "segmented-bar" },
   }),
+  "segmented-pill": () => ({
+    data: DEMO_SEGMENTS,
+    size: CHART_SIZE,
+    spec: { pad: 0, type: "segmented-pill" },
+  }),
   "segmented-ring": () => ({
     data: DEMO_SEGMENTS,
     size: { height: 32, width: 32 },
