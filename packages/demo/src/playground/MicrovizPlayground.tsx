@@ -852,6 +852,7 @@ export const MicrovizPlayground: FC<{
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+  const [useDrawerLayout, setUseDrawerLayout] = useState(false);
   const seriesPresetDisabled =
     dataPreset === "distribution" || dataPreset === "compare";
   const seriesPresetTooltip = seriesPresetDisabled
@@ -868,6 +869,20 @@ export const MicrovizPlayground: FC<{
   const openMobileInspector = useCallback(() => {
     setMobileSidebarOpen(false);
     setMobileInspectorOpen(true);
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hoverMedia = window.matchMedia("(hover: none)");
+    const widthMedia = window.matchMedia("(max-width: 1023px)");
+    const update = () =>
+      setUseDrawerLayout(hoverMedia.matches || widthMedia.matches);
+    update();
+    hoverMedia.addEventListener("change", update);
+    widthMedia.addEventListener("change", update);
+    return () => {
+      hoverMedia.removeEventListener("change", update);
+      widthMedia.removeEventListener("change", update);
+    };
   }, []);
   const randomizeSeed = useCallback(() => {
     setSeed(`mv-${Math.floor(Math.random() * 10_000)}`);
@@ -997,6 +1012,11 @@ export const MicrovizPlayground: FC<{
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [closeMobilePanels, mobileInspectorOpen, mobileSidebarOpen]);
+  useEffect(() => {
+    if (useDrawerLayout) return;
+    setMobileSidebarOpen(false);
+    setMobileInspectorOpen(false);
+  }, [useDrawerLayout]);
 
   const workerClientRef = useRef<MicrovizWorkerClient | null>(null);
   const ensureWorkerClient = useMemo<EnsureWorkerClient>(
@@ -2297,42 +2317,45 @@ export const MicrovizPlayground: FC<{
     selectedWarningSummary,
     selectedWarnings,
   ]);
-  const mobileDrawerOpen = mobileSidebarOpen || mobileInspectorOpen;
+  const mobileDrawerOpen =
+    useDrawerLayout && (mobileSidebarOpen || mobileInspectorOpen);
 
   return (
     <div className="relative flex h-full min-h-0 w-full">
       {mobileDrawerOpen && (
         <button
           aria-label="Close panels"
-          className="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-[1px] lg:hidden"
+          className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-[1px] lg:hidden"
           onClick={closeMobilePanels}
           type="button"
         />
       )}
       <ResizablePane
-        className={`h-full border-r border-slate-200 bg-white/70 shadow-xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-950/40 lg:static lg:shadow-none ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} fixed inset-y-0 left-0 z-40`}
+        className={`h-full border-r border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 left-0 z-40 shadow-xl transition-transform duration-200 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}` : "static shadow-none"}`}
         defaultSize={280}
         name="sidebar"
         side="left"
       >
         <div className="p-3">
-          <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-950/85">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Controls
+          {useDrawerLayout && (
+            <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/100 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/100">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Controls
+              </div>
+              <button
+                aria-label="Close controls"
+                className={tabButton({
+                  active: false,
+                  size: "xs",
+                  variant: "muted",
+                })}
+                onClick={() => setMobileSidebarOpen(false)}
+                type="button"
+              >
+                Close
+              </button>
             </div>
-            <button
-              aria-label="Close controls"
-              className={tabButton({
-                active: false,
-                size: "xs",
-                variant: "muted",
-              })}
-              onClick={() => setMobileSidebarOpen(false)}
-              type="button"
-            >
-              Close
-            </button>
-          </div>
+          )}
           {/* Tab switcher */}
           <div className="mb-3 flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
@@ -2735,32 +2758,34 @@ export const MicrovizPlayground: FC<{
               </div>
             </div>
           </div>
-          <div className="mb-3 flex flex-wrap gap-2 lg:hidden">
-            <button
-              aria-expanded={mobileSidebarOpen}
-              className={tabButton({
-                active: mobileSidebarOpen,
-                size: "sm",
-                variant: "filled",
-              })}
-              onClick={openMobileSidebar}
-              type="button"
-            >
-              Controls
-            </button>
-            <button
-              aria-expanded={mobileInspectorOpen}
-              className={tabButton({
-                active: mobileInspectorOpen,
-                size: "sm",
-                variant: "filled",
-              })}
-              onClick={openMobileInspector}
-              type="button"
-            >
-              Inspector
-            </button>
-          </div>
+          {useDrawerLayout && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              <button
+                aria-expanded={mobileSidebarOpen}
+                className={tabButton({
+                  active: mobileSidebarOpen,
+                  size: "sm",
+                  variant: "filled",
+                })}
+                onClick={openMobileSidebar}
+                type="button"
+              >
+                Controls
+              </button>
+              <button
+                aria-expanded={mobileInspectorOpen}
+                className={tabButton({
+                  active: mobileInspectorOpen,
+                  size: "sm",
+                  variant: "filled",
+                })}
+                onClick={openMobileInspector}
+                type="button"
+              >
+                Inspector
+              </button>
+            </div>
+          )}
         </div>
 
         <div
@@ -2924,31 +2949,33 @@ export const MicrovizPlayground: FC<{
       </div>
 
       <ResizablePane
-        className={`h-full border-l border-slate-200 bg-white/70 shadow-xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-950/40 lg:static lg:shadow-none ${mobileInspectorOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"} fixed inset-y-0 right-0 z-40`}
+        className={`h-full border-l border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 right-0 z-40 shadow-xl transition-transform duration-200 ${mobileInspectorOpen ? "translate-x-0" : "translate-x-full"}` : "static shadow-none"}`}
         collapsible
         defaultSize={380}
-        forceExpanded={mobileInspectorOpen}
+        forceExpanded={useDrawerLayout && mobileInspectorOpen}
         name="inspector"
         side="right"
       >
         <div className="p-4">
-          <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-2 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-950/85">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Inspector
+          {useDrawerLayout && (
+            <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/100 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/100">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Inspector
+              </div>
+              <button
+                aria-label="Close inspector"
+                className={tabButton({
+                  active: false,
+                  size: "xs",
+                  variant: "muted",
+                })}
+                onClick={() => setMobileInspectorOpen(false)}
+                type="button"
+              >
+                Close
+              </button>
             </div>
-            <button
-              aria-label="Close inspector"
-              className={tabButton({
-                active: false,
-                size: "xs",
-                variant: "muted",
-              })}
-              onClick={() => setMobileInspectorOpen(false)}
-              type="button"
-            >
-              Close
-            </button>
-          </div>
+          )}
           <div className="mb-3">
             <div
               aria-label="Inspector tabs"
