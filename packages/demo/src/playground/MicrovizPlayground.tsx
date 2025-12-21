@@ -65,9 +65,10 @@ import { ResizablePane } from "./ResizablePane";
 import {
   buildCompareRange,
   buildOpacities,
-  buildSegments,
-  buildSeries,
+  buildSegmentsForPreset,
+  buildSeriesForPreset,
   createSeededRng,
+  type DataPreset,
   type SeriesPreset,
 } from "./seed";
 import { MicrovizWorkerClient } from "./workerClient";
@@ -79,6 +80,14 @@ const chartSubtypeOptions = [
   { id: "grids", label: "Grids" },
   { id: "dots", label: "Dots" },
 ] as const;
+
+const dataPresetOptions: ReadonlyArray<{ id: DataPreset; label: string }> = [
+  { id: "balanced", label: "Balanced" },
+  { id: "time-series", label: "Time series" },
+  { id: "distribution", label: "Distribution" },
+  { id: "compare", label: "Compare" },
+  { id: "ranking", label: "Ranking" },
+];
 
 type ChartCatalogEntry = {
   chartId: ChartId;
@@ -736,6 +745,9 @@ export const MicrovizPlayground: FC<{
   const [computeMode, setComputeMode] = useState<ComputeMode>(
     () => initialUrlState.computeMode,
   );
+  const [dataPreset, setDataPreset] = useState<DataPreset>(
+    () => initialUrlState.dataPreset,
+  );
   const [seriesPreset, setSeriesPreset] = useState<SeriesPreset>(
     () => initialUrlState.seriesPreset,
   );
@@ -801,6 +813,9 @@ export const MicrovizPlayground: FC<{
     setComputeMode((prev) =>
       prev === urlState.computeMode ? prev : urlState.computeMode,
     );
+    setDataPreset((prev) =>
+      prev === urlState.dataPreset ? prev : urlState.dataPreset,
+    );
     setSeriesPreset((prev) =>
       prev === urlState.seriesPreset ? prev : urlState.seriesPreset,
     );
@@ -837,6 +852,7 @@ export const MicrovizPlayground: FC<{
       chartFilter,
       chartSubtype,
       computeMode,
+      dataPreset,
       fallbackSvgWhenCanvasUnsupported,
       height,
       htmlSafeOnly,
@@ -858,6 +874,7 @@ export const MicrovizPlayground: FC<{
     chartFilter,
     chartSubtype,
     computeMode,
+    dataPreset,
     paletteMode,
     fallbackSvgWhenCanvasUnsupported,
     height,
@@ -915,18 +932,33 @@ export const MicrovizPlayground: FC<{
     [height, size],
   );
 
-  const series = useMemo(
-    () => buildSeries(`${seed}:series`, seriesLength, seriesPreset),
-    [seed, seriesLength, seriesPreset],
-  );
   const compareRange = useMemo(
-    () => buildCompareRange(`${seed}:compare`),
-    [seed],
+    () =>
+      buildCompareRange(
+        `${seed}:compare`,
+        dataPreset === "compare"
+          ? { spans: [32, 45, 60, 80, 92, 100] }
+          : undefined,
+      ),
+    [dataPreset, seed],
+  );
+  const series = useMemo(
+    () =>
+      buildSeriesForPreset(
+        `${seed}:series`,
+        seriesLength,
+        seriesPreset,
+        dataPreset,
+        {
+          compareRange,
+        },
+      ),
+    [compareRange, dataPreset, seed, seriesLength, seriesPreset],
   );
   const opacities = useMemo(() => buildOpacities(series), [series]);
   const segments = useMemo(
-    () => buildSegments(`${seed}:segments`, segmentCount),
-    [seed, segmentCount],
+    () => buildSegmentsForPreset(`${seed}:segments`, segmentCount, dataPreset),
+    [dataPreset, seed, segmentCount],
   );
   const bandSeed = useMemo(
     () => createSeededRng(`${seed}:band`).int(0, 10_000),
@@ -1425,6 +1457,7 @@ export const MicrovizPlayground: FC<{
     if (!htmlSafeOnlyActive) return null;
     return [
       applyNoiseOverlay ? "noise:1" : "noise:0",
+      `data:${dataPreset}`,
       `palette:${paletteMode}`,
       `seed:${seed}`,
       `series:${seriesLength}`,
@@ -1436,6 +1469,7 @@ export const MicrovizPlayground: FC<{
   }, [
     applyNoiseOverlay,
     chartIds,
+    dataPreset,
     height,
     htmlSafeOnlyActive,
     paletteMode,
@@ -1985,6 +2019,24 @@ export const MicrovizPlayground: FC<{
           {/* Settings tab */}
           {sidebarTab === "settings" && (
             <div className="space-y-2">
+              <label className="block text-sm">
+                <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                  Data preset
+                </div>
+                <select
+                  className={inputField()}
+                  onChange={(e) => setDataPreset(e.target.value as DataPreset)}
+                  title="Data preset"
+                  value={dataPreset}
+                >
+                  {dataPresetOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               <label className="block text-sm">
                 <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
                   Series preset
