@@ -7,6 +7,16 @@ import {
   renderHtmlString,
 } from "./html";
 
+function extractBackgroundImageUrl(html: string): string {
+  const entityMatch = /background-image:url\(&quot;([\s\S]+?)&quot;\)/.exec(
+    html,
+  );
+  if (entityMatch) return entityMatch[1];
+  const match = /background-image:url\(([^)]+)\)/.exec(html);
+  if (!match) return "";
+  return match[1].replaceAll("&quot;", "").replaceAll('"', "");
+}
+
 describe("renderHtmlString", () => {
   it("renders a container with marks", () => {
     const model: RenderModel = {
@@ -178,7 +188,7 @@ describe("renderHtmlString", () => {
     };
 
     const html = renderHtmlString(model);
-    const url = /background-image:url\("([^"]+)"\)/.exec(html)?.[1] ?? "";
+    const url = extractBackgroundImageUrl(html);
     const encodedSvg = url.split(",", 2)[1] ?? "";
     const decoded = decodeURIComponent(encodedSvg);
 
@@ -221,7 +231,7 @@ describe("renderHtmlString", () => {
     };
 
     const html1 = renderHtmlString(baseModel);
-    const url1 = /background-image:url\("([^"]+)"\)/.exec(html1)?.[1] ?? "";
+    const url1 = extractBackgroundImageUrl(html1);
 
     const html2 = renderHtmlString({
       ...baseModel,
@@ -244,7 +254,7 @@ describe("renderHtmlString", () => {
         },
       ],
     });
-    const url2 = /background-image:url\("([^"]+)"\)/.exec(html2)?.[1] ?? "";
+    const url2 = extractBackgroundImageUrl(html2);
 
     expect(url1).not.toEqual("");
     expect(url2).not.toEqual("");
