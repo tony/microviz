@@ -196,7 +196,7 @@ export const ResizablePane: FC<Props> = ({
   if (collapsed && !forceExpanded) {
     return (
       <div
-        className={`flex h-full flex-shrink-0 flex-col items-center bg-white/70 py-4 dark:bg-slate-950/40 ${resizablePaneBorder({ side })}`}
+        className={`flex h-full flex-shrink-0 flex-col items-center bg-white/90 py-4 dark:bg-slate-950/70 ${resizablePaneBorder({ side })}`}
         style={{ width: COLLAPSED_WIDTH }}
       >
         <button
