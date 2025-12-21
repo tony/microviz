@@ -199,7 +199,7 @@ export const ResizablePane: FC<Props> = ({
         <button
           className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           onClick={toggleCollapse}
-          title="Expand panel"
+          title="Expand"
           type="button"
         >
           {side === "left" ? <ChevronRight /> : <ChevronLeft />}
@@ -239,7 +239,7 @@ export const ResizablePane: FC<Props> = ({
             className="absolute inset-0 cursor-col-resize bg-transparent transition-colors group-hover:bg-slate-200/60 active:bg-slate-300/70 dark:group-hover:bg-slate-800/60 dark:active:bg-slate-700/70"
             onDoubleClick={onReset}
             onPointerDown={onPointerDown}
-            title="Drag to resize (double-click to reset)"
+            title="Resize (dbl-click reset)"
           />
 
           {/* Collapse button - appears on hover */}
@@ -247,7 +247,7 @@ export const ResizablePane: FC<Props> = ({
             <button
               className="absolute left-1/2 top-4 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 opacity-0 shadow-sm transition-all duration-150 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-200"
               onClick={toggleCollapse}
-              title="Collapse panel"
+              title="Collapse"
               type="button"
             >
               {side === "left" ? <ChevronLeft /> : <ChevronRight />}
