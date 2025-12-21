@@ -16,6 +16,7 @@ import {
   MicrovizSvgString as MicrovizReactSvgString,
 } from "@microviz/react";
 import {
+  canvasToBlob,
   getCanvasUnsupportedFilterPrimitiveTypes,
   getHtmlUnsupportedDefTypes,
   getHtmlUnsupportedMarkEffects,
@@ -24,6 +25,7 @@ import {
   renderCanvas,
   renderHtmlString,
   renderSvgString,
+  svgStringToBlob,
 } from "@microviz/renderers";
 import "@microviz/elements";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -1853,6 +1855,43 @@ export const MicrovizPlayground: FC<{
   const a11yCopyTimeoutRef = useRef<number | null>(null);
   const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
   const diagnosticsCopyTimeoutRef = useRef<number | null>(null);
+  const [exportingPng, setExportingPng] = useState(false);
+  const selectedModel = getEffectiveModel(selectedChart);
+
+  const downloadBlob = useCallback((blob: Blob, filename: string) => {
+    if (typeof document === "undefined") return;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }, []);
+
+  const handleDownloadSvg = useCallback(() => {
+    if (!selectedModel) return;
+    const svg = renderSvgString(selectedModel);
+    downloadBlob(svgStringToBlob(svg), `microviz-${selectedChart}.svg`);
+  }, [downloadBlob, selectedChart, selectedModel]);
+
+  const handleDownloadPng = useCallback(async () => {
+    if (!selectedModel || exportingPng) return;
+    setExportingPng(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = selectedModel.width;
+      canvas.height = selectedModel.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      renderCanvas(ctx, selectedModel, canvasOptions);
+      const blob = await canvasToBlob(canvas, { type: "image/png" });
+      downloadBlob(blob, `microviz-${selectedChart}.png`);
+    } catch {
+      // ignore
+    } finally {
+      setExportingPng(false);
+    }
+  }, [canvasOptions, downloadBlob, exportingPng, selectedChart, selectedModel]);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -1953,7 +1992,6 @@ export const MicrovizPlayground: FC<{
     return null;
   }
 
-  const selectedModel = getEffectiveModel(selectedChart);
   const selectedWarnings = getDiagnosticsWarnings(
     selectedModel,
     renderer,
@@ -2876,6 +2914,42 @@ export const MicrovizPlayground: FC<{
                   )}
                 </div>
               </div>
+
+              <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Export
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel}
+                    onClick={handleDownloadSvg}
+                    type="button"
+                  >
+                    Download SVG
+                  </button>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel || exportingPng}
+                    onClick={handleDownloadPng}
+                    type="button"
+                  >
+                    {exportingPng ? "Exporting PNG…" : "Download PNG"}
+                  </button>
+                </div>
+                <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  PNG export renders with the Canvas pipeline.
+                </div>
+              </div>
+
               <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
                 <JsonViewer data={selectedModel} />
               </div>
