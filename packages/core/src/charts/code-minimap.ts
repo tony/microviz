@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -19,6 +19,10 @@ const DEFAULT_WIDTH_PATTERN = [28, 20, 30, 16, 24, 28, 12, 22] as const;
 export const codeMinimapChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "code-minimap-line",
+        labelPrefix: "Line",
+      }),
       label: a11yLabelWithSeriesSummary(
         "Code minimap chart",
         normalized.series,
