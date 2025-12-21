@@ -184,11 +184,22 @@ Add defs + references:
 We use **Option A:** express these as `path` marks directly (polygons) instead of relying on `clipPath`.
 
 ### Unlock 5 (optional, if we want to keep CSS-first effects as-is)
-Add an **HTML renderer surface** (positioned divs) *or* keep those few patterns “demo-only”.
+Add an **experimental HTML renderer surface** (positioned divs) while **deferring strict parity** for the first iteration.
 
 Many “Texture & Creative” effects can be re-expressed in SVG via defs (Unlock 3), so an HTML renderer is not strictly required, but it reduces work for box-shadow / CSS-mask-heavy variants.
 
-Pragmatic default: **defer Unlock 5** until we hit a pattern that is either (a) meaningfully better in HTML/CSS or (b) prohibitively complex to rewrite with SVG defs. Keep any remaining CSS-only experiments in the demo until then.
+Pragmatic default: **ship HTML as experimental** once we want those effects, while keeping parity requirements lightweight initially. Keep any remaining CSS-only experiments in the demo until then.
+
+### Experimental HTML renderer (parity deferred) — integration plan
+Initial goal: provide a fast HTML surface for CSS-first patterns, without promising SVG/Canvas parity yet.
+- **Render surface:** add `html` to demo renderer picker (left panel) as “HTML (experimental)”.
+- **Renderer implementation:** map `RenderModel` marks to absolutely positioned HTML elements:
+  - `rect` → `<div>` with `position:absolute`, `background`, `borderRadius`, `opacity`.
+  - `circle` → `<div>` with `borderRadius:9999px`, `background`, `opacity`.
+  - `line`/`path`/`text` → allow partial support or fall back to SVG for v1.
+- **Defs/filters:** no parity guarantees in v1; document unsupported defs and ignore gracefully.
+- **A11y:** reuse `model.a11y` for `aria-label` on the HTML surface.
+- **Telemetry:** add a lightweight warning in the demo if a chart uses unsupported mark types/defs.
 
 ---
 
