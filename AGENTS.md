@@ -106,8 +106,9 @@ site → { core, elements, renderers, themes, themes-tailwind }
 
 - HTML renderer is parity-deferred: **rect/circle/line/text only**.
 - `path` marks are ignored; SVG/Canvas remain the source of truth for paths.
-- All defs are ignored (gradients, patterns, masks, filters, clip paths).
-- Mark effects ignored: `clipPath`, `mask`, `filter`, `strokeDash`.
+- Supported defs: `linearGradient` (rect fills) and `clipRect` (rect clipPath).
+- Other defs are ignored (patterns, masks, filters).
+- Mark effects ignored: `mask`, `filter`, `strokeDash` (clipPath only via `clipRect`).
 - Demo/UI must **not** auto-fallback to other renderers; show warnings loudly and allow incomplete output so gaps are visible.
 - Keep `RenderModel` renderer-agnostic; do not add HTML-specific fields.
 
