@@ -23,6 +23,10 @@
   --color-mv-series-6: var(--mv-series-6, oklch(0.67 0.16 295));
   --color-mv-series-7: var(--mv-series-7, oklch(0.71 0.14 200));
   --color-mv-series-8: var(--mv-series-8, oklch(0.73 0.13 120));
+  --color-mv-focus-ring: var(
+    --mv-focus-ring,
+    color-mix(in oklch, var(--color-mv-series-1), black 20%)
+  );
 
   --radius-mv: var(--mv-radius, 2px);
   --spacing-mv-gap: 0.25rem;
