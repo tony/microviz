@@ -216,6 +216,7 @@ export type GradientFadeSpec = {
   pad?: number;
   midOpacity?: number;
   endOpacity?: number;
+  cornerRadius?: number;
   className?: string;
 };
 
