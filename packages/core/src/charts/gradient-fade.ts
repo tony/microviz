@@ -94,6 +94,7 @@ export const gradientFadeChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "gradient-fade" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "gradient-fade",
 } satisfies ChartDefinition<
   "gradient-fade",

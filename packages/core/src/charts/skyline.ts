@@ -74,6 +74,7 @@ export const skylineChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "skyline" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "skyline",
 } satisfies ChartDefinition<
   "skyline",

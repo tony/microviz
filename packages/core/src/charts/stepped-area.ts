@@ -79,6 +79,7 @@ export const steppedAreaChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "stepped-area" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "stepped-area",
 } satisfies ChartDefinition<
   "stepped-area",

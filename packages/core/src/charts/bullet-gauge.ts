@@ -142,6 +142,7 @@ export const bulletGaugeChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "bullet-gauge" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "bullet-gauge",
 } satisfies ChartDefinition<
   "bullet-gauge",

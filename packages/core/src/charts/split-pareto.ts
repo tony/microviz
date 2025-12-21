@@ -107,6 +107,7 @@ export const splitParetoChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "split-pareto" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "split-pareto",
 } satisfies ChartDefinition<
   "split-pareto",

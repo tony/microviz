@@ -131,6 +131,7 @@ export const splitRibbonChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "split-ribbon" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "split-ribbon",
 } satisfies ChartDefinition<
   "split-ribbon",

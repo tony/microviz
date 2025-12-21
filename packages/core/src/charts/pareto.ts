@@ -111,6 +111,7 @@ export const paretoChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "pareto" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "pareto",
 } satisfies ChartDefinition<
   "pareto",

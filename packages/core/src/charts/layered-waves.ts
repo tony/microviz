@@ -98,6 +98,7 @@ export const layeredWavesChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "layered-waves" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "layered-waves",
 } satisfies ChartDefinition<
   "layered-waves",

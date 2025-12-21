@@ -116,6 +116,7 @@ export const dnaHelixChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "dna-helix" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "dna-helix",
 } satisfies ChartDefinition<
   "dna-helix",

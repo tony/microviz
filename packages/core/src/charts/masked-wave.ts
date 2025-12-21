@@ -78,6 +78,7 @@ export const maskedWaveChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "masked-wave" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "masked-wave",
 } satisfies ChartDefinition<
   "masked-wave",

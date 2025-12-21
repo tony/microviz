@@ -164,6 +164,7 @@ export const dumbbellChart = {
       type: "dumbbell",
     };
   },
+  preferredAspectRatio: "wide" as const,
   type: "dumbbell",
 } satisfies ChartDefinition<
   "dumbbell",

@@ -78,6 +78,7 @@ export const progressPillsChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "progress-pills" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "progress-pills",
 } satisfies ChartDefinition<
   "progress-pills",

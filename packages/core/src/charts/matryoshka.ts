@@ -100,6 +100,7 @@ export const matryoshkaChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "matryoshka" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "matryoshka",
 } satisfies ChartDefinition<
   "matryoshka",

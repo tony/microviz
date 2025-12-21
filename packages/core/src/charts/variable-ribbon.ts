@@ -83,6 +83,7 @@ export const variableRibbonChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "variable-ribbon" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "variable-ribbon",
 } satisfies ChartDefinition<
   "variable-ribbon",

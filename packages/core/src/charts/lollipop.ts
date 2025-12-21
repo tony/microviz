@@ -90,6 +90,7 @@ export const lollipopChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "lollipop" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "lollipop",
 } satisfies ChartDefinition<
   "lollipop",

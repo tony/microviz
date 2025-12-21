@@ -82,6 +82,7 @@ export const cascadeStepsChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "cascade-steps" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "cascade-steps",
 } satisfies ChartDefinition<
   "cascade-steps",

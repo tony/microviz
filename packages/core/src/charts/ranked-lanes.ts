@@ -66,6 +66,7 @@ export const rankedLanesChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "ranked-lanes" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "ranked-lanes",
 } satisfies ChartDefinition<
   "ranked-lanes",

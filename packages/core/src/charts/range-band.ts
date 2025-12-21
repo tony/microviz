@@ -139,6 +139,7 @@ export const rangeBandChart = {
     const series = data.filter(isFiniteNumber);
     return { series, type: "range-band" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "range-band",
 } satisfies ChartDefinition<
   "range-band",

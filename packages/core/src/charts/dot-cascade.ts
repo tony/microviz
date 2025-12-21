@@ -88,6 +88,7 @@ export const dotCascadeChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "dot-cascade" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "dot-cascade",
 } satisfies ChartDefinition<
   "dot-cascade",

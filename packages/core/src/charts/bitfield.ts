@@ -142,6 +142,7 @@ export const bitfieldChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "bitfield" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "bitfield",
 } satisfies ChartDefinition<
   "bitfield",
