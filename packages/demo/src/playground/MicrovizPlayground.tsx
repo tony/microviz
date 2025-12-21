@@ -852,13 +852,7 @@ export const MicrovizPlayground: FC<{
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
-  const [useDrawerLayout, setUseDrawerLayout] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      window.matchMedia("(hover: none)").matches ||
-      window.matchMedia("(max-width: 1023px)").matches
-    );
-  });
+  const [useDrawerLayout, setUseDrawerLayout] = useState(false);
   const seriesPresetDisabled =
     dataPreset === "distribution" || dataPreset === "compare";
   const seriesPresetTooltip = seriesPresetDisabled
@@ -2710,68 +2704,41 @@ export const MicrovizPlayground: FC<{
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="px-4 pt-4">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Playground</h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 Compare wrappers, renderers, and compute modes.
               </p>
             </div>
-            <div
-              className={`flex flex-col gap-2 ${useDrawerLayout ? "w-full items-start" : "items-end"}`}
-            >
-              <div
-                className={`flex flex-wrap items-center gap-2 ${useDrawerLayout ? "w-full" : ""}`}
-              >
-                {useDrawerLayout ? (
-                  <label className="flex w-full flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide">
-                      Chart type
-                    </span>
-                    <select
-                      aria-label="Chart subtype filter"
-                      className={inputField({ size: "sm" })}
-                      onChange={(e) =>
-                        setChartSubtype(e.target.value as ChartSubtype)
-                      }
-                      title="Chart subtype filter"
-                      value={chartSubtype}
-                    >
-                      {chartSubtypeOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <div
-                    aria-label="Chart subtype filter"
-                    className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
-                    role="tablist"
-                  >
-                    {chartSubtypeOptions.map((option) => {
-                      const selected = chartSubtype === option.id;
-                      return (
-                        <button
-                          aria-selected={selected}
-                          className={tabButton({
-                            active: selected,
-                            size: "xs",
-                            variant: "muted",
-                          })}
-                          key={option.id}
-                          onClick={() => setChartSubtype(option.id)}
-                          role="tab"
-                          title={`Filter: ${option.label}`}
-                          type="button"
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2">
+                <div
+                  aria-label="Chart subtype filter"
+                  className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
+                  role="tablist"
+                >
+                  {chartSubtypeOptions.map((option) => {
+                    const selected = chartSubtype === option.id;
+                    return (
+                      <button
+                        aria-selected={selected}
+                        className={tabButton({
+                          active: selected,
+                          size: "xs",
+                          variant: "muted",
+                        })}
+                        key={option.id}
+                        onClick={() => setChartSubtype(option.id)}
+                        role="tab"
+                        title={`Filter: ${option.label}`}
+                        type="button"
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
                 <div
                   className="text-xs text-slate-500 dark:text-slate-400"
                   title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
