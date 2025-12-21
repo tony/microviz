@@ -1,3 +1,4 @@
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   clamp,
@@ -13,8 +14,11 @@ import type {
 } from "./types";
 
 export const sparkAreaChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Spark area chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSeriesSummary("Spark area chart", normalized.series),
+      role: "img",
+    };
   },
   category: "lines" as const,
   defaultPad: 3,

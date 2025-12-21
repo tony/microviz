@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   allocateUnitsByPct,
@@ -9,8 +10,11 @@ import {
 import type { BitfieldData, DotRowSpec, NormalizedDotRow } from "./types";
 
 export const dotRowChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Dot row chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary("Dot row chart", normalized.segments),
+      role: "img",
+    };
   },
   category: "dots" as const,
   defaultPad: 0,

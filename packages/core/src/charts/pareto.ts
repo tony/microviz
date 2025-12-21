@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
@@ -7,8 +8,11 @@ import {
 import type { BitfieldData, NormalizedPareto, ParetoSpec } from "./types";
 
 export const paretoChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Pareto chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary("Pareto chart", normalized.segments),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

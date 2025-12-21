@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, normalizeSegments } from "./shared";
@@ -8,8 +9,14 @@ import type {
 } from "./types";
 
 export const orbitalDotsChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Orbital dots chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Orbital dots chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "dots" as const,
   defaultPad: 0,
