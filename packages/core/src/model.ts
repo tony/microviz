@@ -233,10 +233,39 @@ export type A11yNode = {
   children?: ReadonlyArray<A11yNode>;
 };
 
+export type A11ySeriesSummary = {
+  kind: "series";
+  count: number;
+  min?: number;
+  max?: number;
+  last?: number;
+  trend?: "up" | "down" | "flat";
+};
+
+export type A11ySegmentsSummary = {
+  kind: "segments";
+  count: number;
+  largestPct?: number;
+  largestName?: string;
+};
+
+export type A11ySummary = A11ySeriesSummary | A11ySegmentsSummary;
+
+export type A11yItem = {
+  id: MarkId;
+  label: string;
+  value?: number;
+  valueText?: string;
+  series?: string;
+  rank?: number;
+};
+
 export type A11yTree = {
   role: "img" | "graphics-document";
   label: string;
+  summary?: A11ySummary;
   nodes?: ReadonlyArray<A11yNode>;
+  items?: ReadonlyArray<A11yItem>;
 };
 
 export type DiagnosticWarningCode =
