@@ -42,6 +42,26 @@ renderCanvas(ctx, model, {
 });
 ```
 
+## Export utilities
+
+Small helpers for turning render output into sharable artifacts.
+
+```ts
+import {
+  canvasToBlob,
+  renderSvgString,
+  svgStringToBlob,
+  svgStringToDataUrl,
+} from "@microviz/renderers";
+
+const svg = renderSvgString(model);
+const svgBlob = svgStringToBlob(svg);
+const svgDataUrl = svgStringToDataUrl(svg);
+
+// Works with either HTMLCanvasElement or OffscreenCanvas.
+const pngBlob = await canvasToBlob(canvas, { type: "image/png" });
+```
+
 ## Capability notes
 
 `@microviz/renderers` supports the core mark types (`rect`, `path`, `text`, `circle`, `line`) and common defs (`linearGradient`, `clipRect`, `pattern`, `mask`, `filter`).
