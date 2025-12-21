@@ -1,8 +1,31 @@
+/**
+ * Microviz element styles with fallback palette.
+ *
+ * When no external theme is loaded (e.g., @microviz/themes/base.css),
+ * these fallback values ensure charts render with a reasonable palette.
+ * Uses Tableau 10 colors for colorblind accessibility.
+ */
 const stylesText = `
 :host {
   display: inline-block;
   color: var(--mv-fg, currentColor);
   font-family: var(--mv-font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
+  /* Fallback palette: Tableau 10 (colorblind-safe) */
+  --mv-series-1: var(--mv-series-1, #4e79a7);
+  --mv-series-2: var(--mv-series-2, #f28e2c);
+  --mv-series-3: var(--mv-series-3, #e15759);
+  --mv-series-4: var(--mv-series-4, #76b7b2);
+  --mv-series-5: var(--mv-series-5, #59a14f);
+  --mv-series-6: var(--mv-series-6, #edc949);
+  --mv-series-7: var(--mv-series-7, #af7aa1);
+  --mv-series-8: var(--mv-series-8, #ff9da7);
+  --mv-series-9: var(--mv-series-9, #9c755f);
+  --mv-series-10: var(--mv-series-10, #bab0ab);
+  --mv-muted: var(--mv-muted, #94a3b8);
+  --mv-stroke-width: var(--mv-stroke-width, 1.5px);
+  --mv-focus-ring: var(--mv-focus-ring, #3b82f6);
+  --mv-focus-ring-width: var(--mv-focus-ring-width, 2px);
+  --mv-focus-ring-offset: var(--mv-focus-ring-offset, 2px);
 }
 
 :host(:focus-visible) {

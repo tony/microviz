@@ -1,0 +1,213 @@
+# microviz - Quick Reference for LLMs
+
+> Headless, performant micro-charts for the 2025+ web platform.
+> Web Components with Shadow DOM, ESM-only, declarative specs.
+
+## Installation
+
+```html
+<!-- CDN (recommended for quick prototypes) -->
+<script type="importmap">
+  { "imports": { "@microviz/elements": "https://esm.sh/@microviz/elements@1" } }
+</script>
+<link rel="stylesheet" href="https://esm.sh/@microviz/themes@1/base.css" />
+<script type="module">import "@microviz/elements";</script>
+```
+
+## Core Patterns
+
+### Pattern 1: Simple Sparkline
+```html
+<microviz-sparkline data="[10, 25, 15, 30, 20]"></microviz-sparkline>
+```
+
+### Pattern 2: Sparkline with lenient data format
+```html
+<!-- All of these work: -->
+<microviz-sparkline data="10, 25, 15, 30, 20"></microviz-sparkline>
+<microviz-sparkline data="10 25 15 30 20"></microviz-sparkline>
+<microviz-sparkline data="[10, 25, 15, 30, 20]"></microviz-sparkline>
+```
+
+### Pattern 3: Sparkline with custom dimensions
+```html
+<microviz-sparkline
+  data="[10, 25, 15, 30, 20]"
+  width="120"
+  height="24"
+></microviz-sparkline>
+```
+
+### Pattern 4: Bar chart
+```html
+<microviz-bar
+  data='[{"label":"A","value":10},{"label":"B","value":20},{"label":"C","value":15}]'
+></microviz-bar>
+```
+
+### Pattern 5: Generic chart element with spec
+```html
+<microviz-chart
+  autosize
+  style="width: 240px; height: 64px"
+  spec='{"type":"sparkline"}'
+  data="[6, 10, 7, 12, 9, 14]"
+></microviz-chart>
+```
+
+### Pattern 6: Interactive chart with events
+```html
+<microviz-chart interactive spec='{"type":"sparkline"}' data="[1,2,3,4,5]">
+</microviz-chart>
+<script>
+  document.querySelector('microviz-chart')
+    .addEventListener('microviz-hit', e => console.log(e.detail.hit?.markId));
+</script>
+```
+
+### Pattern 7: CSP-safe rendering (for restricted sandboxes)
+```js
+import { computeModel } from '@microviz/core';
+import { renderSvgString } from '@microviz/renderers';
+
+const model = computeModel({
+  data: [1, 2, 3, 4, 5],
+  spec: { type: 'sparkline' },
+  size: { width: 200, height: 32 }
+});
+const svg = renderSvgString(model);
+// Embed svg string directly in innerHTML
+```
+
+### Pattern 8: Custom styling via CSS variables
+```css
+:root {
+  --mv-series-1: oklch(0.6 0.25 30);
+  --mv-stroke-width: 2px;
+  --mv-font-family: Inter, system-ui, sans-serif;
+}
+```
+
+## Available Chart Types
+
+- `sparkline` - Simple line chart
+- `bar` - Vertical bar chart
+- `spark-area` - Area chart with fill
+- `histogram` - Binned frequency distribution
+- `heatgrid` - 2D grid with color intensity
+- `dot-matrix` - Grid of dots
+- `bullet-delta` - Bullet chart with delta indicator
+- `dumbbell` - Range between two values
+- `range-band` - Band with min/max range
+- `step-line` - Stepped line chart
+- `sparkline-bars` - Sparkline with bar marks
+
+## Anti-Patterns (Common Mistakes)
+
+### DON'T: Use single quotes for JSON in data attribute
+```html
+<!-- WRONG: Single quotes break JSON parsing -->
+<microviz-bar data="[{'label':'A','value':10}]"></microviz-bar>
+
+<!-- CORRECT: Use double quotes inside, single outside -->
+<microviz-bar data='[{"label":"A","value":10}]'></microviz-bar>
+```
+
+### DON'T: Self-close the element
+```html
+<!-- WRONG: Self-closing may not work in HTML -->
+<microviz-sparkline data="[1,2,3]" />
+
+<!-- CORRECT: Use explicit closing tag -->
+<microviz-sparkline data="[1,2,3]"></microviz-sparkline>
+```
+
+### DON'T: Forget the import
+```html
+<!-- WRONG: Element won't render without import -->
+<microviz-sparkline data="[1,2,3]"></microviz-sparkline>
+
+<!-- CORRECT: Import the elements package first -->
+<script type="module">import "@microviz/elements";</script>
+<microviz-sparkline data="[1,2,3]"></microviz-sparkline>
+```
+
+### DON'T: Mix up attribute names
+```html
+<!-- WRONG: "values" is not a valid attribute -->
+<microviz-sparkline values="[1,2,3]"></microviz-sparkline>
+
+<!-- CORRECT: Use "data" for the data attribute -->
+<microviz-sparkline data="[1,2,3]"></microviz-sparkline>
+```
+
+### DON'T: Use CommonJS imports
+```js
+// WRONG: microviz is ESM-only
+const { computeModel } = require('@microviz/core');
+
+// CORRECT: Use ESM imports
+import { computeModel } from '@microviz/core';
+```
+
+## API Quick Reference
+
+### Web Components
+| Element | Key Attributes |
+|---------|----------------|
+| `<microviz-sparkline>` | `data`, `width`, `height`, `pad` |
+| `<microviz-bar>` | `data`, `width`, `height` |
+| `<microviz-chart>` | `data`, `spec`, `autosize`, `interactive` |
+| `<microviz-model>` | `model` (RenderModel object) |
+
+### Core Functions
+```ts
+computeModel({ data, spec, size }) → RenderModel
+patchRenderModel(model, patch, options) → RenderModel
+createModelIdAllocator(model) → { markId, defId }
+```
+
+### Renderer Functions
+```ts
+renderSvgString(model) → string
+renderSvgElement(model) → SVGElement
+renderCanvas(model, ctx) → void
+svgStringToBlob(svg) → Blob
+svgStringToDataUrl(svg) → string
+canvasToBlob(canvas, options) → Promise<Blob>
+```
+
+## Data Format Examples
+
+### Sparkline (number array)
+```js
+// All equivalent:
+data="[1, 2, 3, 4, 5]"      // JSON array
+data="1, 2, 3, 4, 5"        // Comma-separated
+data="1 2 3 4 5"            // Space-separated
+```
+
+### Bar chart (object array)
+```js
+data='[{"label":"A","value":10},{"label":"B","value":20}]'
+```
+
+### Heatgrid (nested arrays)
+```js
+data='[[1,2,3],[4,5,6],[7,8,9]]'
+```
+
+## Styling Tokens
+
+| Token | Default | Purpose |
+|-------|---------|---------|
+| `--mv-series-1` to `--mv-series-10` | Tableau 10 | Chart colors |
+| `--mv-muted` | `#94a3b8` | Muted/disabled color |
+| `--mv-stroke-width` | `1.5px` | Line stroke width |
+| `--mv-focus-ring` | `#3b82f6` | Keyboard focus ring |
+| `--mv-font-family` | `system-ui, ...` | Text font |
+
+## Browser Support
+
+Baseline 2025+: Chrome 120+, Firefox 120+, Safari 17+, Edge 120+
+No polyfills. Uses: Shadow DOM, CSS Layers, Container Queries, ES Modules.
