@@ -150,7 +150,7 @@ export const chartCard = cva(
       active: {
         false:
           "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700",
-        true: "border-slate-200 bg-white/95 ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(255,255,255,0.75),0_10px_22px_rgba(15,23,42,0.12)] dark:border-slate-700 dark:bg-slate-900/80 dark:ring-slate-700/60 dark:shadow-[0_0_0_1px_rgba(2,6,23,0.7),0_12px_26px_rgba(2,6,23,0.65)]",
+        true: "border-slate-200 bg-gradient-to-b from-white via-white to-slate-50/70 ring-1 ring-slate-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_12px_26px_rgba(15,23,42,0.14)] dark:border-slate-700 dark:bg-gradient-to-b dark:from-slate-900/80 dark:via-slate-900/65 dark:to-slate-950/90 dark:ring-slate-700/60 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_14px_30px_rgba(2,6,23,0.7)]",
       },
       compact: {
         false: "w-full",
