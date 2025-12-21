@@ -1,4 +1,5 @@
 import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
+import type { Mark } from "../model";
 import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -108,7 +109,7 @@ export const sparkAreaChart = {
 
     const classSuffix = spec.className ? ` ${spec.className}` : "";
 
-    const marks = [
+    const marks: Mark[] = [
       {
         className: `mv-spark-area-area${classSuffix}`,
         d: areaD,
