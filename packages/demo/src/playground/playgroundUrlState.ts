@@ -1,5 +1,5 @@
 import { type ChartSpec, getAllChartMeta } from "@microviz/core";
-import type { SeriesPreset } from "./seed";
+import type { DataPreset, SeriesPreset } from "./seed";
 
 export type Wrapper = "elements" | "react" | "vanilla";
 export type Renderer =
@@ -20,6 +20,7 @@ export type PlaygroundState = {
   chartFilter: string;
   chartSubtype: ChartSubtype;
   computeMode: ComputeMode;
+  dataPreset: DataPreset;
   paletteMode: PaletteMode;
   fallbackSvgWhenCanvasUnsupported: boolean;
   htmlSafeOnly: boolean;
@@ -42,6 +43,7 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   chartFilter: "",
   chartSubtype: "all",
   computeMode: "main",
+  dataPreset: "balanced",
   fallbackSvgWhenCanvasUnsupported: false,
   height: 32,
   htmlSafeOnly: false,
@@ -68,6 +70,8 @@ type PlaygroundSerializedState = {
   st?: ChartSubtype;
   /** computeMode */
   cm?: ComputeMode;
+  /** dataPreset */
+  dp?: DataPreset;
   /** paletteMode */
   pm?: PaletteMode;
   /** fallbackSvgWhenCanvasUnsupported */
@@ -152,6 +156,16 @@ function isSeriesPreset(value: unknown): value is SeriesPreset {
   );
 }
 
+function isDataPreset(value: unknown): value is DataPreset {
+  return (
+    value === "balanced" ||
+    value === "time-series" ||
+    value === "distribution" ||
+    value === "compare" ||
+    value === "ranking"
+  );
+}
+
 function isChartId(value: unknown): value is ChartId {
   return typeof value === "string" && CHART_IDS.has(value as ChartId);
 }
@@ -199,6 +213,8 @@ function serializePlaygroundState(
     s.r = state.renderer;
   if (state.computeMode !== DEFAULT_PLAYGROUND_STATE.computeMode)
     s.cm = state.computeMode;
+  if (state.dataPreset !== DEFAULT_PLAYGROUND_STATE.dataPreset)
+    s.dp = state.dataPreset;
   if (state.paletteMode !== DEFAULT_PLAYGROUND_STATE.paletteMode)
     s.pm = state.paletteMode;
   if (state.seriesPreset !== DEFAULT_PLAYGROUND_STATE.seriesPreset)
@@ -253,6 +269,9 @@ function deserializePlaygroundState(
     computeMode: isComputeMode(serialized.cm)
       ? serialized.cm
       : DEFAULT_PLAYGROUND_STATE.computeMode,
+    dataPreset: isDataPreset(serialized.dp)
+      ? serialized.dp
+      : DEFAULT_PLAYGROUND_STATE.dataPreset,
     fallbackSvgWhenCanvasUnsupported: serialized.fb === 1,
     height:
       typeof serialized.h === "number" && Number.isFinite(serialized.h)
