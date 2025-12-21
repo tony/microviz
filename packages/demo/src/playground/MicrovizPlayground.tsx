@@ -111,6 +111,9 @@ const chartMetaMap = new Map<string, ChartMeta>(
   getAllChartMeta().map((meta) => [meta.type, meta]),
 );
 
+const useLayoutEffectSafe =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 function buildChartCatalog(chartIds: readonly ChartId[]): ChartCatalogEntry[] {
   return chartIds.map((chartId) => {
     const meta = chartMetaMap.get(chartId);
