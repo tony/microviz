@@ -19,6 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { getDemoRange } from "../demoRange";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import { renderSvgElement } from "./svgDom";
 
@@ -106,6 +107,8 @@ const CHART_SIZE = { height: 32, width: 200 } as const;
 const DEMO_SERIES: number[] = [
   22, 28, 40, 36, 52, 48, 60, 55, 68, 62, 74, 70, 82, 77, 90, 86,
 ];
+
+const DEMO_RANGE = getDemoRange(DEMO_SERIES);
 
 const DEMO_OPACITIES: number[] = DEMO_SERIES.map((v) => (v < 35 ? 0.35 : 1));
 
@@ -699,8 +702,8 @@ export const VanillaPlayground: FC = () => {
   const [surface, setSurface] = useState<Surface>("svg-string");
   const [computeMode, setComputeMode] = useState<ComputeMode>("main");
   const [chart, setChart] = useState<ChartId>("sparkline");
-  const [value, setValue] = useState(72);
-  const [targetValue, setTargetValue] = useState(60);
+  const [value, setValue] = useState(DEMO_RANGE.max);
+  const [targetValue, setTargetValue] = useState(DEMO_RANGE.min);
   const [applyNoiseOverlay, setApplyNoiseOverlay] = useState(false);
   const [
     fallbackSvgWhenCanvasUnsupported,
