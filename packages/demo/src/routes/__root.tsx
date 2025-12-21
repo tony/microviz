@@ -101,19 +101,21 @@ function RootComponent() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <header className="flex h-12 flex-none items-center justify-between gap-4 border-b border-slate-200 bg-white/70 px-4 dark:border-slate-800 dark:bg-slate-950/40">
-        <div className="flex items-baseline gap-2">
-          <h1 className="text-sm font-semibold tracking-tight">microviz</h1>
-          <div className="text-xs text-slate-500 dark:text-slate-400">demo</div>
-        </div>
+      <header className="flex h-11 flex-none items-center gap-3 border-b border-slate-200 bg-white/70 px-3 dark:border-slate-800 dark:bg-slate-950/40">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-sm font-semibold tracking-tight">microviz</h1>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              demo
+            </div>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
+          <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
               className={tabButton({
                 active: !showGallery,
                 className: "active:scale-[0.98]",
-                size: "md",
+                size: "sm",
               })}
               onClick={() => navigate({ to: "/" })}
               title="Playground"
@@ -125,7 +127,7 @@ function RootComponent() {
               className={tabButton({
                 active: showGallery,
                 className: "active:scale-[0.98]",
-                size: "md",
+                size: "sm",
               })}
               onClick={() => navigate({ to: "/gallery" })}
               title="Gallery"
@@ -134,8 +136,10 @@ function RootComponent() {
               Gallery
             </button>
           </div>
+        </div>
 
-          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 overflow-x-auto [scrollbar-gutter:stable]">
+          <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
               className={tabButton({
                 active: colorSchemePreference === "system",
@@ -174,8 +178,8 @@ function RootComponent() {
             </button>
           </div>
 
-          <label className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-            <span className="hidden whitespace-nowrap text-slate-600 dark:text-slate-300 lg:inline">
+          <label className="flex shrink-0 items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+            <span className="hidden whitespace-nowrap text-slate-600 dark:text-slate-300 md:inline">
               Microviz
             </span>
             <select
@@ -196,7 +200,7 @@ function RootComponent() {
             </select>
           </label>
 
-          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
+          <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
               className={tabButton({
                 active: microvizBackgroundPreference === "transparent",
