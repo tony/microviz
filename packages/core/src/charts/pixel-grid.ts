@@ -177,6 +177,7 @@ export const pixelGridChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "pixel-grid" };
   },
+  preferredAspectRatio: "square" as const,
   type: "pixel-grid",
 } satisfies ChartDefinition<
   "pixel-grid",
