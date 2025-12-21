@@ -53,6 +53,12 @@ function clamp(value: number, lo: number, hi: number): number {
 
 export type SeriesPreset = "trend" | "seasonal" | "spiky" | "random-walk";
 
+export type CompareRange = {
+  current: number;
+  max: number;
+  reference: number;
+};
+
 export function buildSeries(
   seed: string,
   length: number,
@@ -82,6 +88,41 @@ export function buildSeries(
   }
 
   return out.map((x) => Math.round(x * 100) / 100);
+}
+
+export function buildCompareRange(
+  seed: string,
+  options?: {
+    max?: number;
+    min?: number;
+    spans?: readonly number[];
+  },
+): CompareRange {
+  const rng = createSeededRng(seed);
+  const min = options?.min ?? 0;
+  const max = options?.max ?? 100;
+  const totalSpan = Math.max(1, max - min);
+  const spans =
+    options?.spans ??
+    [6, 12, 20, 32, 45, 60, 80, 92, 100].map((span) =>
+      clamp(span, 2, totalSpan),
+    );
+
+  const base = rng.pick(spans);
+  const jitter = Math.max(1, Math.round(base * 0.2));
+  const span = clamp(base + rng.int(-jitter, jitter), 2, totalSpan);
+  const center = min + span / 2 + rng.float() * Math.max(0, totalSpan - span);
+  const low = clamp(center - span / 2, min, max);
+  const high = clamp(center + span / 2, min, max);
+  const flip = rng.float() < 0.5;
+
+  const round = (value: number) => Math.round(value * 100) / 100;
+
+  return {
+    current: round(flip ? high : low),
+    max,
+    reference: round(flip ? low : high),
+  };
 }
 
 export function buildOpacities(
