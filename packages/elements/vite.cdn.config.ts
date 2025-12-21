@@ -20,18 +20,18 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   build: {
+    emptyOutDir: true,
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      formats: ["es"],
       fileName: () => "microviz.js",
+      formats: ["es"],
     },
+    minify: "esbuild",
     outDir: "dist/cdn",
-    emptyOutDir: true,
     // No externals - bundle everything for CDN use
     rollupOptions: {
       external: [],
     },
-    minify: "esbuild",
     sourcemap: true,
   },
   // Resolve workspace dependencies
