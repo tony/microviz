@@ -35,4 +35,21 @@ describe("segmented-bar", () => {
       expect(second.ry).toBe(2);
     }
   });
+
+  test("exposes a11y summary and items", () => {
+    const model = computeModel({
+      data: [
+        { color: "#ef4444", name: "A", pct: 40 },
+        { color: "#22c55e", name: "B", pct: 60 },
+      ],
+      size: { height: 10, width: 100 },
+      spec: { gap: 2, pad: 0, type: "segmented-bar" as const },
+    });
+
+    expect(model.a11y?.summary?.kind).toBe("segments");
+    const items = model.a11y?.items ?? [];
+    expect(items.length).toBe(2);
+    expect(items[0]?.label).toBe("A");
+    expect(items[0]?.valueText).toContain("%");
+  });
 });
