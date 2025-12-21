@@ -263,6 +263,11 @@ export type RenderModel = {
   height: number;
   marks: ReadonlyArray<Mark>;
   defs?: ReadonlyArray<Def>;
+  /**
+   * Optional paint-order hints for consumers (e.g. debug UIs, hit-testing
+   * overlays, and future renderer optimizations). Current built-in renderers
+   * ignore this field and simply paint marks in array order.
+   */
   layers?: ReadonlyArray<LayerHint>;
   a11y?: A11yTree;
   stats?: ModelStats;

@@ -176,8 +176,9 @@ type ChartWithAspectRatio = { preferredAspectRatio?: PreferredAspectRatio };
 /**
  * Returns the preferred aspect ratio for a given chart type.
  * - "square": Chart works best with equal width and height
- * - "wide": Chart works best with width > height (default)
- * - undefined: Chart adapts to any size
+ * - "wide": Chart works best with width > height
+ * - "tall": Chart works best with height > width
+ * - undefined: Chart adapts to any size (no preference)
  */
 export function getPreferredAspectRatio(
   chartType: ChartType,
