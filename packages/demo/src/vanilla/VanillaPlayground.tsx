@@ -167,9 +167,13 @@ const demoInputBuilders = {
     spec: { overlap: 6, pad: 0, type: "chevron" },
   }),
   "code-minimap": () => ({
-    data: DEMO_SEGMENTS,
+    data: DEMO_SERIES,
     size: { height: 32, width: 32 },
-    spec: { pad: 0, type: "code-minimap" },
+    spec: {
+      colors: DEMO_SEGMENTS.map((segment) => segment.color),
+      pad: 0,
+      type: "code-minimap",
+    },
   }),
   "concentric-arcs": () => ({
     data: DEMO_SEGMENTS,

@@ -4,11 +4,7 @@ import { computeModel } from "../compute";
 describe("code-minimap", () => {
   test("produces a deterministic RenderModel", () => {
     const input = {
-      data: [
-        { color: "#ef4444", name: "A", pct: 50 },
-        { color: "#22c55e", name: "B", pct: 30 },
-        { color: "#3b82f6", name: "C", pct: 20 },
-      ],
+      data: [10, 30, 50, 20, 60, 40, 80, 70],
       size: { height: 32, width: 32 },
       spec: { type: "code-minimap" as const },
     };
@@ -23,7 +19,7 @@ describe("code-minimap", () => {
 
   test("respects lines option", () => {
     const input = {
-      data: [{ color: "#ef4444", name: "A", pct: 100 }],
+      data: [10, 20, 30, 40],
       size: { height: 32, width: 32 },
       spec: { lines: 4, type: "code-minimap" as const },
     };
@@ -34,9 +30,9 @@ describe("code-minimap", () => {
 
   test("fills are set from segments", () => {
     const input = {
-      data: [{ color: "#ef4444", name: "A", pct: 100 }],
+      data: [100],
       size: { height: 32, width: 32 },
-      spec: { type: "code-minimap" as const },
+      spec: { colors: ["#ef4444"], type: "code-minimap" as const },
     };
 
     const model = computeModel(input);

@@ -825,12 +825,15 @@ export type CodeMinimapSpec = {
   insetY?: number;
   lineRadius?: number;
   widthPattern?: number[];
+  colors?: string[];
   className?: string;
 };
 
 export type NormalizedCodeMinimap = {
   type: "code-minimap";
-  segments: Array<{ name?: string; pct: number; color: string }>;
+  series: number[];
+  min: number;
+  max: number;
 };
 
 export type PatternTilesSpec = {

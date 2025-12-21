@@ -17,9 +17,9 @@ describe("mini chart footprints", () => {
       // Mini-Charts
       {
         input: {
-          data: SEGMENTS,
+          data: SERIES,
           size: { height: 32, width: 32 },
-          spec: { type: "code-minimap" as const },
+          spec: { colors: SEGMENTS.map((segment) => segment.color), type: "code-minimap" as const },
         },
         name: "code-minimap 32×32",
       },

@@ -756,9 +756,13 @@ export const MicrovizPlayground: FC<{
         spec: { overlap: 6, pad: 0, type: "chevron" },
       },
       "code-minimap": {
-        data: segments,
+        data: series,
         size: sizeFor("code-minimap"),
-        spec: { pad: 0, type: "code-minimap" },
+        spec: {
+          colors: segments.map((segment) => segment.color),
+          pad: 0,
+          type: "code-minimap",
+        },
       },
       "concentric-arcs": {
         data: segments,
