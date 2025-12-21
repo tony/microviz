@@ -9,6 +9,7 @@ import {
   DEMO_DISTRIBUTION,
   DEMO_TIMELINE_MONTHS,
   GradientFade,
+  MaskedWaveformStrip,
   MicroHeatline,
   MosaicBar,
   PerforatedBar,
@@ -57,6 +58,10 @@ test("microviz patterns render (visual)", async () => {
 
         <div className={VIZ_CLASS} data-testid="perforated">
           <PerforatedBar data={DEMO_DISTRIBUTION} />
+        </div>
+
+        <div className={VIZ_CLASS} data-testid="masked-wave">
+          <MaskedWaveformStrip data={DEMO_DISTRIBUTION} />
         </div>
 
         <div className={VIZ_CLASS} data-testid="shadow-depth">
@@ -126,6 +131,9 @@ test("microviz patterns render (visual)", async () => {
     "gradient-fade",
   );
   await expect(page.getByTestId("perforated")).toMatchScreenshot("perforated");
+  await expect(page.getByTestId("masked-wave")).toMatchScreenshot(
+    "masked-wave",
+  );
   await expect(page.getByTestId("shadow-depth")).toMatchScreenshot(
     "shadow-depth",
   );
