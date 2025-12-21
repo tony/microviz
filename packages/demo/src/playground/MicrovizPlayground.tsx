@@ -528,7 +528,7 @@ function ChartCard({
       {markCountLabel && (
         <div className="absolute bottom-[3px] left-[3px]">
           <div
-            className="-mb-0.5 -ms-0.5 select-none rounded-bl-lg rounded-tr-lg px-1 py-0 text-[10px] leading-tight text-slate-700 sm:tracking-tight dark:text-slate-100"
+            className="-mb-0.5 -ms-0.5 select-none rounded-bl-lg rounded-tr-lg px-1 py-0 text-[10px] leading-tight text-slate-500/60 sm:tracking-tight dark:text-slate-400/60"
             title={markCountLabel}
           >
             {markCountLabel}
@@ -539,7 +539,7 @@ function ChartCard({
       {timingMs !== null && (
         <div className="absolute bottom-[3px] right-[3px]">
           <div
-            className="-mb-0.5 -me-0.5 select-none rounded-br-lg rounded-tl-lg px-1 py-0 text-[10px] leading-tight text-slate-700 sm:tracking-tight dark:text-slate-100"
+            className="-mb-0.5 -me-0.5 select-none rounded-br-lg rounded-tl-lg px-1 py-0 text-[10px] leading-tight text-slate-500/60 sm:tracking-tight dark:text-slate-400/60"
             title={`${timingMs}ms`}
           >
             {timingMs}ms
