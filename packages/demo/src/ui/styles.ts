@@ -140,7 +140,7 @@ export const sidebarItem = cva(
  * Chart preview card.
  */
 export const chartCard = cva(
-  "group relative flex flex-col rounded-xl border px-3 pt-3 pb-5 text-left transition",
+  "group relative flex flex-col overflow-hidden rounded-xl border px-3 pt-3 pb-5 text-left transition",
   {
     defaultVariants: {
       active: false,
