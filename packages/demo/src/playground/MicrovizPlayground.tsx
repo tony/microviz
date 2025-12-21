@@ -1851,12 +1851,27 @@ export const MicrovizPlayground: FC<{
     [],
   );
 
-  const inspectorTabOptions = ["diagnostics", "model", "data"] as const;
+  const inspectorTabOptions = [
+    "diagnostics",
+    "model",
+    "data",
+    "a11y",
+    "export",
+  ] as const;
   type InspectorTab = (typeof inspectorTabOptions)[number];
   const inspectorTabLabels: Record<InspectorTab, string> = {
+    a11y: "A11y",
     data: "Data",
     diagnostics: "Diagnostics",
+    export: "Export",
     model: "Model",
+  };
+  const inspectorTabTitles: Record<InspectorTab, string> = {
+    a11y: "Accessibility",
+    data: "Inputs",
+    diagnostics: "Warnings",
+    export: "Export assets",
+    model: "Render model",
   };
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
   const [a11yCopied, setA11yCopied] = useState(false);
@@ -2858,13 +2873,7 @@ export const MicrovizPlayground: FC<{
                     key={tab}
                     onClick={() => setInspectorTab(tab)}
                     role="tab"
-                    title={
-                      tab === "diagnostics"
-                        ? "Warnings"
-                        : tab === "model"
-                          ? "Render model"
-                          : "Inputs"
-                    }
+                    title={inspectorTabTitles[tab]}
                     type="button"
                   >
                     {inspectorTabLabels[tab]}
@@ -2971,133 +2980,135 @@ export const MicrovizPlayground: FC<{
             </div>
           )}
 
-          {inspectorTab === "model" && (
-            <div className="space-y-3">
-              <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
-                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <span>A11y</span>
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    disabled={!selectedModel?.a11y}
-                    onClick={handleCopyA11y}
-                    type="button"
-                  >
-                    {a11yCopied ? "Copied" : "Copy"}
-                  </button>
-                </div>
-                <div className="mt-2 space-y-1">
-                  <div className="flex flex-wrap gap-x-2 gap-y-1">
-                    <span className="text-slate-500 dark:text-slate-400">
-                      Label:
-                    </span>
-                    <span>{selectedModel?.a11y?.label ?? "—"}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-2 gap-y-1">
-                    <span className="text-slate-500 dark:text-slate-400">
-                      Role:
-                    </span>
-                    <span>{selectedModel?.a11y?.role ?? "—"}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-2 gap-y-1">
-                    <span className="text-slate-500 dark:text-slate-400">
-                      Summary:
-                    </span>
-                    <span>{formatA11ySummary(a11ySummary) ?? "—"}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-2 gap-y-1">
-                    <span className="text-slate-500 dark:text-slate-400">
-                      Items:
-                    </span>
-                    <span>
-                      {a11yMissingItems
-                        ? "0 (missing)"
-                        : a11yTruncatedItems
-                          ? `${a11yItems.length}/${a11yExpectedCount} (truncated)`
-                          : a11yItems.length}
-                    </span>
-                  </div>
-                  {a11yItems.length > 0 && (
-                    <ul className="mt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                      {a11yItems.slice(0, 5).map((item) => (
-                        <li key={item.id}>{formatA11yItem(item)}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+          {inspectorTab === "a11y" && (
+            <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+              <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <span>A11y</span>
+                <button
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  disabled={!selectedModel?.a11y}
+                  onClick={handleCopyA11y}
+                  type="button"
+                >
+                  {a11yCopied ? "Copied" : "Copy"}
+                </button>
               </div>
-
-              <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Export
+              <div className="mt-2 space-y-1">
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Label:
+                  </span>
+                  <span>{selectedModel?.a11y?.label ?? "—"}</span>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    disabled={!selectedModel}
-                    onClick={handleDownloadSvg}
-                    type="button"
-                  >
-                    Download SVG
-                  </button>
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    disabled={!selectedModel}
-                    onClick={handleCopySvg}
-                    type="button"
-                  >
-                    Copy SVG
-                  </button>
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    disabled={!selectedModel || exportingPng}
-                    onClick={handleDownloadPng}
-                    type="button"
-                  >
-                    {exportingPng ? "Exporting PNG…" : "Download PNG"}
-                  </button>
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    disabled={!selectedModel || copyingPng}
-                    onClick={handleCopyPngDataUrl}
-                    title="Copy PNG as data URL"
-                    type="button"
-                  >
-                    {copyingPng ? "Copying PNG…" : "Copy PNG URL"}
-                  </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Role:
+                  </span>
+                  <span>{selectedModel?.a11y?.role ?? "—"}</span>
                 </div>
-                {exportNotice && (
-                  <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400">
-                    {exportNotice}
-                  </div>
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Summary:
+                  </span>
+                  <span>{formatA11ySummary(a11ySummary) ?? "—"}</span>
+                </div>
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Items:
+                  </span>
+                  <span>
+                    {a11yMissingItems
+                      ? "0 (missing)"
+                      : a11yTruncatedItems
+                        ? `${a11yItems.length}/${a11yExpectedCount} (truncated)`
+                        : a11yItems.length}
+                  </span>
+                </div>
+                {a11yItems.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    {a11yItems.slice(0, 5).map((item) => (
+                      <li key={item.id}>{formatA11yItem(item)}</li>
+                    ))}
+                  </ul>
                 )}
-                <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                  PNG export renders with the Canvas pipeline.
-                </div>
               </div>
+            </div>
+          )}
 
-              <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
-                <JsonViewer data={selectedModel} />
+          {inspectorTab === "export" && (
+            <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Export
               </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  disabled={!selectedModel}
+                  onClick={handleDownloadSvg}
+                  type="button"
+                >
+                  Download SVG
+                </button>
+                <button
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  disabled={!selectedModel}
+                  onClick={handleCopySvg}
+                  type="button"
+                >
+                  Copy SVG
+                </button>
+                <button
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  disabled={!selectedModel || exportingPng}
+                  onClick={handleDownloadPng}
+                  type="button"
+                >
+                  {exportingPng ? "Exporting PNG…" : "Download PNG"}
+                </button>
+                <button
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  disabled={!selectedModel || copyingPng}
+                  onClick={handleCopyPngDataUrl}
+                  title="Copy PNG as data URL"
+                  type="button"
+                >
+                  {copyingPng ? "Copying PNG…" : "Copy PNG URL"}
+                </button>
+              </div>
+              {exportNotice && (
+                <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400">
+                  {exportNotice}
+                </div>
+              )}
+              <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                PNG export renders with the Canvas pipeline.
+              </div>
+            </div>
+          )}
+
+          {inspectorTab === "model" && (
+            <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
+              <JsonViewer data={selectedModel} />
             </div>
           )}
 
