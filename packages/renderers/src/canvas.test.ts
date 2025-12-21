@@ -156,6 +156,10 @@ class FakeCanvas2DContext {
     return new FakeCanvasPattern();
   }
 
+  drawImage(image: unknown, dx: number, dy: number): void {
+    this.#record("drawImage", [image, dx, dy]);
+  }
+
   save(): void {
     this.#stack.push({
       fillStyle: this.fillStyle,
@@ -695,6 +699,103 @@ describe("renderCanvas", () => {
     expect(ctx.filter).toBe("none");
   });
 
+  it("renders noise displacement filters via drawImage when OffscreenCanvas supports ImageData", () => {
+    class FakeNoiseCanvas2DContext extends FakeCanvas2DContext {
+      getImageData(_x: number, _y: number, w: number, h: number): ImageData {
+        return {
+          data: new Uint8ClampedArray(w * h * 4),
+          height: h,
+          width: w,
+        } as unknown as ImageData;
+      }
+
+      createImageData(w: number, h: number): ImageData {
+        return {
+          data: new Uint8ClampedArray(w * h * 4),
+          height: h,
+          width: w,
+        } as unknown as ImageData;
+      }
+
+      putImageData(_data: ImageData, _dx: number, _dy: number): void {}
+    }
+
+    class FakeOffscreenCanvas {
+      #ctx = new FakeNoiseCanvas2DContext();
+
+      constructor(
+        readonly width: number,
+        readonly height: number,
+      ) {}
+
+      getContext(_type: "2d"): FakeNoiseCanvas2DContext {
+        return this.#ctx;
+      }
+    }
+
+    const prev = (globalThis as unknown as { OffscreenCanvas?: unknown })
+      .OffscreenCanvas;
+    (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas =
+      FakeOffscreenCanvas;
+
+    try {
+      const ctx = new FakeCanvas2DContext();
+
+      const model: RenderModel = {
+        defs: [
+          {
+            id: "noise-1",
+            primitives: [
+              {
+                baseFrequency: "0.02 0.08",
+                noiseType: "fractalNoise",
+                numOctaves: 2,
+                result: "noise",
+                seed: 7,
+                type: "turbulence",
+              },
+              {
+                in: "SourceGraphic",
+                in2: "noise",
+                scale: 12,
+                type: "displacementMap",
+                xChannelSelector: "R",
+                yChannelSelector: "G",
+              },
+            ],
+            type: "filter",
+          },
+        ],
+        height: 10,
+        marks: [
+          {
+            fill: "red",
+            filter: "noise-1",
+            h: 10,
+            id: "rect",
+            type: "rect",
+            w: 10,
+            x: 0,
+            y: 0,
+          },
+        ],
+        width: 10,
+      };
+
+      renderCanvas(ctx as unknown as Canvas2DContext, model);
+
+      expect(ctx.calls.some((c) => c.fn === "drawImage")).toBe(true);
+      expect(ctx.calls.some((c) => c.fn === "fillRect")).toBe(false);
+
+      const draw = ctx.calls.find((c) => c.fn === "drawImage");
+      expect(draw?.args[0]).toBeInstanceOf(FakeOffscreenCanvas);
+      expect(draw?.args.slice(1)).toEqual([0, 0]);
+    } finally {
+      (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas =
+        prev;
+    }
+  });
+
   it("applies masks via canvas clipping when Path2D is available", () => {
     class FakePath2D {
       addPath(_path: FakePath2D): void {}
@@ -751,6 +852,60 @@ describe("renderCanvas", () => {
 });
 
 describe("getCanvasUnsupportedFilterPrimitiveTypes", () => {
+  it("treats noise displacement primitives as supported when OffscreenCanvas supports ImageData", () => {
+    class FakeOffscreenCanvas {
+      getContext(_type: "2d"): unknown {
+        return {
+          createImageData: () => ({}),
+          getImageData: () => ({}),
+          putImageData: () => {},
+        };
+      }
+    }
+
+    const prev = (globalThis as unknown as { OffscreenCanvas?: unknown })
+      .OffscreenCanvas;
+    (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas =
+      FakeOffscreenCanvas;
+
+    try {
+      const model: RenderModel = {
+        defs: [
+          {
+            id: "f-1",
+            primitives: [
+              {
+                baseFrequency: "0.02 0.08",
+                noiseType: "fractalNoise",
+                numOctaves: 2,
+                result: "noise",
+                seed: 7,
+                type: "turbulence",
+              },
+              {
+                in: "SourceGraphic",
+                in2: "noise",
+                scale: 8,
+                type: "displacementMap",
+                xChannelSelector: "R",
+                yChannelSelector: "G",
+              },
+            ],
+            type: "filter",
+          },
+        ],
+        height: 10,
+        marks: [],
+        width: 10,
+      };
+
+      expect(getCanvasUnsupportedFilterPrimitiveTypes(model)).toEqual([]);
+    } finally {
+      (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas =
+        prev;
+    }
+  });
+
   it("returns unique, sorted unsupported primitive types", () => {
     const model: RenderModel = {
       defs: [
