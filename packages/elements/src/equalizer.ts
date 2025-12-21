@@ -1,7 +1,7 @@
 import { computeModel, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
-import { parseBitfieldSegments, parseNumber } from "./parse";
+import { parseNumber, parseNumberArray } from "./parse";
 import { renderSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 
@@ -55,7 +55,7 @@ export class MicrovizEqualizer extends HTMLElement {
   }
 
   #computeFromAttributes(): RenderModel {
-    const segments = parseBitfieldSegments(this.getAttribute("data"));
+    const series = parseNumberArray(this.getAttribute("data"));
     const width = parseNumber(this.getAttribute("width"), 200);
     const height = parseNumber(this.getAttribute("height"), 32);
     const pad = this.hasAttribute("pad")
@@ -72,7 +72,7 @@ export class MicrovizEqualizer extends HTMLElement {
       : undefined;
 
     return computeModel({
-      data: segments,
+      data: series,
       size: { height, width },
       spec: { barWidth, bins, gap, pad, type: "equalizer" },
     });

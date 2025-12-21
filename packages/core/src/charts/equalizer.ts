@@ -1,13 +1,17 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
-  allocateUnitsByPct,
+  clamp,
   coerceFiniteInt,
   coerceFiniteNonNegative,
-  expandSegmentColors,
-  normalizeSegments,
+  isFiniteNumber,
+  resampleSeries,
 } from "./shared";
-import type { BitfieldData, EqualizerSpec, NormalizedEqualizer } from "./types";
+import type {
+  EqualizerSpec,
+  NormalizedEqualizer,
+  SparklineData,
+} from "./types";
 
 /**
  * Equalizer chart: Vertical bars that grow from the bottom (audio visualizer style).
@@ -16,35 +20,31 @@ import type { BitfieldData, EqualizerSpec, NormalizedEqualizer } from "./types";
 export const equalizerChart = {
   a11y(_spec, normalized, _layout) {
     return {
-      label: a11yLabelWithSegmentsSummary(
-        "Equalizer chart",
-        normalized.segments,
-      ),
+      label: a11yLabelWithSeriesSummary("Equalizer chart", normalized.series),
       role: "img",
     };
   },
   category: "bars" as const,
   defaultPad: 0,
   displayName: "Equalizer",
-  emptyDataWarningMessage: "No segments data.",
+  emptyDataWarningMessage: "No series data.",
   isEmpty(normalized) {
-    return normalized.segments.length === 0;
+    return normalized.series.length === 0;
   },
   marks(spec, normalized, layout, _state, _theme, warnings) {
     const bins = coerceFiniteInt(
-      spec.bins ?? 16,
-      16,
+      spec.bins ?? normalized.series.length,
+      normalized.series.length,
       1,
       warnings,
       "Non-finite equalizer bins; defaulted to 16.",
     );
 
-    const segments = normalized.segments;
-    if (segments.length === 0) return [];
+    const series = normalized.series;
+    if (series.length === 0) return [];
 
-    const counts = allocateUnitsByPct(segments, bins);
-    const cells = expandSegmentColors(segments, counts);
-    if (cells.length === 0) return [];
+    const values = resampleSeries(series, bins);
+    if (values.length === 0) return [];
 
     const usableW = Math.max(0, layout.width - layout.pad * 2);
     const usableH = Math.max(0, layout.height - layout.pad * 2);
@@ -68,24 +68,22 @@ export const equalizerChart = {
     if (barW <= 0) return [];
 
     const classSuffix = spec.className ? ` ${spec.className}` : "";
+    const denom = normalized.max - normalized.min || 1;
+    const colors = spec.colors;
+    const fallbackColor = colors?.[colors.length - 1];
 
     const x0 = layout.pad;
     const y0 = layout.pad;
 
-    return Array.from({ length: bins }, (_, i) => {
-      const cell = cells[i] ?? cells[cells.length - 1];
-      // Height varies based on position - creates audio visualizer effect
-      const heightPct = Math.max(
-        15,
-        40 + Math.sin(i * 0.6) * 30 + Math.sin(i * 1.1) * 20,
-      );
-      const barH = (heightPct / 100) * usableH;
+    return values.map((value, i) => {
+      const normalizedValue = clamp((value - normalized.min) / denom, 0, 1);
+      const barH = Math.max(2, normalizedValue * usableH);
       // Bars grow from bottom (key difference from waveform)
       const y = y0 + usableH - barH;
       const x = x0 + i * (barW + gap);
       return {
         className: `mv-equalizer-bar${classSuffix}`,
-        fill: cell?.color ?? "currentColor",
+        fill: colors ? (colors[i] ?? fallbackColor) : undefined,
         h: barH,
         id: `equalizer-bar-${i}`,
         type: "rect",
@@ -96,13 +94,15 @@ export const equalizerChart = {
     });
   },
   normalize(_spec, data) {
-    const segments = normalizeSegments(data);
-    return { segments, type: "equalizer" as const };
+    const series = data.filter(isFiniteNumber);
+    const min = series.length > 0 ? Math.min(...series) : 0;
+    const max = series.length > 0 ? Math.max(...series) : 1;
+    return { max, min, series, type: "equalizer" as const };
   },
   type: "equalizer",
 } satisfies ChartDefinition<
   "equalizer",
   EqualizerSpec,
-  BitfieldData,
+  SparklineData,
   NormalizedEqualizer
 >;
