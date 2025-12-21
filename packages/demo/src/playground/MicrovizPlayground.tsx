@@ -852,7 +852,12 @@ export const MicrovizPlayground: FC<{
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
-  const [useDrawerLayout, setUseDrawerLayout] = useState(false);
+  const [useDrawerLayout, setUseDrawerLayout] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const hoverMedia = window.matchMedia("(hover: none)");
+    const widthMedia = window.matchMedia("(max-width: 1023px)");
+    return hoverMedia.matches || widthMedia.matches;
+  });
   const seriesPresetDisabled =
     dataPreset === "distribution" || dataPreset === "compare";
   const seriesPresetTooltip = seriesPresetDisabled

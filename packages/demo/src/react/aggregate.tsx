@@ -1439,66 +1439,67 @@ export const MicroVizAggregateDemo: FC<{
         </p>
       </div>
 
-      {/* Controls - Sticky horizontal toolbar */}
-      <div className="sticky top-[8.125rem] z-20 -mx-1 sm:-mx-2 border-y border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
-        <div className="overflow-x-auto">
-          <div className="flex items-center gap-4 px-3 py-2 min-w-max">
-            {/* Max Slices */}
-            <div className="flex items-center gap-2 shrink-0">
-              <label
-                className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap"
-                htmlFor="maxSlices"
-              >
-                Slices:
-              </label>
-              <input
-                className="w-16 accent-blue-500"
-                id="maxSlices"
-                max={6}
-                min={3}
-                onChange={(e) => setMaxSlices(Number(e.target.value))}
-                title={`Slices: ${maxSlices}`}
-                type="range"
-                value={maxSlices}
-              />
-              <span className="w-4 font-mono text-xs text-slate-500 dark:text-slate-400">
-                {maxSlices}
-              </span>
-            </div>
+      {/* Sticky controls + legend */}
+      <div className="sticky top-0 z-20 -mx-1 sm:-mx-2">
+        <div className="border-y border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+          <div className="overflow-x-auto">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2 sm:flex-nowrap sm:gap-4 sm:min-w-max">
+              {/* Max Slices */}
+              <div className="flex items-center gap-2 shrink-0">
+                <label
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap"
+                  htmlFor="maxSlices"
+                >
+                  Slices:
+                </label>
+                <input
+                  className="w-16 accent-blue-500"
+                  id="maxSlices"
+                  max={6}
+                  min={3}
+                  onChange={(e) => setMaxSlices(Number(e.target.value))}
+                  title={`Slices: ${maxSlices}`}
+                  type="range"
+                  value={maxSlices}
+                />
+                <span className="w-4 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  {maxSlices}
+                </span>
+              </div>
 
-            {/* Divider */}
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-600 shrink-0" />
+              {/* Divider */}
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-600 shrink-0" />
 
-            {/* Min Percentage */}
-            <div className="flex items-center gap-2 shrink-0">
-              <label
-                className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap"
-                htmlFor="minPct"
-              >
-                Min %:
-              </label>
-              <input
-                className="w-20 accent-blue-500"
-                id="minPct"
-                max={15}
-                min={1}
-                onChange={(e) => setMinPercentage(Number(e.target.value))}
-                title={`Min %: ${minPercentage}`}
-                type="range"
-                value={minPercentage}
-              />
-              <span className="w-4 font-mono text-xs text-slate-500 dark:text-slate-400">
-                {minPercentage}
-              </span>
+              {/* Min Percentage */}
+              <div className="flex items-center gap-2 shrink-0">
+                <label
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap"
+                  htmlFor="minPct"
+                >
+                  Min %:
+                </label>
+                <input
+                  className="w-20 accent-blue-500"
+                  id="minPct"
+                  max={15}
+                  min={1}
+                  onChange={(e) => setMinPercentage(Number(e.target.value))}
+                  title={`Min %: ${minPercentage}`}
+                  type="range"
+                  value={minPercentage}
+                />
+                <span className="w-4 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  {minPercentage}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Legend - Sticky below controls */}
-      <div className="sticky top-[10.5rem] z-20 -mx-1 sm:-mx-2 mb-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm overflow-x-auto">
-        <div className="px-3 py-2 min-w-max">
-          <Legend slices={slices} />
+        <div className="mb-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+          <div className="px-3 py-2">
+            <Legend slices={slices} />
+          </div>
         </div>
       </div>
 
