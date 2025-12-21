@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, normalizeSegments } from "./shared";
 import type { BitfieldData, DonutSpec, NormalizedDonut } from "./types";
@@ -10,6 +10,9 @@ import type { BitfieldData, DonutSpec, NormalizedDonut } from "./types";
 export const donutChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "donut-segment",
+      }),
       label: a11yLabelWithSegmentsSummary("Donut chart", normalized.segments),
       role: "img",
     };
