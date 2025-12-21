@@ -655,33 +655,30 @@ function ChartCard({
           >
             {title}
           </div>
-          {htmlWarningTags && htmlWarningTags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {htmlWarningTags.map((tag) => (
-                <span
-                  className="select-none px-1 py-0 text-[10px] leading-tight text-amber-700/70 sm:tracking-tight dark:text-amber-200/70"
-                  key={tag.label}
-                  title={`${tag.label}: ${tag.detail}`}
-                >
-                  {tag.label}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
-        {showHtmlBrokenBadge && (
-          <div className="flex shrink-0 items-center">
-            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
-              HTML broken
-            </span>
-          </div>
-        )}
       </div>
       <div
         className={`${chartCardContent({ centered })}${isWideCard ? " flex-1" : ""}`}
       >
         {render}
       </div>
+
+      {showHtmlBrokenBadge && (
+        <div className="absolute right-[3px] top-[3px]">
+          <div
+            className="-me-0.5 -mt-0.5 select-none rounded-bl-lg rounded-tr-lg border border-amber-200 bg-amber-50 px-1.5 py-[1px] text-[9px] tracking-tight text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200"
+            title={
+              htmlWarningTags && htmlWarningTags.length > 0
+                ? htmlWarningTags
+                    .map((tag) => `${tag.label}: ${tag.detail}`)
+                    .join(" | ")
+                : "HTML broken"
+            }
+          >
+            HTML Broken
+          </div>
+        </div>
+      )}
 
       {markCountLabel && (
         <div className="absolute bottom-[3px] left-[3px]">
