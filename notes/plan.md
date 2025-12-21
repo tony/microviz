@@ -193,13 +193,13 @@ Pragmatic default: **ship HTML as experimental** once we want those effects, whi
 ### Experimental HTML renderer (parity deferred) — integration plan
 Initial goal: provide a fast HTML surface for CSS-first patterns, without promising SVG/Canvas parity yet.
 - **Render surface:** add `html` to demo renderer picker (left panel) as “HTML (experimental)”.
-- **Policy (v1):** supports `rect`/`circle`/`line`/`text` only. Ignores `path` marks. Supports `linearGradient` fills on rects and `clipRect` for rect clip paths; other defs (patterns/masks/filters) and mark effects (`mask`, `filter`, `strokeDash`) are ignored. Use SVG/Canvas for full fidelity.
+- **Policy (v1):** supports `rect`/`circle`/`line`/`text` only. Ignores `path` marks. Supports `linearGradient`, `pattern`, `mask`, `clipRect`, and `filter` defs (dropShadow/gaussianBlur only); other defs/effects are ignored. Use SVG/Canvas for full fidelity.
 - **Renderer implementation:** map `RenderModel` marks to absolutely positioned HTML elements:
   - `rect` → `<div>` with `position:absolute`, `background`, `borderRadius`, `opacity`.
   - `circle` → `<div>` with `borderRadius:9999px`, `background`, `opacity`.
   - `line` → `<div>` with rotation and stroke width.
   - `text` → `<div>` with absolute positioning + anchor/baseline transforms.
-- **Defs/filters:** ignored in v1; document unsupported defs and ignore gracefully.
+- **Defs/filters:** support `linearGradient`, `pattern`, `mask`, `clipRect`, and `filter` (dropShadow/gaussianBlur only); other defs/effects remain ignored and must warn.
 - **A11y:** reuse `model.a11y` for `aria-label` on the HTML surface.
 - **Telemetry:** show loud warnings in the demo if a chart uses unsupported mark types/defs. **Do not auto-fallback** to other renderers; broken output is acceptable to expose gaps.
 
