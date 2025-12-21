@@ -2358,43 +2358,45 @@ export const MicrovizPlayground: FC<{
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1 [scrollbar-gutter:stable] dark:bg-slate-800/50">
-              <button
-                className={tabButton({
-                  active: sidebarTab === "browse",
-                  className: "flex-1 whitespace-nowrap",
-                  size: "xs",
-                })}
-                onClick={() => setSidebarTab("browse")}
-                title="Charts"
-                type="button"
-              >
-                Browse
-              </button>
-              <button
-                className={tabButton({
-                  active: sidebarTab === "settings",
-                  className: "flex-1 whitespace-nowrap",
-                  size: "xs",
-                })}
-                onClick={() => setSidebarTab("settings")}
-                title="Settings"
-                type="button"
-              >
-                Settings
-              </button>
-              <button
-                className={tabButton({
-                  active: sidebarTab === "debug",
-                  className: "flex-1 whitespace-nowrap",
-                  size: "xs",
-                })}
-                onClick={() => setSidebarTab("debug")}
-                title="Debug"
-                type="button"
-              >
-                Debug
-              </button>
+            <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
+              <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
+                <button
+                  className={tabButton({
+                    active: sidebarTab === "browse",
+                    className: "whitespace-nowrap",
+                    size: "xs",
+                  })}
+                  onClick={() => setSidebarTab("browse")}
+                  title="Charts"
+                  type="button"
+                >
+                  Browse
+                </button>
+                <button
+                  className={tabButton({
+                    active: sidebarTab === "settings",
+                    className: "whitespace-nowrap",
+                    size: "xs",
+                  })}
+                  onClick={() => setSidebarTab("settings")}
+                  title="Settings"
+                  type="button"
+                >
+                  Settings
+                </button>
+                <button
+                  className={tabButton({
+                    active: sidebarTab === "debug",
+                    className: "whitespace-nowrap",
+                    size: "xs",
+                  })}
+                  onClick={() => setSidebarTab("debug")}
+                  title="Debug"
+                  type="button"
+                >
+                  Debug
+                </button>
+              </div>
             </div>
           </div>
 
@@ -3008,29 +3010,33 @@ export const MicrovizPlayground: FC<{
             <div className="flex min-w-0 items-center gap-2">
               <div
                 aria-label="Inspector tabs"
-                className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 [scrollbar-gutter:stable] dark:border-slate-800 dark:bg-slate-900"
+                className="min-w-0 flex-1"
                 role="tablist"
               >
-                {inspectorTabOptions.map((tab) => {
-                  const selected = inspectorTab === tab;
-                  return (
-                    <button
-                      aria-selected={selected}
-                      className={tabButton({
-                        active: selected,
-                        size: "xs",
-                        variant: "muted",
-                      })}
-                      key={tab}
-                      onClick={() => setInspectorTab(tab)}
-                      role="tab"
-                      title={inspectorTabTitles[tab]}
-                      type="button"
-                    >
-                      {inspectorTabLabels[tab]}
-                    </button>
-                  );
-                })}
+                <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+                    {inspectorTabOptions.map((tab) => {
+                      const selected = inspectorTab === tab;
+                      return (
+                        <button
+                          aria-selected={selected}
+                          className={tabButton({
+                            active: selected,
+                            size: "xs",
+                            variant: "muted",
+                          })}
+                          key={tab}
+                          onClick={() => setInspectorTab(tab)}
+                          role="tab"
+                          title={inspectorTabTitles[tab]}
+                          type="button"
+                        >
+                          {inspectorTabLabels[tab]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
