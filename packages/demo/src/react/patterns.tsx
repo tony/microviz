@@ -1,5 +1,5 @@
 import type { MicrovizSegment } from "@microviz/core";
-import { clamp, computeModel } from "@microviz/core";
+import { computeModel } from "@microviz/core";
 import { MicrovizSvg } from "@microviz/react";
 import {
   type CSSProperties,
@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { getDemoRange } from "../demoRange";
 import { VirtualizedStack } from "../ui/VirtualizedStack";
 
 // ============================================
@@ -1317,6 +1318,8 @@ export const MicroVizDemo: FC<{
     [seriesData],
   );
 
+  const seriesRange = useMemo(() => getDemoRange(seriesValues), [seriesValues]);
+
   // Opacity array for fading light values
   const seriesOpacities = useMemo(
     () => seriesData.map((d) => (fadeLight && d.isLight ? 0.35 : 1)),
@@ -1327,11 +1330,9 @@ export const MicroVizDemo: FC<{
   const primaryColor = data[0]?.color ?? FALLBACK_COLOR;
 
   // Derived values for delta/compare charts
-  const current =
-    monthSeries.length > 0 ? monthSeries[monthSeries.length - 1] : 50;
-  const previous =
-    monthSeries.length > 5 ? monthSeries[monthSeries.length - 6] : 40;
-  const target = clamp((data[0]?.pct ?? 50) + 10, 0, 100);
+  const current = seriesRange.max;
+  const previous = seriesRange.min;
+  const target = seriesRange.min;
   const bandSeed = useMemo(
     () => months.reduce((acc, m) => acc + m.count, 0) % 1000,
     [months],
