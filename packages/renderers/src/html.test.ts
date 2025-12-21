@@ -141,6 +141,50 @@ describe("renderHtmlString", () => {
     expect(html).toContain("background-repeat:repeat");
   });
 
+  it("applies patternTransform inside pattern SVGs", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          height: 4,
+          id: "pattern-rot",
+          marks: [
+            {
+              fill: "white",
+              h: 4,
+              type: "rect",
+              w: 2,
+              x: 0,
+              y: 0,
+            },
+          ],
+          patternTransform: "rotate(45)",
+          type: "pattern",
+          width: 4,
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          fill: "url(#pattern-rot)",
+          h: 6,
+          id: "r-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 2,
+        },
+      ],
+      width: 20,
+    };
+
+    const html = renderHtmlString(model);
+    const url = /background-image:url\("([^"]+)"\)/.exec(html)?.[1] ?? "";
+    const encodedSvg = url.split(",", 2)[1] ?? "";
+    const decoded = decodeURIComponent(encodedSvg);
+
+    expect(decoded).toContain('transform="rotate(45)"');
+  });
+
   it("does not reuse cached pattern URLs across different defs with the same id", () => {
     const baseModel: RenderModel = {
       defs: [
