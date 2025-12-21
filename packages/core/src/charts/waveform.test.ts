@@ -45,4 +45,25 @@ describe("waveform", () => {
       expect(third.y).toBeCloseTo(0, 6);
     }
   });
+
+  test("exposes a11y summary and items", () => {
+    const model = computeModel({
+      data: [0, 50, 100],
+      size: { height: 32, width: 200 },
+      spec: { bins: 3, pad: 0, type: "waveform" as const },
+    });
+
+    expect(model.a11y?.summary?.kind).toBe("series");
+    expect(model.a11y?.summary).toMatchObject({
+      count: 3,
+      last: 100,
+      max: 100,
+      min: 0,
+    });
+
+    const items = model.a11y?.items ?? [];
+    expect(items.length).toBe(3);
+    expect(items[0]?.label).toBe("Sample 1");
+    expect(items[0]?.value).toBe(0);
+  });
 });
