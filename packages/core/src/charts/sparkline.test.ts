@@ -17,10 +17,7 @@ describe("sparkline", () => {
     expect(a.stats?.warnings).toBeUndefined();
     expect(a.a11y?.label).toBe("Sparkline chart (min 10, max 30, last 20)");
 
-    const first = a.marks[0];
-    expect(first?.type).toBe("path");
-    if (first?.type === "path") {
-      expect(first.d).toBeTruthy();
-    }
+    const lines = a.marks.filter((mark) => mark.type === "line");
+    expect(lines.length).toBe(4);
   });
 });

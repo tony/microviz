@@ -95,12 +95,22 @@ export const rangeBandChart = {
       bandD += ` L ${maxPts[i].x.toFixed(2)} ${maxPts[i].y.toFixed(2)}`;
     bandD += " Z";
 
-    let lineD = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
-    for (let i = 1; i < points.length; i++)
-      lineD += ` L ${points[i].x.toFixed(2)} ${points[i].y.toFixed(2)}`;
-
     const classSuffix = spec.className ? ` ${spec.className}` : "";
     const last = points[points.length - 1];
+    const lineMarks = points.slice(1).map((curr, i) => {
+      const prev = points[i];
+      return {
+        className: `mv-range-band-line${classSuffix}`,
+        id: `range-band-line-${i}`,
+        strokeLinecap: "round" as const,
+        strokeWidth,
+        type: "line" as const,
+        x1: prev.x,
+        x2: curr.x,
+        y1: prev.y,
+        y2: curr.y,
+      };
+    });
 
     return [
       {
@@ -110,16 +120,7 @@ export const rangeBandChart = {
         id: "range-band-band",
         type: "path",
       },
-      {
-        className: `mv-range-band-line${classSuffix}`,
-        d: lineD,
-        fill: "none",
-        id: "range-band-line",
-        strokeLinecap: "round",
-        strokeLinejoin: "round",
-        strokeWidth,
-        type: "path",
-      },
+      ...lineMarks,
       {
         className: `mv-range-band-dot${classSuffix}`,
         cx: last?.x ?? x1,
