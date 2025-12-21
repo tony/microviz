@@ -72,7 +72,22 @@ function pointNearLineSegment(
   return distSqToSegment(p, a, b, lenSq) <= tolSq;
 }
 
-function pointInPolygon(p: Point, polygon: ReadonlyArray<Point>): boolean {
+function polygonArea(polygon: ReadonlyArray<Point>): number {
+  if (polygon.length < 3) return 0;
+  let sum = 0;
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i];
+    const b = polygon[(i + 1) % polygon.length];
+    if (!a || !b) continue;
+    sum += a.x * b.y - b.x * a.y;
+  }
+  return sum / 2;
+}
+
+function pointInPolygonEvenOdd(
+  p: Point,
+  polygon: ReadonlyArray<Point>,
+): boolean {
   if (polygon.length < 3) return false;
   let inside = false;
 
@@ -92,6 +107,20 @@ function pointInPolygon(p: Point, polygon: ReadonlyArray<Point>): boolean {
   }
 
   return inside;
+}
+
+function pointInSubpathsNonZero(
+  p: Point,
+  subpaths: ReadonlyArray<ReadonlyArray<Point>>,
+): boolean {
+  let winding = 0;
+  for (const poly of subpaths) {
+    if (!pointInPolygonEvenOdd(p, poly)) continue;
+    const area = polygonArea(poly);
+    if (area > 0) winding += 1;
+    else if (area < 0) winding -= 1;
+  }
+  return winding !== 0;
 }
 
 function pointNearPolyline(
@@ -477,12 +506,8 @@ export function hitTest(
       if (!parsed) continue;
 
       const wantsFill = wantsFillHitTest(mark);
-      if (wantsFill) {
-        for (const poly of parsed.subpaths) {
-          if (pointInPolygon(point, poly))
-            return { markId: mark.id, markType: mark.type };
-        }
-      }
+      if (wantsFill && pointInSubpathsNonZero(point, parsed.subpaths))
+        return { markId: mark.id, markType: mark.type };
 
       const wantsStroke = wantsStrokeHitTest(mark);
       if (wantsStroke) {
