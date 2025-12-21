@@ -2,6 +2,7 @@ import {
   type ChartSpec,
   computeModel,
   hitTest,
+  isChartType,
   type RenderModel,
 } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
@@ -24,7 +25,8 @@ function parseJson(value: string | null): unknown | null {
 
 function isChartSpec(value: unknown): value is ChartSpec {
   if (!value || typeof value !== "object") return false;
-  return typeof (value as { type?: unknown }).type === "string";
+  const type = (value as { type?: unknown }).type;
+  return typeof type === "string" && isChartType(type);
 }
 
 function coerceSize(raw: Size): Size {
@@ -196,7 +198,7 @@ export class MicrovizChart extends HTMLElement {
     if (isChartSpec(spec)) return spec;
 
     const type = this.getAttribute("type");
-    if (!type) return null;
+    if (!type || !isChartType(type)) return null;
 
     const pad = this.hasAttribute("pad")
       ? parseNumber(this.getAttribute("pad"), 0)

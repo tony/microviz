@@ -170,6 +170,10 @@ export { getAllChartMeta, getChartMeta };
 type ChartRegistry = typeof chartRegistry;
 type ChartType = keyof ChartRegistry & string;
 
+export function isChartType(type: string): type is ChartType {
+  return Object.hasOwn(chartRegistry, type);
+}
+
 // Helper type to access optional metadata properties
 type ChartWithAspectRatio = { preferredAspectRatio?: PreferredAspectRatio };
 
