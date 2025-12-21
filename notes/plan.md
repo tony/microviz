@@ -27,10 +27,10 @@ We’re “ready” when:
 - ✅ Mark types: `rect`, `path`, `text`, `circle`, `line`.
 - ✅ Defs: `linearGradient` end-to-end (SVG string + Canvas `url(#id)` fill support).
 - ✅ Defs: `clipRect` is supported by SVG string + React + Canvas renderers (used by `pixel-treemap`).
-- 🟡 Defs for texture parity:
+- ✅ Defs for texture parity:
   - ✅ SVG string + React + SVG DOM support: `pattern`, `mask`, `filter` (drop-shadow + gaussian blur + turbulence + displacementMap).
-  - ✅ Canvas parity: `pattern`, `mask`, `filter` (drop-shadow + gaussian blur).
-  - 🔜 Canvas support for additional filter primitives (turbulence/displacementMap) is not implemented yet (demo warns and has an opt-in SVG fallback for preview parity).
+  - ✅ Canvas parity: `pattern`, `mask`, `filter` (drop-shadow + gaussian blur + turbulence + displacementMap) when `OffscreenCanvas` ImageData APIs are available.
+  - 🟡 Without `OffscreenCanvas`, Canvas ignores `turbulence`/`displacementMap` (demo can optionally fall back to SVG for parity).
 
 ### Charts currently implemented (core + elements + demo)
 These exist as first-class `spec.type` values in `@microviz/core` and are covered by Tier‑0 tests:
@@ -135,14 +135,14 @@ Add mark types:
 - `circle` (needed for dots, ring dashes, endpoints, orbital, etc.)
 - `line` (needed for bullet/dumbbell/radial bars)
 
-### Unlock 3 (partial)
+### Unlock 3 (done)
 Add defs + references:
 - ✅ `linearGradient` defs (e.g. spark-area).
 - ✅ `clipRect` defs (SVG string + React + Canvas support exists; used by `pixel-treemap`).
 - ✅ `pattern` defs (stripes/dots/crosshatch/waves) in SVG string + React + SVG DOM.
 - ✅ `mask` defs (masked wave / CSS-mask parity patterns) in SVG string + React + SVG DOM.
 - ✅ `filter` defs (drop-shadow + gaussian blur + turbulence + displacementMap) in SVG string + React + SVG DOM.
-- 🟡 Canvas parity: `pattern`, `mask`, `filter` (drop-shadow + gaussian blur); advanced filter primitives are ignored (demo warns and can optionally fall back to SVG).
+- ✅ Canvas parity: `pattern`, `mask`, `filter` (drop-shadow + gaussian blur + turbulence + displacementMap) when `OffscreenCanvas` ImageData APIs are available.
 
 ### Unlock 4 (done for flow/clip-path shapes)
 We use **Option A:** express these as `path` marks directly (polygons) instead of relying on `clipPath`.

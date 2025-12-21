@@ -48,7 +48,8 @@ renderCanvas(ctx, model, {
 
 SVG filters:
 - SVG renderers support `dropShadow`, `gaussianBlur`, `turbulence`, and `displacementMap`.
-- Canvas supports `dropShadow` and `gaussianBlur` today (other primitives are ignored).
+- Canvas supports `dropShadow` and `gaussianBlur`.
+- Canvas also supports `turbulence` + `displacementMap` when `OffscreenCanvas` ImageData APIs are available (otherwise those primitives are ignored).
 
 To detect filter primitives that Canvas will ignore:
 
@@ -57,6 +58,6 @@ import { getCanvasUnsupportedFilterPrimitiveTypes } from "@microviz/renderers";
 
 const unsupported = getCanvasUnsupportedFilterPrimitiveTypes(model);
 if (unsupported.length > 0) {
-  // e.g. ["displacementMap", "turbulence"]
+  // e.g. ["displacementMap", "turbulence"] (environments without OffscreenCanvas)
 }
 ```
