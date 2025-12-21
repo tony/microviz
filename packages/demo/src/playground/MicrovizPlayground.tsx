@@ -659,7 +659,7 @@ function ChartCard({
             <div className="mt-1 flex flex-wrap gap-1">
               {htmlWarningTags.map((tag) => (
                 <span
-                  className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200"
+                  className="select-none px-1 py-0 text-[10px] leading-tight text-amber-700/70 sm:tracking-tight dark:text-amber-200/70"
                   key={tag.label}
                   title={`${tag.label}: ${tag.detail}`}
                 >
