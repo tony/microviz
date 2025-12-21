@@ -384,6 +384,7 @@ export const MicrovizPlayground: FC = () => {
   const [wrapper, setWrapper] = useState<Wrapper>("vanilla");
   const [renderer, setRenderer] = useState<Renderer>("svg-string");
   const [applyNoiseOverlay, setApplyNoiseOverlay] = useState(false);
+  const [showHoverTooltip, setShowHoverTooltip] = useState(false);
   const [
     fallbackSvgWhenCanvasUnsupported,
     setFallbackSvgWhenCanvasUnsupported,
@@ -928,6 +929,12 @@ export const MicrovizPlayground: FC = () => {
     setRenderer("svg-string");
   }, [renderer, wrapper]);
 
+  useEffect(() => {
+    if (wrapper === "elements") return;
+    if (!showHoverTooltip) return;
+    setShowHoverTooltip(false);
+  }, [showHoverTooltip, wrapper]);
+
   const computeModeEffective: ComputeMode =
     renderer === "offscreen-canvas" ? "worker" : computeMode;
 
@@ -973,7 +980,9 @@ export const MicrovizPlayground: FC = () => {
       );
 
     if (wrapper === "elements") {
-      return <ElementPreview model={model} />;
+      return (
+        <ElementPreview model={model} showHoverTooltip={showHoverTooltip} />
+      );
     }
 
     const canvasUnsupportedFilters =
@@ -1285,9 +1294,27 @@ export const MicrovizPlayground: FC = () => {
                 </span>
               </label>
 
+              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input
+                  checked={showHoverTooltip}
+                  className="accent-blue-500"
+                  disabled={wrapper !== "elements"}
+                  onChange={(e) => setShowHoverTooltip(e.target.checked)}
+                  type="checkbox"
+                />
+                <span className="text-sm">Hover tooltip (elements)</span>
+              </label>
+
+              {wrapper !== "elements" && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Only available for web components (uses `microviz-hit`
+                  events).
+                </div>
+              )}
+
               {wrapper === "elements" && (
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Disabled for web components (SVG-only).
+                  Canvas fallback is disabled for web components (SVG-only).
                 </div>
               )}
 
@@ -1680,8 +1707,17 @@ const CanvasPreview: FC<{
   );
 };
 
-const ElementPreview: FC<{ model: RenderModel }> = ({ model }) => {
+const ElementPreview: FC<{ model: RenderModel; showHoverTooltip: boolean }> = ({
+  model,
+  showHoverTooltip,
+}) => {
   const ref = useRef<MicrovizModelElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [hovered, setHovered] = useState<{
+    hit: { markId: string; markType: string };
+    x: number;
+    y: number;
+  } | null>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -1689,9 +1725,63 @@ const ElementPreview: FC<{ model: RenderModel }> = ({ model }) => {
     el.model = model;
   }, [model]);
 
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (showHoverTooltip) el.setAttribute("interactive", "");
+    else el.removeAttribute("interactive");
+
+    if (!showHoverTooltip) return;
+
+    const onHit = (event: Event) => {
+      const detail = (event as CustomEvent).detail as
+        | {
+            client?: { x: number; y: number };
+            hit: { markId: string; markType: string } | null;
+          }
+        | undefined;
+
+      if (!detail?.hit || !detail.client) {
+        setHovered(null);
+        return;
+      }
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      setHovered({
+        hit: detail.hit,
+        x: detail.client.x - rect.left,
+        y: detail.client.y - rect.top,
+      });
+    };
+
+    el.addEventListener("microviz-hit", onHit);
+    return () => el.removeEventListener("microviz-hit", onHit);
+  }, [showHoverTooltip]);
+
+  useEffect(() => {
+    if (!showHoverTooltip) setHovered(null);
+  }, [showHoverTooltip]);
+
   const setRef = (node: MicrovizModelElement | null) => {
     ref.current = node;
   };
 
-  return <microviz-model ref={setRef} />;
+  return (
+    <div className="relative inline-block" ref={containerRef}>
+      <microviz-model ref={setRef} />
+      {showHoverTooltip && hovered && (
+        <div
+          className="pointer-events-none absolute z-10 rounded-md bg-slate-900/90 px-2 py-1 text-xs text-slate-50 shadow-sm"
+          style={{ left: hovered.x + 8, top: hovered.y + 8 }}
+        >
+          <div className="max-w-[180px] truncate">
+            {hovered.hit.markType} · {hovered.hit.markId}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
