@@ -1728,10 +1728,6 @@ const ElementPreview: FC<{ model: RenderModel; showHoverTooltip: boolean }> = ({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    if (showHoverTooltip) el.setAttribute("interactive", "");
-    else el.removeAttribute("interactive");
-
     if (!showHoverTooltip) return;
 
     const onHit = (event: Event) => {
@@ -1771,7 +1767,7 @@ const ElementPreview: FC<{ model: RenderModel; showHoverTooltip: boolean }> = ({
 
   return (
     <div className="relative inline-block" ref={containerRef}>
-      <microviz-model ref={setRef} />
+      <microviz-model interactive={showHoverTooltip} ref={setRef} />
       {showHoverTooltip && hovered && (
         <div
           className="pointer-events-none absolute z-10 rounded-md bg-slate-900/90 px-2 py-1 text-xs text-slate-50 shadow-sm"
