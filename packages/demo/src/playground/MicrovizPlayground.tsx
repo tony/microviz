@@ -1,6 +1,5 @@
 import {
   type ChartMeta,
-  type ChartSpec,
   type ComputeModelInput,
   computeModel,
   getAllChartMeta,
@@ -41,6 +40,16 @@ import {
 import { ToggleGroup } from "../ui/ToggleGroup";
 import { renderSvgElement } from "../vanilla/svgDom";
 import { JsonViewer } from "./JsonViewer";
+import {
+  type ChartId,
+  type ChartSubtype,
+  type ComputeMode,
+  DEFAULT_PLAYGROUND_STATE,
+  type PlaygroundState,
+  type Renderer,
+  type SidebarTab,
+  type Wrapper,
+} from "./playgroundUrlState";
 import { ResizablePane } from "./ResizablePane";
 import {
   buildOpacities,
@@ -51,14 +60,6 @@ import {
 } from "./seed";
 import { MicrovizWorkerClient } from "./workerClient";
 
-type Wrapper = "vanilla" | "react" | "elements";
-
-type Renderer = "svg-string" | "svg-dom" | "canvas" | "offscreen-canvas";
-
-type ComputeMode = "main" | "worker";
-
-type ChartId = ChartSpec["type"];
-
 const chartSubtypeOptions = [
   { id: "all", label: "All" },
   { id: "lines", label: "Lines" },
@@ -67,7 +68,6 @@ const chartSubtypeOptions = [
   { id: "dots", label: "Dots" },
 ] as const;
 
-type ChartSubtype = (typeof chartSubtypeOptions)[number]["id"];
 type ChartCatalogEntry = {
   chartId: ChartId;
   title: string;
@@ -381,28 +381,142 @@ function ChartCard({
   );
 }
 
-export const MicrovizPlayground: FC = () => {
-  const [wrapper, setWrapper] = useState<Wrapper>("vanilla");
-  const [renderer, setRenderer] = useState<Renderer>("svg-string");
-  const [applyNoiseOverlay, setApplyNoiseOverlay] = useState(false);
-  const [showHoverTooltip, setShowHoverTooltip] = useState(false);
+export const MicrovizPlayground: FC<{
+  onUrlStateChange?: (state: PlaygroundState) => void;
+  urlState?: PlaygroundState;
+}> = ({ onUrlStateChange, urlState }) => {
+  const initialUrlState = urlState ?? DEFAULT_PLAYGROUND_STATE;
+
+  const [wrapper, setWrapper] = useState<Wrapper>(
+    () => initialUrlState.wrapper,
+  );
+  const [renderer, setRenderer] = useState<Renderer>(
+    () => initialUrlState.renderer,
+  );
+  const [applyNoiseOverlay, setApplyNoiseOverlay] = useState(
+    () => initialUrlState.applyNoiseOverlay,
+  );
+  const [showHoverTooltip, setShowHoverTooltip] = useState(
+    () => initialUrlState.showHoverTooltip,
+  );
   const [
     fallbackSvgWhenCanvasUnsupported,
     setFallbackSvgWhenCanvasUnsupported,
-  ] = useState(false);
-  const [computeMode, setComputeMode] = useState<ComputeMode>("main");
-  const [seriesPreset, setSeriesPreset] = useState<SeriesPreset>("trend");
-  const [seed, setSeed] = useState("mv-1");
-  const [seriesLength, setSeriesLength] = useState(16);
-  const [segmentCount, setSegmentCount] = useState(5);
-  const [selectedChart, setSelectedChart] = useState<ChartId>("sparkline");
-  const [chartSubtype, setChartSubtype] = useState<ChartSubtype>("all");
-  const [width, setWidth] = useState(200);
-  const [height, setHeight] = useState(32);
-  const [sidebarTab, setSidebarTab] = useState<"browse" | "settings" | "debug">(
-    "settings",
+  ] = useState(() => initialUrlState.fallbackSvgWhenCanvasUnsupported);
+  const [computeMode, setComputeMode] = useState<ComputeMode>(
+    () => initialUrlState.computeMode,
   );
-  const [chartFilter, setChartFilter] = useState("");
+  const [seriesPreset, setSeriesPreset] = useState<SeriesPreset>(
+    () => initialUrlState.seriesPreset,
+  );
+  const [seed, setSeed] = useState(() => initialUrlState.seed);
+  const [seriesLength, setSeriesLength] = useState(
+    () => initialUrlState.seriesLength,
+  );
+  const [segmentCount, setSegmentCount] = useState(
+    () => initialUrlState.segmentCount,
+  );
+  const [selectedChart, setSelectedChart] = useState<ChartId>(
+    () => initialUrlState.selectedChart,
+  );
+  const [chartSubtype, setChartSubtype] = useState<ChartSubtype>(
+    () => initialUrlState.chartSubtype,
+  );
+  const [width, setWidth] = useState(() => initialUrlState.width);
+  const [height, setHeight] = useState(() => initialUrlState.height);
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>(
+    () => initialUrlState.sidebarTab,
+  );
+  const [chartFilter, setChartFilter] = useState(
+    () => initialUrlState.chartFilter,
+  );
+
+  useEffect(() => {
+    if (!urlState) return;
+
+    setWrapper((prev) => (prev === urlState.wrapper ? prev : urlState.wrapper));
+    setRenderer((prev) =>
+      prev === urlState.renderer ? prev : urlState.renderer,
+    );
+    setApplyNoiseOverlay((prev) =>
+      prev === urlState.applyNoiseOverlay ? prev : urlState.applyNoiseOverlay,
+    );
+    setShowHoverTooltip((prev) =>
+      prev === urlState.showHoverTooltip ? prev : urlState.showHoverTooltip,
+    );
+    setFallbackSvgWhenCanvasUnsupported((prev) =>
+      prev === urlState.fallbackSvgWhenCanvasUnsupported
+        ? prev
+        : urlState.fallbackSvgWhenCanvasUnsupported,
+    );
+    setComputeMode((prev) =>
+      prev === urlState.computeMode ? prev : urlState.computeMode,
+    );
+    setSeriesPreset((prev) =>
+      prev === urlState.seriesPreset ? prev : urlState.seriesPreset,
+    );
+    setSeed((prev) => (prev === urlState.seed ? prev : urlState.seed));
+    setSeriesLength((prev) =>
+      prev === urlState.seriesLength ? prev : urlState.seriesLength,
+    );
+    setSegmentCount((prev) =>
+      prev === urlState.segmentCount ? prev : urlState.segmentCount,
+    );
+    setSelectedChart((prev) =>
+      prev === urlState.selectedChart ? prev : urlState.selectedChart,
+    );
+    setChartSubtype((prev) =>
+      prev === urlState.chartSubtype ? prev : urlState.chartSubtype,
+    );
+    setWidth((prev) => (prev === urlState.width ? prev : urlState.width));
+    setHeight((prev) => (prev === urlState.height ? prev : urlState.height));
+    setSidebarTab((prev) =>
+      prev === urlState.sidebarTab ? prev : urlState.sidebarTab,
+    );
+    setChartFilter((prev) =>
+      prev === urlState.chartFilter ? prev : urlState.chartFilter,
+    );
+  }, [urlState]);
+
+  useEffect(() => {
+    if (!onUrlStateChange) return;
+    onUrlStateChange({
+      applyNoiseOverlay,
+      chartFilter,
+      chartSubtype,
+      computeMode,
+      fallbackSvgWhenCanvasUnsupported,
+      height,
+      renderer,
+      seed,
+      segmentCount,
+      selectedChart,
+      seriesLength,
+      seriesPreset,
+      showHoverTooltip,
+      sidebarTab,
+      width,
+      wrapper,
+    });
+  }, [
+    applyNoiseOverlay,
+    chartFilter,
+    chartSubtype,
+    computeMode,
+    fallbackSvgWhenCanvasUnsupported,
+    height,
+    onUrlStateChange,
+    renderer,
+    seed,
+    segmentCount,
+    seriesLength,
+    seriesPreset,
+    selectedChart,
+    showHoverTooltip,
+    sidebarTab,
+    width,
+    wrapper,
+  ]);
 
   const workerClientRef = useRef<MicrovizWorkerClient | null>(null);
   const ensureWorkerClient = useMemo<EnsureWorkerClient>(
