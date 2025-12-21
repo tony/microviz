@@ -452,5 +452,79 @@ This section is *not* about turning microviz into a full charting suite. It’s 
 
 ### Explicitly out of scope (by constitution)
 - Polyfills / legacy browser support, non‑ESM builds, or DOM imports in `core`/`renderers`.
-- A general-purpose “everything charting suite” surface (axes, dashboards, 3D, maps, etc.) in `@microviz/core`.
+- A general-purpose "everything charting suite" surface (axes, dashboards, 3D, maps, etc.) in `@microviz/core`.
 - Heavy animation runtimes in core; keep motion optional at the integration layer.
+
+---
+
+## Sandbox / Vibecoding / ESM Friendliness (2025-12-19)
+
+Expert synthesis from 5 independent assessments on making microviz more friendly for AI-assisted coding, sandboxes, and CDN usage.
+
+### Expert Consensus vs. Microviz Status
+
+| Principle | Expert Consensus | Microviz Status | Gap |
+|-----------|------------------|-----------------|-----|
+| **Bundle size** | ~50KB gzip target | ~80-100KB gzip | 🟡 Need subset bundle |
+| **Progressive API** | One-liner → Config → Full spec | Web Components only | 🔴 Need inference API |
+| **Data flexibility** | Accept CSV, arrays, objects | Strict JSON | 🟡 Add lenient parsing |
+| **Smart defaults** | Infer chart type from data | Manual type selection | 🔴 Need inference engine |
+| **Zero-config styling** | "Looks good" without CSS | Requires CSS import | 🟡 Add fallback styles |
+| **CDN drop-in** | Single script, no import maps | Requires import map | 🔴 Need standalone bundle |
+| **AI/LLM friendly** | `llms.txt`, strings over functions | Good (declarative) | 🟡 Add llms.txt |
+| **CSP-safe rendering** | SVG string for sandboxes | `renderSvgString()` exists | ✅ Already good |
+
+**Key insight**: Architecture is expert-approved. Gaps are **packaging and ergonomics**, not fundamentals.
+
+### Implementation Roadmap
+
+#### Phase 1: Quick Wins (v1.0.x)
+- [ ] **Lenient data parsing**: Accept `data="1,2,3"` and `data="1 2 3"` in elements
+- [ ] **Inline fallback styles**: Inject minimal `--mv-series-*` colors when no theme detected
+- [ ] **Create `llms.txt`**: Few-shot examples + anti-patterns for AI code generation
+
+#### Phase 2: CDN Bundle (v1.1)
+- [ ] Ship `@microviz/cdn` with top 10 charts, inlined deps (~50KB gzip target)
+- [ ] IIFE fallback for CodePen/JSFiddle
+- [ ] Per-chart entry points for tree-shaking
+
+#### Phase 3: Inference & Progressive API (v1.2)
+- [ ] Type inference helpers in core (temporal/quantitative/nominal detection)
+- [ ] `<microviz-auto>` element that guesses chart type
+- [ ] Quick function API: `sparkline([1,2,3])` returns element
+
+#### Phase 4: Data Ecosystem (v1.3+)
+- [ ] CSV string parsing in core
+- [ ] Arrow/DataFrame support (optional module)
+
+### Key Implementation Notes
+
+**Lenient Parsing (Phase 1)**:
+```ts
+function parseFlexibleData(value: string): number[] {
+  if (!value) return [];
+  try { return JSON.parse(value); } catch {}
+  // Comma or space separated
+  if (/^[\d\s,.\-]+$/.test(value.trim())) {
+    return value.trim().split(/[,\s]+/).filter(Boolean).map(Number);
+  }
+  return [];
+}
+```
+
+**Fallback Styles (Phase 1)**:
+Inject minimal CSS via `adoptedStyleSheets` when `--mv-series-1` is undefined. Use Tableau 10 palette for colorblind safety.
+
+**Target CDN Usage (Phase 2)**:
+```html
+<!-- Goal: 2 steps, no import map -->
+<script type="module" src="https://esm.sh/@microviz/cdn"></script>
+<microviz-sparkline data="1,2,3"></microviz-sparkline>
+```
+
+### Expert References
+- **Expert 1**: General vibe-coding DX principles (progressive disclosure, smart defaults)
+- **Expert 2**: "UltraVibeChart.js" concept (~50KB, emoji API, WebGL)
+- **Expert 3**: "VibePlot" spec (grammar of graphics, 5-layer API, type inference)
+- **Expert 4**: "Universal Visualization Component" (CSP constraints, llms.txt, Arrow)
+- **Expert 5**: "Vibe" engine (greedy parser, bi-directional state, Shadow DOM)
