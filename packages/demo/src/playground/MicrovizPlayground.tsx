@@ -2,6 +2,7 @@ import {
   type ChartMeta,
   type ComputeModelInput,
   computeModel,
+  type Def,
   getAllChartMeta,
   getPreferredAspectRatio,
   type Mark,
@@ -125,11 +126,13 @@ const HTML_SAFE_MARK_TYPES = new Set<Mark["type"]>([
   "text",
 ]);
 
-function usesUrlRef(value: string | undefined): boolean {
-  return typeof value === "string" && value.includes("url(");
+function extractUrlRefId(value: string | undefined): string | null {
+  if (!value) return null;
+  const match = /url\((['"]?)#?([^'")]+)\1\)/.exec(value);
+  return match?.[2] ?? null;
 }
 
-function isHtmlSafeMark(mark: Mark): boolean {
+function isHtmlSafeMark(mark: Mark, defsById: Map<string, Def>): boolean {
   if (!HTML_SAFE_MARK_TYPES.has(mark.type)) return false;
   if ("clipPath" in mark && mark.clipPath) return false;
   if ("mask" in mark && mark.mask) return false;
@@ -138,7 +141,14 @@ function isHtmlSafeMark(mark: Mark): boolean {
   if ("strokeDashoffset" in mark && mark.strokeDashoffset) return false;
   const fill = "fill" in mark ? mark.fill : undefined;
   const stroke = "stroke" in mark ? mark.stroke : undefined;
-  if (usesUrlRef(fill) || usesUrlRef(stroke)) return false;
+  const fillRefId = extractUrlRefId(fill);
+  if (fillRefId) {
+    const fillDef = defsById.get(fillRefId);
+    if (!fillDef || fillDef.type !== "linearGradient" || mark.type !== "rect")
+      return false;
+  }
+  const strokeRefId = extractUrlRefId(stroke);
+  if (strokeRefId) return false;
   return true;
 }
 
@@ -146,11 +156,14 @@ function splitHtmlSvgModel(model: RenderModel): {
   htmlModel: RenderModel;
   svgModel: RenderModel | null;
 } {
+  const defsById = new Map<string, Def>(
+    model.defs?.map((def) => [def.id, def]) ?? [],
+  );
   const htmlMarks: Mark[] = [];
   const svgMarks: Mark[] = [];
 
   for (const mark of model.marks) {
-    if (isHtmlSafeMark(mark)) {
+    if (isHtmlSafeMark(mark, defsById)) {
       htmlMarks.push(mark);
     } else {
       svgMarks.push(mark);

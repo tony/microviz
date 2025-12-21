@@ -32,6 +32,41 @@ describe("renderHtmlString", () => {
     expect(html).toContain("height:8px");
     expect(html).toContain('data-mark-id="r-1"');
   });
+
+  it("maps linearGradient fills to CSS gradients", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          id: "grad-1",
+          stops: [
+            { color: "red", offset: 0 },
+            { color: "blue", offset: 1 },
+          ],
+          type: "linearGradient",
+          x1: 0,
+          x2: 1,
+          y1: 0,
+          y2: 0,
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          fill: "url(#grad-1)",
+          h: 6,
+          id: "r-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 2,
+        },
+      ],
+      width: 20,
+    };
+
+    const html = renderHtmlString(model);
+    expect(html).toContain("linear-gradient");
+  });
 });
 
 describe("HTML renderer diagnostics", () => {
@@ -68,7 +103,7 @@ describe("HTML renderer diagnostics", () => {
     };
 
     expect(getHtmlUnsupportedMarkTypes(model)).toEqual(["path"]);
-    expect(getHtmlUnsupportedDefTypes(model)).toEqual(["linearGradient"]);
+    expect(getHtmlUnsupportedDefTypes(model)).toEqual([]);
     expect(getHtmlUnsupportedMarkEffects(model)).toEqual(["clipPath"]);
   });
 });
