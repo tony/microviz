@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   clamp,
@@ -20,6 +20,10 @@ import type {
 export const equalizerChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "equalizer-bar",
+        labelPrefix: "Bar",
+      }),
       label: a11yLabelWithSeriesSummary("Equalizer chart", normalized.series),
       role: "img",
     };
