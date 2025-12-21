@@ -85,6 +85,7 @@ site → { core, elements, renderers, themes, themes-tailwind }
 - Keep `core` deterministic: same inputs → same outputs
 - Use OffscreenCanvas for text measurement (works in Workers + SSR)
 - Return `RenderModel` as serializable data, not DOM nodes
+- Use `patchRenderModel` + `createModelIdAllocator` for overlay-style model edits
 - Use CSS custom properties (`--mv-*`) for theming
 - Wrap library styles in `@layer microviz`
 - Use `ElementInternals` for accessibility in Web Components

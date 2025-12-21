@@ -150,6 +150,14 @@ export function largestRemainderAllocation(
 }
 
 export { compressRuns, interleaveCounts };
+export {
+  createModelIdAllocator,
+  type ModelIdAllocator,
+  type ModelMergeMode,
+  patchRenderModel,
+  type RenderModelPatch,
+  type RenderModelPatchOptions,
+} from "./overlays";
 
 export interface MicrovizPixelSegment extends MicrovizPercentageSlice {
   start: number;
