@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeModel } from "../compute";
+import { computeModel } from "./compute";
 
 const SEGMENTS = [
   { color: "#2563eb", name: "A", pct: 38 },
