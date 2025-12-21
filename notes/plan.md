@@ -193,7 +193,7 @@ Pragmatic default: **ship HTML as experimental** once we want those effects, whi
 ### Experimental HTML renderer (parity deferred) — integration plan
 Initial goal: provide a fast HTML surface for CSS-first patterns, without promising SVG/Canvas parity yet.
 - **Render surface:** add `html` to demo renderer picker (left panel) as “HTML (experimental)”.
-- **Policy (v1):** supports `rect`/`circle`/`line`/`text` only. Ignores `path` marks, all defs (gradients/patterns/masks/filters/clip paths), and mark effects (`clipPath`, `mask`, `filter`, `strokeDash`). Use SVG/Canvas for full fidelity.
+- **Policy (v1):** supports `rect`/`circle`/`line`/`text` only. Ignores `path` marks. Supports `linearGradient` fills on rects and `clipRect` for rect clip paths; other defs (patterns/masks/filters) and mark effects (`mask`, `filter`, `strokeDash`) are ignored. Use SVG/Canvas for full fidelity.
 - **Renderer implementation:** map `RenderModel` marks to absolutely positioned HTML elements:
   - `rect` → `<div>` with `position:absolute`, `background`, `borderRadius`, `opacity`.
   - `circle` → `<div>` with `borderRadius:9999px`, `background`, `opacity`.
