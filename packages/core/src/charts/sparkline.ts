@@ -83,6 +83,7 @@ export const sparklineChart = {
     const max = series.length > 0 ? Math.max(...series) : 1;
     return { max, min, series, type: "sparkline" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "sparkline",
 } satisfies ChartDefinition<
   "sparkline",

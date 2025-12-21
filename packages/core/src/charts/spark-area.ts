@@ -140,6 +140,7 @@ export const sparkAreaChart = {
     const series = data.filter(isFiniteNumber);
     return { series, type: "spark-area" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "spark-area",
 } satisfies ChartDefinition<
   "spark-area",

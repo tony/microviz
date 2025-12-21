@@ -154,6 +154,7 @@ export const patternTilesChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "pattern-tiles" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "pattern-tiles",
 } satisfies ChartDefinition<
   "pattern-tiles",

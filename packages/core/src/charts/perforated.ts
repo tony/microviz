@@ -128,6 +128,7 @@ export const perforatedChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "perforated" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "perforated",
 } satisfies ChartDefinition<
   "perforated",

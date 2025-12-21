@@ -145,6 +145,7 @@ export const mosaicChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "mosaic" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "mosaic",
 } satisfies ChartDefinition<
   "mosaic",

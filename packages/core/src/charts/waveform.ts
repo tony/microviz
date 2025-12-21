@@ -90,6 +90,7 @@ export const waveformChart = {
     const max = series.length > 0 ? Math.max(...series) : 1;
     return { max, min, series, type: "waveform" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "waveform",
 } satisfies ChartDefinition<
   "waveform",

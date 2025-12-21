@@ -112,6 +112,7 @@ export const twoTierChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "two-tier" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "two-tier",
 } satisfies ChartDefinition<
   "two-tier",

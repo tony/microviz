@@ -219,6 +219,7 @@ export const bulletDeltaChart = {
       type: "bullet-delta",
     };
   },
+  preferredAspectRatio: "wide" as const,
   type: "bullet-delta",
 } satisfies ChartDefinition<
   "bullet-delta",

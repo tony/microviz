@@ -105,6 +105,7 @@ export const handOfCardsChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "hand-of-cards" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "hand-of-cards",
 } satisfies ChartDefinition<
   "hand-of-cards",

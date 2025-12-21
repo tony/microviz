@@ -165,6 +165,7 @@ export const histogramChart = {
     const opacities = data.opacities?.filter(isFiniteNumber);
     return { opacities, series, type: "histogram" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "histogram",
 } satisfies ChartDefinition<
   "histogram",

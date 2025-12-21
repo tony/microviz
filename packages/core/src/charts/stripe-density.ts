@@ -118,6 +118,7 @@ export const stripeDensityChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "stripe-density" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "stripe-density",
 } satisfies ChartDefinition<
   "stripe-density",
