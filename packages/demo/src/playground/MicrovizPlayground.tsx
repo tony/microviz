@@ -18,12 +18,14 @@ import {
   renderSvgString,
 } from "@microviz/renderers";
 import "@microviz/elements";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   type FC,
   Fragment,
   type ReactNode,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -73,6 +75,12 @@ type ChartCatalogEntry = {
   title: string;
   subtype: Exclude<ChartSubtype, "all">;
 };
+
+type ChartBlock =
+  | { kind: "sectionHeader"; label: string }
+  | { kind: "wideRow"; charts: ChartCatalogEntry[]; isLast: boolean }
+  | { kind: "squareRow"; charts: ChartCatalogEntry[]; isLast: boolean }
+  | { kind: "tallBlock"; charts: ChartCatalogEntry[] };
 
 // Build catalog directly from registry metadata
 const chartMetaMap = new Map<string, ChartMeta>(
@@ -163,6 +171,7 @@ function useModels(
   inputs: Record<ChartId, ComputeModelInput>,
   computeMode: ComputeMode,
   ensureWorkerClient: EnsureWorkerClient,
+  requestedChartIds: readonly ChartId[],
 ): {
   models: Record<ChartId, RenderModel | null>;
   timingsMs: Record<ChartId, number | null>;
@@ -176,19 +185,36 @@ function useModels(
     () => createRecordFromKeys<ChartId, number | null>(initialChartIds, null),
   );
 
-  useEffect(() => {
-    const chartIds = Object.keys(inputs) as ChartId[];
-    if (computeMode === "main") {
-      const nextModels = createRecordFromKeys<ChartId, RenderModel | null>(
-        chartIds,
-        null,
-      );
-      const nextTimings = createRecordFromKeys<ChartId, number | null>(
-        chartIds,
-        null,
-      );
+  const computeModeRef = useRef(computeMode);
+  const runIdRef = useRef(0);
+  const inFlightRef = useRef<Map<ChartId, number>>(new Map());
 
-      for (const chartId of chartIds) {
+  useLayoutEffect(() => {
+    computeModeRef.current = computeMode;
+    runIdRef.current += 1;
+    inFlightRef.current.clear();
+
+    const chartIds = Object.keys(inputs) as ChartId[];
+    setModels(
+      createRecordFromKeys<ChartId, RenderModel | null>(chartIds, null),
+    );
+    setTimingsMs(createRecordFromKeys<ChartId, number | null>(chartIds, null));
+  }, [computeMode, inputs]);
+
+  useEffect(() => {
+    const chartIds = requestedChartIds;
+    if (chartIds.length === 0) return;
+
+    const runId = runIdRef.current;
+
+    if (computeMode === "main") {
+      const toCompute = chartIds.filter((chartId) => models[chartId] === null);
+      if (toCompute.length === 0) return;
+
+      const nextModels = { ...models };
+      const nextTimings = { ...timingsMs };
+
+      for (const chartId of toCompute) {
         const start = performance.now();
         const model = computeModel(inputs[chartId]);
         const end = performance.now();
@@ -196,6 +222,7 @@ function useModels(
         nextTimings[chartId] = Math.round((end - start) * 1000) / 1000;
       }
 
+      if (runId !== runIdRef.current) return;
       setModels(nextModels);
       setTimingsMs(nextTimings);
       return;
@@ -203,48 +230,38 @@ function useModels(
 
     const worker = ensureWorkerClient();
 
-    let cancelled = false;
-    const entries = chartIds;
-    const startById = new Map<ChartId, number>(
-      entries.map((id) => [id, performance.now()]),
-    );
+    for (const chartId of chartIds) {
+      if (models[chartId] !== null) continue;
+      if (inFlightRef.current.get(chartId) === runId) continue;
 
-    void Promise.all(
-      entries.map(async (chartId) => {
-        const model = await worker.compute(inputs[chartId]);
-        const end = performance.now();
-        const start = startById.get(chartId) ?? end;
-        return {
-          chartId,
-          model,
-          timingMs: Math.round((end - start) * 1000) / 1000,
-        };
-      }),
-    ).then((results) => {
-      if (cancelled) return;
+      inFlightRef.current.set(chartId, runId);
+      const start = performance.now();
 
-      const nextModels = createRecordFromKeys<ChartId, RenderModel | null>(
-        entries,
-        null,
-      );
-      const nextTimings = createRecordFromKeys<ChartId, number | null>(
-        entries,
-        null,
-      );
+      void worker
+        .compute(inputs[chartId])
+        .then((model) => {
+          const end = performance.now();
+          if (runId !== runIdRef.current) return;
 
-      for (const row of results) {
-        nextModels[row.chartId] = row.model;
-        nextTimings[row.chartId] = row.timingMs;
-      }
-
-      setModels(nextModels);
-      setTimingsMs(nextTimings);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [computeMode, ensureWorkerClient, inputs]);
+          setModels((prev) => ({ ...prev, [chartId]: model }));
+          setTimingsMs((prev) => ({
+            ...prev,
+            [chartId]: Math.round((end - start) * 1000) / 1000,
+          }));
+        })
+        .finally(() => {
+          if (inFlightRef.current.get(chartId) !== runId) return;
+          inFlightRef.current.delete(chartId);
+        });
+    }
+  }, [
+    computeMode,
+    ensureWorkerClient,
+    inputs,
+    models,
+    requestedChartIds,
+    timingsMs,
+  ]);
 
   return { models, timingsMs };
 }
@@ -1053,10 +1070,115 @@ export const MicrovizPlayground: FC<{
   const computeModeEffective: ComputeMode =
     renderer === "offscreen-canvas" ? "worker" : computeMode;
 
+  const chartListRef = useRef<HTMLDivElement | null>(null);
+  const [chartListWidthPx, setChartListWidthPx] = useState(0);
+
+  useEffect(() => {
+    const el = chartListRef.current;
+    if (!el) return;
+
+    setChartListWidthPx(el.getBoundingClientRect().width);
+
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (typeof width === "number") setChartListWidthPx(width);
+    });
+
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const gridGapPx = 12; // Tailwind `gap-3`
+
+  const wideCols = useMemo(() => {
+    const minCardWidth = 280;
+    if (chartListWidthPx <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor((chartListWidthPx + gridGapPx) / (minCardWidth + gridGapPx)),
+    );
+  }, [chartListWidthPx]);
+
+  const squareCols = useMemo(() => {
+    const minCardWidth = 120;
+    if (chartListWidthPx <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor((chartListWidthPx + gridGapPx) / (minCardWidth + gridGapPx)),
+    );
+  }, [chartListWidthPx]);
+
+  const chartBlocks = useMemo<ChartBlock[]>(() => {
+    const blocks: ChartBlock[] = [];
+
+    if (chartsByAspectRatio.wide.length > 0) {
+      blocks.push({ kind: "sectionHeader", label: "Wide" });
+      for (let i = 0; i < chartsByAspectRatio.wide.length; i += wideCols) {
+        const charts = chartsByAspectRatio.wide.slice(i, i + wideCols);
+        blocks.push({
+          charts,
+          isLast: i + wideCols >= chartsByAspectRatio.wide.length,
+          kind: "wideRow",
+        });
+      }
+    }
+
+    if (chartsByAspectRatio.square.length > 0) {
+      blocks.push({ kind: "sectionHeader", label: "Square" });
+      for (let i = 0; i < chartsByAspectRatio.square.length; i += squareCols) {
+        const charts = chartsByAspectRatio.square.slice(i, i + squareCols);
+        blocks.push({
+          charts,
+          isLast: i + squareCols >= chartsByAspectRatio.square.length,
+          kind: "squareRow",
+        });
+      }
+    }
+
+    if (chartsByAspectRatio.tall.length > 0) {
+      blocks.push({ kind: "sectionHeader", label: "Tall" });
+      blocks.push({ charts: chartsByAspectRatio.tall, kind: "tallBlock" });
+    }
+
+    return blocks;
+  }, [chartsByAspectRatio, squareCols, wideCols]);
+
+  const chartBlocksVirtualizer = useVirtualizer({
+    count: chartBlocks.length,
+    estimateSize: (index) => {
+      const block = chartBlocks[index];
+      if (!block) return 220;
+
+      if (block.kind === "sectionHeader") return 22;
+      if (block.kind === "squareRow") return 170;
+      if (block.kind === "tallBlock") return 160;
+      return 220; // wide rows tend to be the tallest
+    },
+    getScrollElement: () => chartListRef.current,
+    overscan: 8,
+  });
+
+  const virtualBlocks = chartBlocksVirtualizer.getVirtualItems();
+  const requestedChartIdSet = new Set<ChartId>([selectedChart]);
+  for (const row of virtualBlocks) {
+    const block = chartBlocks[row.index];
+    if (!block) continue;
+    if (block.kind === "sectionHeader") continue;
+
+    for (const chart of block.charts) {
+      requestedChartIdSet.add(chart.chartId);
+    }
+  }
+
+  const requestedChartIds = chartIds.filter((id) =>
+    requestedChartIdSet.has(id),
+  );
+
   const { models, timingsMs } = useModels(
     inputs,
     computeModeEffective,
     ensureWorkerClient,
+    requestedChartIds,
   );
 
   const effectiveModels = useMemo(() => {
@@ -1471,7 +1593,7 @@ export const MicrovizPlayground: FC<{
         </div>
       </ResizablePane>
 
-      <div className="min-w-0 flex-1 overflow-auto p-4">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col p-4">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">Playground</h2>
@@ -1520,88 +1642,126 @@ export const MicrovizPlayground: FC<{
           </div>
         </div>
 
-        {/* Wide charts (default) - standard 2-column grid */}
-        {chartsByAspectRatio.wide.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Wide
+        <div className="min-h-0 flex-1 overflow-auto" ref={chartListRef}>
+          {chartBlocks.length === 0 ? (
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              No charts
             </div>
-            <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-              {chartsByAspectRatio.wide.map((chart) => {
-                const model = effectiveModels[chart.chartId] ?? null;
-                return (
-                  <ChartCard
-                    active={selectedChart === chart.chartId}
-                    chartId={chart.chartId}
-                    hasWarnings={hasDiagnosticsWarnings(model, renderer)}
-                    key={chart.chartId}
-                    model={model}
-                    onSelect={setSelectedChart}
-                    render={renderSurface(chart.chartId)}
-                    timingMs={timingsMs[chart.chartId]}
-                    title={chart.title}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
+          ) : (
+            <div
+              className="relative w-full"
+              style={{ height: chartBlocksVirtualizer.getTotalSize() }}
+            >
+              {virtualBlocks.map((virtualRow) => {
+                const block = chartBlocks[virtualRow.index];
+                if (!block) return null;
 
-        {/* Square charts - tighter grid for compact items */}
-        {chartsByAspectRatio.square.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Square
-            </div>
-            <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
-              {chartsByAspectRatio.square.map((chart) => {
-                const model = effectiveModels[chart.chartId] ?? null;
                 return (
-                  <ChartCard
-                    active={selectedChart === chart.chartId}
-                    centered
-                    chartId={chart.chartId}
-                    hasWarnings={hasDiagnosticsWarnings(model, renderer)}
-                    key={chart.chartId}
-                    model={model}
-                    onSelect={setSelectedChart}
-                    render={renderSurface(chart.chartId)}
-                    timingMs={timingsMs[chart.chartId]}
-                    title={chart.title}
-                  />
+                  <div
+                    className="absolute left-0 top-0 w-full"
+                    data-index={virtualRow.index}
+                    key={virtualRow.key}
+                    ref={chartBlocksVirtualizer.measureElement}
+                    style={{ transform: `translateY(${virtualRow.start}px)` }}
+                  >
+                    {block.kind === "sectionHeader" ? (
+                      <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {block.label}
+                      </div>
+                    ) : block.kind === "wideRow" ? (
+                      <div className={block.isLast ? "pb-6" : "pb-3"}>
+                        <div
+                          className="grid gap-3"
+                          style={{
+                            gridTemplateColumns: `repeat(${wideCols}, minmax(280px, 1fr))`,
+                          }}
+                        >
+                          {block.charts.map((chart) => {
+                            const model =
+                              effectiveModels[chart.chartId] ?? null;
+                            return (
+                              <ChartCard
+                                active={selectedChart === chart.chartId}
+                                chartId={chart.chartId}
+                                hasWarnings={hasDiagnosticsWarnings(
+                                  model,
+                                  renderer,
+                                )}
+                                key={chart.chartId}
+                                model={model}
+                                onSelect={setSelectedChart}
+                                render={renderSurface(chart.chartId)}
+                                timingMs={timingsMs[chart.chartId]}
+                                title={chart.title}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : block.kind === "squareRow" ? (
+                      <div className={block.isLast ? "pb-6" : "pb-3"}>
+                        <div
+                          className="grid gap-3"
+                          style={{
+                            gridTemplateColumns: `repeat(${squareCols}, minmax(120px, 1fr))`,
+                          }}
+                        >
+                          {block.charts.map((chart) => {
+                            const model =
+                              effectiveModels[chart.chartId] ?? null;
+                            return (
+                              <ChartCard
+                                active={selectedChart === chart.chartId}
+                                centered
+                                chartId={chart.chartId}
+                                hasWarnings={hasDiagnosticsWarnings(
+                                  model,
+                                  renderer,
+                                )}
+                                key={chart.chartId}
+                                model={model}
+                                onSelect={setSelectedChart}
+                                render={renderSurface(chart.chartId)}
+                                timingMs={timingsMs[chart.chartId]}
+                                title={chart.title}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pb-6">
+                        <div className="flex flex-wrap gap-3">
+                          {block.charts.map((chart) => {
+                            const model =
+                              effectiveModels[chart.chartId] ?? null;
+                            return (
+                              <ChartCard
+                                active={selectedChart === chart.chartId}
+                                chartId={chart.chartId}
+                                compact
+                                hasWarnings={hasDiagnosticsWarnings(
+                                  model,
+                                  renderer,
+                                )}
+                                key={chart.chartId}
+                                model={model}
+                                onSelect={setSelectedChart}
+                                render={renderSurface(chart.chartId)}
+                                timingMs={timingsMs[chart.chartId]}
+                                title={chart.title}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {/* Tall charts - horizontal flow for vertical items */}
-        {chartsByAspectRatio.tall.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Tall
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {chartsByAspectRatio.tall.map((chart) => {
-                const model = effectiveModels[chart.chartId] ?? null;
-                return (
-                  <ChartCard
-                    active={selectedChart === chart.chartId}
-                    chartId={chart.chartId}
-                    compact
-                    hasWarnings={hasDiagnosticsWarnings(model, renderer)}
-                    key={chart.chartId}
-                    model={model}
-                    onSelect={setSelectedChart}
-                    render={renderSurface(chart.chartId)}
-                    timingMs={timingsMs[chart.chartId]}
-                    title={chart.title}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <ResizablePane
