@@ -1357,8 +1357,37 @@ export const MicrovizPlayground: FC<{
   const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
 
   const htmlSafeOnlyActive = htmlSafeOnly && renderer === "html";
+  const htmlSafeCacheRef = useRef(new Map<string, Set<ChartId>>());
+  const htmlSafeCacheKey = useMemo(() => {
+    if (!htmlSafeOnlyActive) return null;
+    return [
+      applyNoiseOverlay ? "noise:1" : "noise:0",
+      `palette:${paletteMode}`,
+      `seed:${seed}`,
+      `series:${seriesLength}`,
+      `segments:${segmentCount}`,
+      `preset:${seriesPreset}`,
+      `size:${width}x${height}`,
+      `charts:${chartIds.join(",")}`,
+    ].join("|");
+  }, [
+    applyNoiseOverlay,
+    chartIds,
+    height,
+    htmlSafeOnlyActive,
+    paletteMode,
+    seed,
+    segmentCount,
+    seriesLength,
+    seriesPreset,
+    width,
+  ]);
   const htmlSafeChartIdSet = useMemo(() => {
     if (!htmlSafeOnlyActive) return null;
+    if (htmlSafeCacheKey) {
+      const cached = htmlSafeCacheRef.current.get(htmlSafeCacheKey);
+      if (cached) return cached;
+    }
 
     const safeCharts = new Set<ChartId>();
     for (const chartId of chartIds) {
@@ -1375,8 +1404,17 @@ export const MicrovizPlayground: FC<{
       }
     }
 
+    if (htmlSafeCacheKey) {
+      htmlSafeCacheRef.current.set(htmlSafeCacheKey, safeCharts);
+    }
     return safeCharts;
-  }, [applyNoiseOverlay, chartIds, htmlSafeOnlyActive, inputs]);
+  }, [
+    applyNoiseOverlay,
+    chartIds,
+    htmlSafeCacheKey,
+    htmlSafeOnlyActive,
+    inputs,
+  ]);
 
   const htmlSafeCatalog = useMemo(() => {
     if (!htmlSafeOnlyActive || !htmlSafeChartIdSet) return chartCatalog;
