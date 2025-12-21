@@ -13,6 +13,11 @@ export const HTML_SUPPORTED_MARK_TYPES = [
   "text",
 ] as const;
 
+const HTML_SUPPORTED_DEF_TYPES = ["linearGradient"] as const;
+const HTML_SUPPORTED_DEF_TYPE_SET = new Set<Def["type"]>(
+  HTML_SUPPORTED_DEF_TYPES,
+);
+
 const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
   HTML_SUPPORTED_MARK_TYPES,
 );
@@ -21,15 +26,17 @@ const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
  * HTML renderer policy (experimental, parity-deferred):
  * - Supports only rect/circle/line/text marks.
  * - Ignores path marks entirely.
- * - Ignores all defs (gradients, patterns, masks, filters, clip paths).
+ * - Supports linearGradient defs for rect fills.
+ * - Ignores other defs (patterns, masks, filters, clip paths).
  * - Ignores mark effects: clipPath, mask, filter, strokeDash.
  * - Use SVG/Canvas for full-fidelity output.
  */
 export const HTML_RENDERER_POLICY = {
   notes: ["Use SVG/Canvas for full-fidelity output."],
   status: "experimental",
+  supportedDefs: HTML_SUPPORTED_DEF_TYPES,
   supportedMarkTypes: HTML_SUPPORTED_MARK_TYPES,
-  unsupportedDefs: "all",
+  unsupportedDefs: "most",
   unsupportedMarkEffects: ["clipPath", "mask", "filter", "strokeDash"],
   unsupportedMarkTypes: ["path"],
 } as const;
@@ -50,7 +57,11 @@ export function getHtmlUnsupportedMarkTypes(
 
 export function getHtmlUnsupportedDefTypes(model: RenderModel): Def["type"][] {
   if (!model.defs || model.defs.length === 0) return [];
-  return uniqueSorted(model.defs.map((def) => def.type));
+  return uniqueSorted(
+    model.defs
+      .map((def) => def.type)
+      .filter((type) => !HTML_SUPPORTED_DEF_TYPE_SET.has(type)),
+  );
 }
 
 export function getHtmlUnsupportedMarkEffects(
@@ -85,6 +96,12 @@ function attr(name: string, value: string | number | undefined): string {
   return ` ${name}="${escapeHtmlText(String(value))}"`;
 }
 
+function extractUrlRefId(value: string | undefined): string | null {
+  if (!value) return null;
+  const match = /url\((['"]?)#?([^'")]+)\1\)/.exec(value);
+  return match?.[2] ?? null;
+}
+
 function px(value: number | undefined): string | undefined {
   if (value === undefined) return undefined;
   const rounded = Math.round(value * 1000) / 1000;
@@ -106,6 +123,35 @@ function withOpacity(color: string, opacity: number | undefined): string {
   return `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 }
 
+function linearGradientToCss(
+  def: Extract<Def, { type: "linearGradient" }>,
+  fillOpacity: number | undefined,
+): string | null {
+  if (!def.stops || def.stops.length === 0) return null;
+  const x1 = def.x1 ?? 0;
+  const y1 = def.y1 ?? 0;
+  const x2 = def.x2 ?? 1;
+  const y2 = def.y2 ?? 0;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+  const angleRounded = Math.round(angle * 1000) / 1000;
+  const baseOpacity = Number.isFinite(fillOpacity) ? (fillOpacity ?? 1) : 1;
+  const stops = [...def.stops]
+    .sort((a, b) => a.offset - b.offset)
+    .map((stop) => {
+      const offset = Math.max(0, Math.min(1, stop.offset));
+      const opacity = Math.max(
+        0,
+        Math.min(1, (stop.opacity ?? 1) * baseOpacity),
+      );
+      const color = withOpacity(stop.color, opacity);
+      const pct = Math.round(offset * 1000) / 10;
+      return `${color} ${pct}%`;
+    });
+  return `linear-gradient(${angleRounded}deg, ${stops.join(", ")})`;
+}
+
 function fallbackPaint(mark: Mark, kind: "fill" | "stroke" | "text"): string {
   const className = mark.className?.toLowerCase() ?? "";
   if (kind === "text") return "var(--mv-fg)";
@@ -120,10 +166,23 @@ function fallbackPaint(mark: Mark, kind: "fill" | "stroke" | "text"): string {
   return "var(--mv-series-1)";
 }
 
-function renderRect(mark: Extract<Mark, { type: "rect" }>): string {
-  const fillBase = mark.fill ?? fallbackPaint(mark, "fill");
-  const fill =
-    mark.fill === "none" ? undefined : withOpacity(fillBase, mark.fillOpacity);
+function renderRect(
+  mark: Extract<Mark, { type: "rect" }>,
+  defsById: Map<string, Def>,
+): string {
+  const fillRefId = extractUrlRefId(mark.fill);
+  const fillDef = fillRefId ? defsById.get(fillRefId) : undefined;
+  const gradientFill =
+    fillDef?.type === "linearGradient"
+      ? linearGradientToCss(fillDef, mark.fillOpacity)
+      : null;
+  const rawFill = fillRefId ? undefined : mark.fill;
+  const fillBase = gradientFill ?? rawFill ?? fallbackPaint(mark, "fill");
+  const fill = gradientFill
+    ? gradientFill
+    : rawFill === "none"
+      ? undefined
+      : withOpacity(fillBase, mark.fillOpacity);
   const strokeBase = mark.stroke ?? fallbackPaint(mark, "stroke");
   const stroke =
     mark.stroke === "none"
@@ -242,10 +301,10 @@ function renderText(mark: Extract<Mark, { type: "text" }>): string {
   return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}>${escapeHtmlText(mark.text)}</div>`;
 }
 
-function renderMark(mark: Mark): string {
+function renderMark(mark: Mark, defsById: Map<string, Def>): string {
   switch (mark.type) {
     case "rect":
-      return renderRect(mark);
+      return renderRect(mark, defsById);
     case "circle":
       return renderCircle(mark);
     case "line":
@@ -263,6 +322,9 @@ export function renderHtmlString(
 ): string {
   const label = options?.title ?? model.a11y?.label;
   const role = model.a11y?.role ?? "img";
+  const defsById = new Map<string, Def>(
+    model.defs?.map((def) => [def.id, def]) ?? [],
+  );
   const className = ["mv-chart", "mv-html-renderer", options?.className]
     .filter(Boolean)
     .join(" ");
@@ -272,7 +334,7 @@ export function renderHtmlString(
     stylePair("height", px(model.height)),
     stylePair("overflow", "hidden"),
   ].join("");
-  const marks = model.marks.map(renderMark).join("");
+  const marks = model.marks.map((mark) => renderMark(mark, defsById)).join("");
 
   return `<div${attr("class", className)}${attr("role", role)}${attr("aria-label", label)}${attr("data-mv-renderer", "html")}${attr("style", style)}>${marks}</div>`;
 }
