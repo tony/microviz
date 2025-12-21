@@ -850,11 +850,25 @@ export const MicrovizPlayground: FC<{
   const [chartFilter, setChartFilter] = useState(
     () => initialUrlState.chartFilter,
   );
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
   const seriesPresetDisabled =
     dataPreset === "distribution" || dataPreset === "compare";
   const seriesPresetTooltip = seriesPresetDisabled
     ? `Series preset is ignored for the "${dataPreset}" data preset.`
     : "Series preset";
+  const closeMobilePanels = useCallback(() => {
+    setMobileSidebarOpen(false);
+    setMobileInspectorOpen(false);
+  }, []);
+  const openMobileSidebar = useCallback(() => {
+    setMobileInspectorOpen(false);
+    setMobileSidebarOpen(true);
+  }, []);
+  const openMobileInspector = useCallback(() => {
+    setMobileSidebarOpen(false);
+    setMobileInspectorOpen(true);
+  }, []);
   const randomizeSeed = useCallback(() => {
     setSeed(`mv-${Math.floor(Math.random() * 10_000)}`);
   }, []);
@@ -972,6 +986,17 @@ export const MicrovizPlayground: FC<{
     width,
     wrapper,
   ]);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen && !mobileInspectorOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMobilePanels();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [closeMobilePanels, mobileInspectorOpen, mobileSidebarOpen]);
 
   const workerClientRef = useRef<MicrovizWorkerClient | null>(null);
   const ensureWorkerClient = useMemo<EnsureWorkerClient>(
@@ -2272,16 +2297,42 @@ export const MicrovizPlayground: FC<{
     selectedWarningSummary,
     selectedWarnings,
   ]);
+  const mobileDrawerOpen = mobileSidebarOpen || mobileInspectorOpen;
 
   return (
-    <div className="flex h-full min-h-0 w-full">
+    <div className="relative flex h-full min-h-0 w-full">
+      {mobileDrawerOpen && (
+        <button
+          aria-label="Close panels"
+          className="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-[1px] lg:hidden"
+          onClick={closeMobilePanels}
+          type="button"
+        />
+      )}
       <ResizablePane
-        className="h-full border-r border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950/40"
+        className={`h-full border-r border-slate-200 bg-white/70 shadow-xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-950/40 lg:static lg:shadow-none ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} fixed inset-y-0 left-0 z-40`}
         defaultSize={280}
         name="sidebar"
         side="left"
       >
         <div className="p-3">
+          <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-950/85">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Controls
+            </div>
+            <button
+              aria-label="Close controls"
+              className={tabButton({
+                active: false,
+                size: "xs",
+                variant: "muted",
+              })}
+              onClick={() => setMobileSidebarOpen(false)}
+              type="button"
+            >
+              Close
+            </button>
+          </div>
           {/* Tab switcher */}
           <div className="mb-3 flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
@@ -2684,6 +2735,32 @@ export const MicrovizPlayground: FC<{
               </div>
             </div>
           </div>
+          <div className="mb-3 flex flex-wrap gap-2 lg:hidden">
+            <button
+              aria-expanded={mobileSidebarOpen}
+              className={tabButton({
+                active: mobileSidebarOpen,
+                size: "sm",
+                variant: "filled",
+              })}
+              onClick={openMobileSidebar}
+              type="button"
+            >
+              Controls
+            </button>
+            <button
+              aria-expanded={mobileInspectorOpen}
+              className={tabButton({
+                active: mobileInspectorOpen,
+                size: "sm",
+                variant: "filled",
+              })}
+              onClick={openMobileInspector}
+              type="button"
+            >
+              Inspector
+            </button>
+          </div>
         </div>
 
         <div
@@ -2847,13 +2924,31 @@ export const MicrovizPlayground: FC<{
       </div>
 
       <ResizablePane
-        className="h-full border-l border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950/40"
+        className={`h-full border-l border-slate-200 bg-white/70 shadow-xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-950/40 lg:static lg:shadow-none ${mobileInspectorOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"} fixed inset-y-0 right-0 z-40`}
         collapsible
         defaultSize={380}
+        forceExpanded={mobileInspectorOpen}
         name="inspector"
         side="right"
       >
         <div className="p-4">
+          <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-2 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-950/85">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Inspector
+            </div>
+            <button
+              aria-label="Close inspector"
+              className={tabButton({
+                active: false,
+                size: "xs",
+                variant: "muted",
+              })}
+              onClick={() => setMobileInspectorOpen(false)}
+              type="button"
+            >
+              Close
+            </button>
+          </div>
           <div className="mb-3">
             <div
               aria-label="Inspector tabs"
