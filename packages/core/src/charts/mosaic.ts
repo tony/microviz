@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, normalizeSegments } from "./shared";
@@ -7,6 +7,10 @@ import type { BitfieldData, MosaicSpec, NormalizedMosaic } from "./types";
 export const mosaicChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "mosaic-seg",
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary("Mosaic chart", normalized.segments),
       role: "img",
     };

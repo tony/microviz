@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
@@ -14,6 +14,10 @@ import type {
 export const progressPillsChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "progress-pill",
+        labelFallback: "Pill",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Progress pills chart",
         normalized.segments,

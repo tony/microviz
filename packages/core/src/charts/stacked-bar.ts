@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { layoutSegmentsByPct, normalizeSegments } from "./shared";
@@ -11,6 +11,10 @@ import type {
 export const stackedBarChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "stacked-bar-seg",
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Stacked bar chart",
         normalized.segments,
