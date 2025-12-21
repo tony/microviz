@@ -30,6 +30,7 @@ export type PlaygroundState = {
   seriesLength: number;
   seriesPreset: SeriesPreset;
   selectedChart: ChartId;
+  showHtmlSvgOverlay: boolean;
   showHoverTooltip: boolean;
   sidebarTab: SidebarTab;
   width: number;
@@ -52,6 +53,7 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   seriesLength: 16,
   seriesPreset: "trend",
   showHoverTooltip: false,
+  showHtmlSvgOverlay: true,
   sidebarTab: "settings",
   width: 200,
   wrapper: "vanilla",
@@ -86,6 +88,8 @@ type PlaygroundSerializedState = {
   sp?: SeriesPreset;
   /** selectedChart */
   ch?: ChartId;
+  /** showHtmlSvgOverlay (0 = false) */
+  ho?: 0 | 1;
   /** showHoverTooltip */
   ht?: 1;
   /** sidebarTab */
@@ -221,6 +225,7 @@ function serializePlaygroundState(
   if (state.applyNoiseOverlay) s.n = 1;
   if (state.fallbackSvgWhenCanvasUnsupported) s.fb = 1;
   if (state.htmlSafeOnly) s.hs = 1;
+  if (!state.showHtmlSvgOverlay) s.ho = 0;
   if (state.showHoverTooltip) s.ht = 1;
 
   return s;
@@ -276,6 +281,7 @@ function deserializePlaygroundState(
       ? serialized.sp
       : DEFAULT_PLAYGROUND_STATE.seriesPreset,
     showHoverTooltip: serialized.ht === 1,
+    showHtmlSvgOverlay: serialized.ho !== 0,
     sidebarTab: isSidebarTab(serialized.tb)
       ? serialized.tb
       : DEFAULT_PLAYGROUND_STATE.sidebarTab,
