@@ -97,6 +97,14 @@ el?.addEventListener("microviz-hit", (event) => {
 });
 ```
 
+Keyboard focus (arrow keys) emits `microviz-focus` with the a11y item:
+
+```ts
+el?.addEventListener("microviz-focus", (event) => {
+  console.log((event as CustomEvent).detail.item);
+});
+```
+
 ## Customizing styles
 
 Tweak tokens via CSS variables:
