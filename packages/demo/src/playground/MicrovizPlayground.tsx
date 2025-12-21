@@ -1,4 +1,6 @@
 import {
+  type A11yItem,
+  type A11ySummary,
   type ChartMeta,
   type ComputeModelInput,
   computeModel,
@@ -591,6 +593,36 @@ function formatWarningsList(warnings: WarningLike[]): ReactNode {
       ))}
     </ul>
   );
+}
+
+function formatA11ySummary(summary?: A11ySummary): string | null {
+  if (!summary) return null;
+  if (summary.kind === "series") {
+    const parts = [`${summary.count} values`];
+    if (summary.min !== undefined && summary.max !== undefined) {
+      parts.push(`min ${summary.min}`, `max ${summary.max}`);
+    }
+    if (summary.last !== undefined) parts.push(`last ${summary.last}`);
+    if (summary.trend) parts.push(`trend ${summary.trend}`);
+    return parts.join(" · ");
+  }
+
+  const parts = [`${summary.count} segments`];
+  if (summary.largestPct !== undefined) {
+    const pct = Math.round(summary.largestPct);
+    const name = summary.largestName?.trim();
+    parts.push(name ? `largest ${name} ${pct}%` : `largest ${pct}%`);
+  }
+  return parts.join(" · ");
+}
+
+function formatA11yItem(item: A11yItem): string {
+  const parts = [item.label];
+  if (item.valueText) parts.push(item.valueText);
+  else if (item.value !== undefined) parts.push(String(item.value));
+  if (item.series) parts.push(item.series);
+  if (item.rank !== undefined) parts.push(`#${item.rank}`);
+  return parts.join(" · ");
 }
 
 function getHtmlWarningTags(model: RenderModel | null): HtmlWarningTag[] {
@@ -2588,8 +2620,50 @@ export const MicrovizPlayground: FC<{
           )}
 
           {inspectorTab === "model" && (
-            <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
-              <JsonViewer data={selectedModel} />
+            <div className="space-y-3">
+              <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  A11y
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Label:
+                    </span>
+                    <span>{selectedModel?.a11y?.label ?? "—"}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Role:
+                    </span>
+                    <span>{selectedModel?.a11y?.role ?? "—"}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Summary:
+                    </span>
+                    <span>
+                      {formatA11ySummary(selectedModel?.a11y?.summary) ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Items:
+                    </span>
+                    <span>{selectedModel?.a11y?.items?.length ?? 0}</span>
+                  </div>
+                  {(selectedModel?.a11y?.items?.length ?? 0) > 0 && (
+                    <ul className="mt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      {selectedModel?.a11y?.items?.slice(0, 5).map((item) => (
+                        <li key={item.id}>{formatA11yItem(item)}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
+                <JsonViewer data={selectedModel} />
+              </div>
             </div>
           )}
 
