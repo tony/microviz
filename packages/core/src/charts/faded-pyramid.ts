@@ -81,6 +81,7 @@ export const fadedPyramidChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "faded-pyramid" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "faded-pyramid",
 } satisfies ChartDefinition<
   "faded-pyramid",

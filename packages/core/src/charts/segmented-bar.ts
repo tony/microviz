@@ -67,6 +67,7 @@ export const segmentedBarChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "segmented-bar" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "segmented-bar",
 } satisfies ChartDefinition<
   "segmented-bar",

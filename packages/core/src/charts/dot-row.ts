@@ -90,6 +90,7 @@ export const dotRowChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "dot-row" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "dot-row",
 } satisfies ChartDefinition<
   "dot-row",

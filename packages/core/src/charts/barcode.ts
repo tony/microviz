@@ -134,6 +134,7 @@ export const barcodeChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "barcode" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "barcode",
 } satisfies ChartDefinition<
   "barcode",

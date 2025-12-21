@@ -49,5 +49,6 @@ export const barChart = {
     const max = isFiniteNumber(data.max ?? value) ? (data.max ?? value) : value;
     return { max: Math.max(max, 0), type: "bar", value: Math.max(value, 0) };
   },
+  preferredAspectRatio: "wide" as const,
   type: "bar",
 } satisfies ChartDefinition<"bar", BarSpec, BarData, NormalizedBar>;

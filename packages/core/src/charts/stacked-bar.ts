@@ -164,6 +164,7 @@ export const stackedBarChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "stacked-bar" };
   },
+  preferredAspectRatio: "wide" as const,
   type: "stacked-bar",
 } satisfies ChartDefinition<
   "stacked-bar",

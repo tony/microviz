@@ -106,6 +106,7 @@ export const concentricArcsHorizChart = {
     const arcs = normalizeSegments(data);
     return { arcs, type: "concentric-arcs-horiz" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "concentric-arcs-horiz",
 } satisfies ChartDefinition<
   "concentric-arcs-horiz",

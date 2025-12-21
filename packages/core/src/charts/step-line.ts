@@ -116,6 +116,7 @@ export const stepLineChart = {
     const max = series.length > 0 ? Math.max(...series) : 1;
     return { max, min, series, type: "step-line" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "step-line",
 } satisfies ChartDefinition<
   "step-line",

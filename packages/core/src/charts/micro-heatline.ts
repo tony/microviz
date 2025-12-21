@@ -87,6 +87,7 @@ export const microHeatlineChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "micro-heatline" as const };
   },
+  preferredAspectRatio: "wide" as const,
   type: "micro-heatline",
 } satisfies ChartDefinition<
   "micro-heatline",
