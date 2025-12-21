@@ -670,6 +670,9 @@ export const MicrovizPlayground: FC<{
   const [htmlSafeOnly, setHtmlSafeOnly] = useState(
     () => initialUrlState.htmlSafeOnly,
   );
+  const [showHtmlSvgOverlay, setShowHtmlSvgOverlay] = useState(
+    () => initialUrlState.showHtmlSvgOverlay,
+  );
   const [computeMode, setComputeMode] = useState<ComputeMode>(
     () => initialUrlState.computeMode,
   );
@@ -732,6 +735,9 @@ export const MicrovizPlayground: FC<{
     setHtmlSafeOnly((prev) =>
       prev === urlState.htmlSafeOnly ? prev : urlState.htmlSafeOnly,
     );
+    setShowHtmlSvgOverlay((prev) =>
+      prev === urlState.showHtmlSvgOverlay ? prev : urlState.showHtmlSvgOverlay,
+    );
     setComputeMode((prev) =>
       prev === urlState.computeMode ? prev : urlState.computeMode,
     );
@@ -782,6 +788,7 @@ export const MicrovizPlayground: FC<{
       seriesLength,
       seriesPreset,
       showHoverTooltip,
+      showHtmlSvgOverlay,
       sidebarTab,
       width,
       wrapper,
@@ -795,6 +802,7 @@ export const MicrovizPlayground: FC<{
     fallbackSvgWhenCanvasUnsupported,
     height,
     htmlSafeOnly,
+    showHtmlSvgOverlay,
     onUrlStateChange,
     renderer,
     seed,
@@ -1685,7 +1693,10 @@ export const MicrovizPlayground: FC<{
     if (renderer === "html-svg") {
       const { htmlModel, svgModel } = splitHtmlSvgModel(model);
       const html = renderHtmlString(htmlModel);
-      const svg = svgModel ? renderSvgString(svgModel) : "";
+      if (!showHtmlSvgOverlay || !svgModel) {
+        return <HtmlPreview html={html} />;
+      }
+      const svg = renderSvgString(svgModel);
       return <HtmlSvgOverlayPreview html={html} svg={svg} />;
     }
 
@@ -1974,6 +1985,20 @@ export const MicrovizPlayground: FC<{
                   type="checkbox"
                 />
                 <span className="text-sm">Only show HTML-safe charts</span>
+              </label>
+
+              <label
+                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                title="Show SVG overlay when using HTML + SVG renderer"
+              >
+                <input
+                  checked={showHtmlSvgOverlay}
+                  className="accent-blue-500"
+                  disabled={renderer !== "html-svg"}
+                  onChange={(e) => setShowHtmlSvgOverlay(e.target.checked)}
+                  type="checkbox"
+                />
+                <span className="text-sm">Show SVG overlay</span>
               </label>
 
               <ToggleGroup<ComputeMode>
