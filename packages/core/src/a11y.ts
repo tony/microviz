@@ -1,4 +1,4 @@
-import type { A11yTree, RenderModel } from "./model";
+import type { A11ySummary, A11yTree, RenderModel } from "./model";
 
 function formatA11yNumber(value: number): string {
   if (!Number.isFinite(value)) return "0";
@@ -11,40 +11,33 @@ export function a11yLabelWithSeriesSummary(
   baseLabel: string,
   series: ReadonlyArray<number>,
 ): string {
-  if (series.length === 0) return `${baseLabel} (empty)`;
-
-  let min = Number.POSITIVE_INFINITY;
-  let max = Number.NEGATIVE_INFINITY;
-  for (const v of series) {
-    if (!Number.isFinite(v)) continue;
-    min = Math.min(min, v);
-    max = Math.max(max, v);
+  const summary = summarizeSeries(series);
+  if (!summary || summary.count === 0) return `${baseLabel} (empty)`;
+  if (
+    !Number.isFinite(summary.min) ||
+    !Number.isFinite(summary.max) ||
+    !Number.isFinite(summary.last)
+  ) {
+    return baseLabel;
   }
 
-  const last = series[series.length - 1] ?? 0;
-  if (!Number.isFinite(min) || !Number.isFinite(max)) return baseLabel;
-
-  return `${baseLabel} (min ${formatA11yNumber(min)}, max ${formatA11yNumber(max)}, last ${formatA11yNumber(last)})`;
+  return `${baseLabel} (min ${formatA11yNumber(summary.min)}, max ${formatA11yNumber(summary.max)}, last ${formatA11yNumber(summary.last)})`;
 }
 
 export function a11yLabelWithSegmentsSummary(
   baseLabel: string,
   segments: ReadonlyArray<{ pct: number; name?: string }>,
 ): string {
-  if (segments.length === 0) return `${baseLabel} (empty)`;
+  const summary = summarizeSegments(segments);
+  if (!summary || summary.count === 0) return `${baseLabel} (empty)`;
 
-  let largest = segments[0];
-  for (const seg of segments) {
-    if (!largest || seg.pct > largest.pct) largest = seg;
-  }
-
-  const largestPct = largest ? Math.round(largest.pct) : 0;
-  const largestName = largest?.name?.trim();
+  const largestPct = Math.round(summary.largestPct ?? 0);
+  const largestName = summary.largestName?.trim();
   const largestLabel = largestName
     ? `${largestName} ${largestPct}%`
     : `${largestPct}%`;
 
-  return `${baseLabel} (${segments.length} segments, largest ${largestLabel})`;
+  return `${baseLabel} (${summary.count} segments, largest ${largestLabel})`;
 }
 
 export function computeA11ySummary(
@@ -57,4 +50,91 @@ export function computeA11ySummary(
     label: `${label} (${markCount} marks, ${textCount} text)`,
     role: "img",
   };
+}
+
+function summarizeSeries(series: ReadonlyArray<number>): A11ySummary | null {
+  if (series.length === 0) return { kind: "series", count: 0 };
+
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  let first = Number.NaN;
+  let last = Number.NaN;
+
+  for (const v of series) {
+    if (!Number.isFinite(v)) continue;
+    if (!Number.isFinite(first)) first = v;
+    last = v;
+    min = Math.min(min, v);
+    max = Math.max(max, v);
+  }
+
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { kind: "series", count: series.length };
+  }
+
+  const trend =
+    Number.isFinite(first) && Number.isFinite(last)
+      ? last > first
+        ? "up"
+        : last < first
+          ? "down"
+          : "flat"
+      : undefined;
+
+  return {
+    kind: "series",
+    count: series.length,
+    last,
+    max,
+    min,
+    trend,
+  };
+}
+
+function summarizeSegments(
+  segments: ReadonlyArray<{ pct: number; name?: string }>,
+): A11ySummary | null {
+  if (segments.length === 0) return { kind: "segments", count: 0 };
+
+  let largestPct = Number.NEGATIVE_INFINITY;
+  let largestName: string | undefined;
+  let count = 0;
+  for (const seg of segments) {
+    if (!Number.isFinite(seg.pct)) continue;
+    count += 1;
+    if (seg.pct > largestPct) {
+      largestPct = seg.pct;
+      largestName = seg.name;
+    }
+  }
+
+  if (count === 0) return { kind: "segments", count: 0 };
+
+  return {
+    kind: "segments",
+    count,
+    largestName,
+    largestPct,
+  };
+}
+
+export function inferA11ySummary(normalized: unknown): A11ySummary | undefined {
+  if (!normalized || typeof normalized !== "object") return undefined;
+  const record = normalized as Record<string, unknown>;
+
+  const series = record.series;
+  if (Array.isArray(series)) {
+    const summary = summarizeSeries(series as number[]);
+    if (summary) return summary;
+  }
+
+  const segments = record.segments;
+  if (Array.isArray(segments)) {
+    const summary = summarizeSegments(
+      segments as ReadonlyArray<{ pct: number; name?: string }>,
+    );
+    if (summary) return summary;
+  }
+
+  return undefined;
 }
