@@ -66,6 +66,30 @@ const marks = applyFillRules(model.marks, [
 const withFills = { ...model, marks };
 ```
 
+## Model overlays (post-processing hooks)
+
+If you want to add debug marks/defs or modify a model without forking chart code:
+
+```ts
+import { createModelIdAllocator, patchRenderModel } from "@microviz/core";
+
+const { defId } = createModelIdAllocator(model);
+
+const withOverlay = patchRenderModel(
+  model,
+  {
+    defs: [
+      {
+        id: defId("mv-overlay-filter"),
+        primitives: [{ type: "gaussianBlur", stdDeviation: 1 }],
+        type: "filter",
+      },
+    ],
+  },
+  { defsMode: "append" },
+);
+```
+
 ## Chart types
 
 To list the available chart types (and their metadata):
