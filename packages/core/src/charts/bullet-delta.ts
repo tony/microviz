@@ -17,6 +17,20 @@ export const bulletDeltaChart = {
         ? 0
         : Math.round((normalized.previous / normalized.max) * 100);
     return {
+      items: [
+        {
+          id: "bullet-delta-current",
+          label: "Current",
+          value: normalized.current,
+          valueText: `${pctCurrent}%`,
+        },
+        {
+          id: "bullet-delta-previous",
+          label: "Previous",
+          value: normalized.previous,
+          valueText: `${pctPrevious}%`,
+        },
+      ],
       label: `Bullet delta chart (current ${pctCurrent}%, previous ${pctPrevious}%)`,
       role: "img",
     };

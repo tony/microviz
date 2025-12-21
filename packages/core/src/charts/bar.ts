@@ -8,7 +8,18 @@ export const barChart = {
       normalized.max === 0
         ? 0
         : Math.round((normalized.value / normalized.max) * 100);
-    return { label: `Bar chart (${pct}%)`, role: "img" };
+    return {
+      items: [
+        {
+          id: "bar-fill",
+          label: "Value",
+          value: normalized.value,
+          valueText: `${pct}%`,
+        },
+      ],
+      label: `Bar chart (${pct}%)`,
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 3,
