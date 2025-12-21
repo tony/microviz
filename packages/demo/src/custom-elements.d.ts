@@ -213,6 +213,10 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
+      "microviz-segmented-pill": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
       "microviz-segmented-ring": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
