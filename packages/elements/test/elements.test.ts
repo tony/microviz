@@ -149,4 +149,31 @@ describe("@microviz/elements", () => {
     expect(summary?.textContent).toContain("min");
     expect(summary?.textContent).toContain("max");
   });
+
+  it("supports keyboard focus navigation", () => {
+    const el = document.createElement("microviz-model") as HTMLElement & {
+      model: RenderModel | null;
+    };
+    el.setAttribute("interactive", "");
+    document.body.append(el);
+
+    el.model = {
+      height: 10,
+      marks: [
+        { h: 2, id: "a", type: "rect", w: 2, x: 0, y: 0 },
+        { h: 2, id: "b", type: "rect", w: 2, x: 3, y: 0 },
+      ],
+      width: 10,
+    };
+
+    expect(el.getAttribute("tabindex")).toBe("0");
+
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    const focus1 = el.shadowRoot?.querySelector("#mv-a11y-focus");
+    expect(focus1?.textContent).toContain("a");
+
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    const focus2 = el.shadowRoot?.querySelector("#mv-a11y-focus");
+    expect(focus2?.textContent).toContain("b");
+  });
 });

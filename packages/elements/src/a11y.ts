@@ -1,6 +1,9 @@
-import type { A11ySummary, RenderModel } from "@microviz/core";
+import type { A11yItem, A11ySummary, RenderModel } from "@microviz/core";
 
+const ITEMS_ID = "mv-a11y-items";
+const FOCUS_ID = "mv-a11y-focus";
 const SUMMARY_ID = "mv-a11y-summary";
+const MAX_A11Y_ITEMS = 60;
 const SR_ONLY_CLASS = "mv-sr-only";
 
 function ensureSrOnlyElement(
@@ -37,6 +40,74 @@ function formatSummary(summary: A11ySummary): string {
   return parts.join(", ");
 }
 
+function formatItem(item: A11yItem): string {
+  const parts = [item.label];
+  if (item.valueText) parts.push(item.valueText);
+  else if (item.value !== undefined) parts.push(String(item.value));
+  if (item.series) parts.push(item.series);
+  if (item.rank !== undefined) parts.push(`rank ${item.rank}`);
+  return parts.join(", ");
+}
+
+function labelForMark(mark: RenderModel["marks"][number]): string {
+  if (mark.type === "text" && mark.text.trim().length > 0) return mark.text;
+  if ("className" in mark && mark.className?.trim())
+    return mark.className.trim();
+  return mark.id;
+}
+
+export function getA11yItems(model: RenderModel | null): A11yItem[] {
+  if (!model) return [];
+  const explicit = model.a11y?.items ?? [];
+  if (explicit.length > 0) return explicit.slice(0, MAX_A11Y_ITEMS);
+
+  if (model.marks.length === 0 || model.marks.length > MAX_A11Y_ITEMS)
+    return [];
+
+  return model.marks.map((mark) => ({
+    id: mark.id,
+    label: labelForMark(mark),
+  }));
+}
+
+function syncItemsList(root: ShadowRoot, items: A11yItem[]): void {
+  const list = ensureSrOnlyElement(root, ITEMS_ID, "ul");
+  list.setAttribute("role", "list");
+  list.textContent = "";
+
+  if (items.length === 0) {
+    list.setAttribute("aria-hidden", "true");
+    return;
+  }
+
+  list.removeAttribute("aria-hidden");
+  for (const item of items) {
+    const li = document.createElement("li");
+    li.textContent = formatItem(item);
+    list.append(li);
+  }
+}
+
+export function updateA11yFocus(
+  root: ShadowRoot | null,
+  item: A11yItem | null,
+  index?: number,
+): void {
+  if (!root) return;
+  const focusEl = ensureSrOnlyElement(root, FOCUS_ID);
+  focusEl.setAttribute("aria-live", "polite");
+  focusEl.setAttribute("aria-atomic", "true");
+  if (!item) {
+    focusEl.textContent = "";
+    focusEl.setAttribute("aria-hidden", "true");
+    return;
+  }
+  const label = formatItem(item);
+  focusEl.textContent =
+    index === undefined ? label : `Item ${index + 1}: ${label}`;
+  focusEl.removeAttribute("aria-hidden");
+}
+
 export function applyMicrovizA11y(
   host: HTMLElement,
   internals: ElementInternals | null,
@@ -67,6 +138,9 @@ export function applyMicrovizA11y(
       summaryEl.textContent = "";
       summaryEl.setAttribute("aria-hidden", "true");
     }
+
+    const items = getA11yItems(model);
+    syncItemsList(host.shadowRoot, items);
   }
 
   if (!internals) return;
