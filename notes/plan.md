@@ -193,11 +193,13 @@ Pragmatic default: **ship HTML as experimental** once we want those effects, whi
 ### Experimental HTML renderer (parity deferred) — integration plan
 Initial goal: provide a fast HTML surface for CSS-first patterns, without promising SVG/Canvas parity yet.
 - **Render surface:** add `html` to demo renderer picker (left panel) as “HTML (experimental)”.
+- **Policy (v1):** supports `rect`/`circle`/`line`/`text` only. Ignores `path` marks, all defs (gradients/patterns/masks/filters/clip paths), and mark effects (`clipPath`, `mask`, `filter`, `strokeDash`). Use SVG/Canvas for full fidelity.
 - **Renderer implementation:** map `RenderModel` marks to absolutely positioned HTML elements:
   - `rect` → `<div>` with `position:absolute`, `background`, `borderRadius`, `opacity`.
   - `circle` → `<div>` with `borderRadius:9999px`, `background`, `opacity`.
-  - `line`/`path`/`text` → allow partial support or fall back to SVG for v1.
-- **Defs/filters:** no parity guarantees in v1; document unsupported defs and ignore gracefully.
+  - `line` → `<div>` with rotation and stroke width.
+  - `text` → `<div>` with absolute positioning + anchor/baseline transforms.
+- **Defs/filters:** ignored in v1; document unsupported defs and ignore gracefully.
 - **A11y:** reuse `model.a11y` for `aria-label` on the HTML surface.
 - **Telemetry:** add a lightweight warning in the demo if a chart uses unsupported mark types/defs.
 
