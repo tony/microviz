@@ -4,6 +4,7 @@ import { MicrovizBitfield } from "./bitfield";
 import { MicrovizBulletDelta } from "./bullet-delta";
 import { MicrovizBulletGauge } from "./bullet-gauge";
 import { MicrovizCascadeSteps } from "./cascade-steps";
+import { MicrovizChart } from "./chart";
 import { MicrovizChevron } from "./chevron";
 import { MicrovizCodeMinimap } from "./code-minimap";
 import { MicrovizConcentricArcs } from "./concentric-arcs";
@@ -71,6 +72,7 @@ export {
   MicrovizCascadeSteps,
   MicrovizBarcode,
   MicrovizBitfield,
+  MicrovizChart,
   MicrovizChevron,
   MicrovizCodeMinimap,
   MicrovizConcentricArcs,
@@ -133,6 +135,10 @@ export {
 };
 
 export function registerMicrovizElements(): void {
+  if (!customElements.get("microviz-chart")) {
+    customElements.define("microviz-chart", MicrovizChart);
+  }
+
   if (!customElements.get("microviz-model")) {
     customElements.define("microviz-model", MicrovizModel);
   }
