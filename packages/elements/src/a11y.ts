@@ -1,5 +1,11 @@
 import type { A11yItem, A11ySummary, RenderModel } from "@microviz/core";
+import {
+  getHtmlUnsupportedDefTypes,
+  getHtmlUnsupportedMarkEffects,
+  getHtmlUnsupportedMarkTypes,
+} from "@microviz/renderers";
 
+const WARNINGS_ID = "mv-a11y-warnings";
 const ITEMS_ID = "mv-a11y-items";
 const FOCUS_ID = "mv-a11y-focus";
 const SUMMARY_ID = "mv-a11y-summary";
@@ -88,6 +94,53 @@ function syncItemsList(root: ShadowRoot, items: A11yItem[]): void {
   }
 }
 
+function syncWarnings(
+  root: ShadowRoot,
+  model: RenderModel | null,
+  renderer: string | null,
+): void {
+  const warningsEl = ensureSrOnlyElement(root, WARNINGS_ID);
+  warningsEl.setAttribute("aria-live", "polite");
+  warningsEl.setAttribute("aria-atomic", "true");
+
+  const messages: string[] = [];
+  if (model?.stats?.warnings) {
+    messages.push(...model.stats.warnings.map((warning) => warning.message));
+  }
+
+  if (renderer === "html" && model) {
+    const unsupportedMarkTypes = getHtmlUnsupportedMarkTypes(model);
+    if (unsupportedMarkTypes.length > 0) {
+      messages.push(
+        `HTML renderer ignores marks: ${unsupportedMarkTypes.join(", ")}.`,
+      );
+    }
+
+    const unsupportedDefs = getHtmlUnsupportedDefTypes(model);
+    if (unsupportedDefs.length > 0) {
+      messages.push(
+        `HTML renderer ignores defs: ${unsupportedDefs.join(", ")}.`,
+      );
+    }
+
+    const unsupportedEffects = getHtmlUnsupportedMarkEffects(model);
+    if (unsupportedEffects.length > 0) {
+      messages.push(
+        `HTML renderer ignores mark effects: ${unsupportedEffects.join(", ")}.`,
+      );
+    }
+  }
+
+  if (messages.length === 0) {
+    warningsEl.textContent = "";
+    warningsEl.setAttribute("aria-hidden", "true");
+    return;
+  }
+
+  warningsEl.textContent = messages.join(" ");
+  warningsEl.removeAttribute("aria-hidden");
+}
+
 export function updateA11yFocus(
   root: ShadowRoot | null,
   item: A11yItem | null,
@@ -141,6 +194,7 @@ export function applyMicrovizA11y(
 
     const items = getA11yItems(model);
     syncItemsList(host.shadowRoot, items);
+    syncWarnings(host.shadowRoot, model, host.getAttribute("renderer"));
   }
 
   if (!internals) return;
