@@ -1,0 +1,39 @@
+name: tests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ["24.x"]
+
+    env:
+      IBM_TELEMETRY_DISABLED: 'true'
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+      - name: project - install
+        run: |
+          pnpm install --frozen-lockfile
+      - name: pnpm biome format
+        run: |
+          pnpm biome format .
+      - name: pnpm biome lint
+        run: |
+          pnpm biome lint .
+      - name: pnpm biome check
+        run: |
+          pnpm biome check .
+      - name: "Run tests"
+        run: |
+          pnpm --recursive run test
