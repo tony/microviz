@@ -102,6 +102,14 @@ site → { core, elements, renderers, themes, themes-tailwind }
 - Add polyfills—target Baseline 2025
 - Make `themes` depend on Tailwind (`themes-tailwind` is separate)
 
+### HTML Renderer Policy (Experimental)
+
+- HTML renderer is parity-deferred: **rect/circle/line/text only**.
+- `path` marks are ignored; SVG/Canvas remain the source of truth for paths.
+- All defs are ignored (gradients, patterns, masks, filters, clip paths).
+- Mark effects ignored: `clipPath`, `mask`, `filter`, `strokeDash`.
+- Keep `RenderModel` renderer-agnostic; do not add HTML-specific fields.
+
 ## Key Types
 
 ```typescript
