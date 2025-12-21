@@ -53,15 +53,15 @@ describe("ranked-lanes", () => {
     const [first, second] = model.marks;
 
     if (first?.type === "rect" && second?.type === "rect") {
-      // First bar should be at y=0 with width proportional to normalized pct
+      // First bar should be at y=0 and fill the width (max pct)
       expect(first.x).toBe(0);
       expect(first.y).toBe(0);
-      expect(first.w).toBeCloseTo(60, 1); // 60% of 100px (already normalized)
+      expect(first.w).toBeCloseTo(100, 1);
 
       // Second bar should be lower
       expect(second.x).toBe(0);
       expect(second.y).toBeGreaterThan(first.y);
-      expect(second.w).toBeCloseTo(40, 1); // 40% of 100px (already normalized)
+      expect(second.w).toBeCloseTo(66.67, 1); // 40 / 60 of 100px
     }
   });
 });
