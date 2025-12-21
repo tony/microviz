@@ -1750,6 +1750,14 @@ export const MicrovizPlayground: FC<{
     getHtmlWarnings,
   );
   const warningCount = selectedWarnings.length;
+  const htmlSvgMarkCounts = useMemo(() => {
+    if (renderer !== "html-svg" || !selectedModel) return null;
+    const { htmlModel, svgModel } = splitHtmlSvgModel(selectedModel);
+    return {
+      html: htmlModel.marks.length,
+      svg: svgModel?.marks.length ?? 0,
+    };
+  }, [renderer, selectedModel]);
 
   useEffect(() => {
     if (inspectorTabTouched) return;
@@ -2368,6 +2376,13 @@ export const MicrovizPlayground: FC<{
 
           {inspectorTab === "diagnostics" && (
             <div className="space-y-4">
+              {htmlSvgMarkCounts && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  HTML marks: {htmlSvgMarkCounts.html} · SVG marks:{" "}
+                  {htmlSvgMarkCounts.svg}
+                </div>
+              )}
+
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Selected warnings
