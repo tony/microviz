@@ -31,6 +31,10 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
+      "microviz-chart": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
       "microviz-chevron": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
@@ -108,6 +112,10 @@ declare module "react" {
         HTMLElement
       >;
       "microviz-layered-waves": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
+      "microviz-legend": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
