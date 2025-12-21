@@ -108,6 +108,7 @@ site → { core, elements, renderers, themes, themes-tailwind }
 - `path` marks are ignored; SVG/Canvas remain the source of truth for paths.
 - All defs are ignored (gradients, patterns, masks, filters, clip paths).
 - Mark effects ignored: `clipPath`, `mask`, `filter`, `strokeDash`.
+- Demo/UI must **not** auto-fallback to other renderers; show warnings loudly and allow incomplete output so gaps are visible.
 - Keep `RenderModel` renderer-agnostic; do not add HTML-specific fields.
 
 ## Key Types
