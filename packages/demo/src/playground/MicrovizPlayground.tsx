@@ -1094,24 +1094,33 @@ export const MicrovizPlayground: FC<{
   }, []);
 
   const gridGapPx = 12; // Tailwind `gap-3`
+  const chartListGutterPx = 16; // Tailwind `px-4` on the scroll content wrapper
+  const chartListContentWidthPx = Math.max(
+    0,
+    chartListWidthPx - chartListGutterPx * 2,
+  );
 
   const wideCols = useMemo(() => {
     const minCardWidth = 280;
-    if (chartListWidthPx <= 0) return 1;
+    if (chartListContentWidthPx <= 0) return 1;
     return Math.max(
       1,
-      Math.floor((chartListWidthPx + gridGapPx) / (minCardWidth + gridGapPx)),
+      Math.floor(
+        (chartListContentWidthPx + gridGapPx) / (minCardWidth + gridGapPx),
+      ),
     );
-  }, [chartListWidthPx]);
+  }, [chartListContentWidthPx]);
 
   const squareCols = useMemo(() => {
     const minCardWidth = 120;
-    if (chartListWidthPx <= 0) return 1;
+    if (chartListContentWidthPx <= 0) return 1;
     return Math.max(
       1,
-      Math.floor((chartListWidthPx + gridGapPx) / (minCardWidth + gridGapPx)),
+      Math.floor(
+        (chartListContentWidthPx + gridGapPx) / (minCardWidth + gridGapPx),
+      ),
     );
-  }, [chartListWidthPx]);
+  }, [chartListContentWidthPx]);
 
   const chartBlocks = useMemo<ChartBlock[]>(() => {
     const blocks: ChartBlock[] = [];
@@ -1598,174 +1607,181 @@ export const MicrovizPlayground: FC<{
         </div>
       </ResizablePane>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col p-4">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Playground</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Compare wrappers, renderers, and compute modes.
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
-              <div
-                aria-label="Chart subtype filter"
-                className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
-                role="tablist"
-              >
-                {chartSubtypeOptions.map((option) => {
-                  const selected = chartSubtype === option.id;
-                  return (
-                    <button
-                      aria-selected={selected}
-                      className={tabButton({
-                        active: selected,
-                        size: "xs",
-                        variant: "muted",
-                      })}
-                      key={option.id}
-                      onClick={() => setChartSubtype(option.id)}
-                      role="tab"
-                      title={`Filter: ${option.label}`}
-                      type="button"
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <div
-                className="text-xs text-slate-500 dark:text-slate-400"
-                title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
-              >
-                {visibleCharts.length} charts
-              </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="px-4 pt-4">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Playground</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                Compare wrappers, renderers, and compute modes.
+              </p>
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              {wrapper} · {renderer} · {computeModeEffective}
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2">
+                <div
+                  aria-label="Chart subtype filter"
+                  className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
+                  role="tablist"
+                >
+                  {chartSubtypeOptions.map((option) => {
+                    const selected = chartSubtype === option.id;
+                    return (
+                      <button
+                        aria-selected={selected}
+                        className={tabButton({
+                          active: selected,
+                          size: "xs",
+                          variant: "muted",
+                        })}
+                        key={option.id}
+                        onClick={() => setChartSubtype(option.id)}
+                        role="tab"
+                        title={`Filter: ${option.label}`}
+                        type="button"
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  className="text-xs text-slate-500 dark:text-slate-400"
+                  title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
+                >
+                  {visibleCharts.length} charts
+                </div>
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                {wrapper} · {renderer} · {computeModeEffective}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto" ref={chartListRef}>
-          {chartBlocks.length === 0 ? (
-            <div className="text-sm text-slate-500 dark:text-slate-400">
-              No charts
-            </div>
-          ) : (
-            <div
-              className="relative w-full"
-              style={{ height: chartBlocksVirtualizer.getTotalSize() }}
-            >
-              {virtualBlocks.map((virtualRow) => {
-                const block = chartBlocks[virtualRow.index];
-                if (!block) return null;
+        <div
+          className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
+          ref={chartListRef}
+        >
+          <div className="px-4 pb-4">
+            {chartBlocks.length === 0 ? (
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                No charts
+              </div>
+            ) : (
+              <div
+                className="relative w-full"
+                style={{ height: chartBlocksVirtualizer.getTotalSize() }}
+              >
+                {virtualBlocks.map((virtualRow) => {
+                  const block = chartBlocks[virtualRow.index];
+                  if (!block) return null;
 
-                return (
-                  <div
-                    className="absolute left-0 top-0 w-full"
-                    data-index={virtualRow.index}
-                    key={virtualRow.key}
-                    ref={chartBlocksVirtualizer.measureElement}
-                    style={{ transform: `translateY(${virtualRow.start}px)` }}
-                  >
-                    {block.kind === "sectionHeader" ? (
-                      <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        {block.label}
-                      </div>
-                    ) : block.kind === "wideRow" ? (
-                      <div className={block.isLast ? "pb-6" : "pb-3"}>
-                        <div
-                          className="grid gap-3"
-                          style={{
-                            gridTemplateColumns: `repeat(${wideCols}, minmax(280px, 1fr))`,
-                          }}
-                        >
-                          {block.charts.map((chart) => {
-                            const model =
-                              effectiveModels[chart.chartId] ?? null;
-                            return (
-                              <ChartCard
-                                active={selectedChart === chart.chartId}
-                                chartId={chart.chartId}
-                                hasWarnings={hasDiagnosticsWarnings(
-                                  model,
-                                  renderer,
-                                )}
-                                key={chart.chartId}
-                                model={model}
-                                onSelect={setSelectedChart}
-                                render={renderSurface(chart.chartId)}
-                                timingMs={timingsMs[chart.chartId]}
-                                title={chart.title}
-                              />
-                            );
-                          })}
+                  return (
+                    <div
+                      className="absolute left-0 top-0 w-full"
+                      data-index={virtualRow.index}
+                      key={virtualRow.key}
+                      ref={chartBlocksVirtualizer.measureElement}
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
+                    >
+                      {block.kind === "sectionHeader" ? (
+                        <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {block.label}
                         </div>
-                      </div>
-                    ) : block.kind === "squareRow" ? (
-                      <div className={block.isLast ? "pb-6" : "pb-3"}>
-                        <div
-                          className="grid gap-3"
-                          style={{
-                            gridTemplateColumns: `repeat(${squareCols}, minmax(120px, 1fr))`,
-                          }}
-                        >
-                          {block.charts.map((chart) => {
-                            const model =
-                              effectiveModels[chart.chartId] ?? null;
-                            return (
-                              <ChartCard
-                                active={selectedChart === chart.chartId}
-                                centered
-                                chartId={chart.chartId}
-                                hasWarnings={hasDiagnosticsWarnings(
-                                  model,
-                                  renderer,
-                                )}
-                                key={chart.chartId}
-                                model={model}
-                                onSelect={setSelectedChart}
-                                render={renderSurface(chart.chartId)}
-                                timingMs={timingsMs[chart.chartId]}
-                                title={chart.title}
-                              />
-                            );
-                          })}
+                      ) : block.kind === "wideRow" ? (
+                        <div className={block.isLast ? "pb-6" : "pb-3"}>
+                          <div
+                            className="grid gap-3"
+                            style={{
+                              gridTemplateColumns: `repeat(${wideCols}, minmax(280px, 1fr))`,
+                            }}
+                          >
+                            {block.charts.map((chart) => {
+                              const model =
+                                effectiveModels[chart.chartId] ?? null;
+                              return (
+                                <ChartCard
+                                  active={selectedChart === chart.chartId}
+                                  chartId={chart.chartId}
+                                  hasWarnings={hasDiagnosticsWarnings(
+                                    model,
+                                    renderer,
+                                  )}
+                                  key={chart.chartId}
+                                  model={model}
+                                  onSelect={setSelectedChart}
+                                  render={renderSurface(chart.chartId)}
+                                  timingMs={timingsMs[chart.chartId]}
+                                  title={chart.title}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="pb-6">
-                        <div className="flex flex-wrap gap-3">
-                          {block.charts.map((chart) => {
-                            const model =
-                              effectiveModels[chart.chartId] ?? null;
-                            return (
-                              <ChartCard
-                                active={selectedChart === chart.chartId}
-                                chartId={chart.chartId}
-                                compact
-                                hasWarnings={hasDiagnosticsWarnings(
-                                  model,
-                                  renderer,
-                                )}
-                                key={chart.chartId}
-                                model={model}
-                                onSelect={setSelectedChart}
-                                render={renderSurface(chart.chartId)}
-                                timingMs={timingsMs[chart.chartId]}
-                                title={chart.title}
-                              />
-                            );
-                          })}
+                      ) : block.kind === "squareRow" ? (
+                        <div className={block.isLast ? "pb-6" : "pb-3"}>
+                          <div
+                            className="grid gap-3"
+                            style={{
+                              gridTemplateColumns: `repeat(${squareCols}, minmax(120px, 1fr))`,
+                            }}
+                          >
+                            {block.charts.map((chart) => {
+                              const model =
+                                effectiveModels[chart.chartId] ?? null;
+                              return (
+                                <ChartCard
+                                  active={selectedChart === chart.chartId}
+                                  centered
+                                  chartId={chart.chartId}
+                                  hasWarnings={hasDiagnosticsWarnings(
+                                    model,
+                                    renderer,
+                                  )}
+                                  key={chart.chartId}
+                                  model={model}
+                                  onSelect={setSelectedChart}
+                                  render={renderSurface(chart.chartId)}
+                                  timingMs={timingsMs[chart.chartId]}
+                                  title={chart.title}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      ) : (
+                        <div className="pb-6">
+                          <div className="flex flex-wrap gap-3">
+                            {block.charts.map((chart) => {
+                              const model =
+                                effectiveModels[chart.chartId] ?? null;
+                              return (
+                                <ChartCard
+                                  active={selectedChart === chart.chartId}
+                                  chartId={chart.chartId}
+                                  compact
+                                  hasWarnings={hasDiagnosticsWarnings(
+                                    model,
+                                    renderer,
+                                  )}
+                                  key={chart.chartId}
+                                  model={model}
+                                  onSelect={setSelectedChart}
+                                  render={renderSurface(chart.chartId)}
+                                  timingMs={timingsMs[chart.chartId]}
+                                  title={chart.title}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
