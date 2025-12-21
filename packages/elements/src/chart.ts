@@ -71,6 +71,7 @@ export class MicrovizChart extends HTMLElement {
   #lastPoint: Point | null = null;
   #a11yItems: A11yItem[] = [];
   #focusIndex: number | null = null;
+  #focusedMarkId: string | null = null;
 
   constructor() {
     super();
@@ -166,6 +167,7 @@ export class MicrovizChart extends HTMLElement {
     this.#lastHitKey = null;
     this.#lastPoint = null;
     this.#focusIndex = null;
+    this.#setFocusedMarkId(null, { rerender: true });
     updateA11yFocus(this.#root, null);
 
     this.removeEventListener("pointermove", this.#onPointerMove);
@@ -194,6 +196,25 @@ export class MicrovizChart extends HTMLElement {
       this.#focusIndex = this.#a11yItems.length > 0 ? 0 : null;
     }
     this.#syncKeyboardAccess();
+    this.#syncFocusedMarkId();
+  }
+
+  #focusedMarkIdForIndex(index: number | null): string | null {
+    if (index === null) return null;
+    return this.#a11yItems[index]?.id ?? null;
+  }
+
+  #setFocusedMarkId(
+    next: string | null,
+    options?: { rerender?: boolean },
+  ): void {
+    if (next === this.#focusedMarkId) return;
+    this.#focusedMarkId = next;
+    if (options?.rerender && this.isConnected) this.render();
+  }
+
+  #syncFocusedMarkId(): void {
+    this.#setFocusedMarkId(this.#focusedMarkIdForIndex(this.#focusIndex));
   }
 
   #announceFocus(): void {
@@ -248,11 +269,15 @@ export class MicrovizChart extends HTMLElement {
 
     event.preventDefault();
     this.#focusIndex = nextIndex;
+    this.#setFocusedMarkId(this.#focusedMarkIdForIndex(nextIndex), {
+      rerender: true,
+    });
     this.#announceFocus();
   };
 
   #onBlur = (): void => {
     this.#focusIndex = null;
+    this.#setFocusedMarkId(null, { rerender: true });
     updateA11yFocus(this.#root, null);
   };
 
@@ -396,6 +421,7 @@ export class MicrovizChart extends HTMLElement {
     const data = parseJson(this.getAttribute("data"));
     if (!spec || data === null) {
       this.#model = null;
+      this.#setFocusedMarkId(null);
       applyMicrovizA11y(this, this.#internals, null);
       this.#setA11yItems([]);
       clearSvgFromShadowRoot(this.#root);
@@ -415,10 +441,14 @@ export class MicrovizChart extends HTMLElement {
     }
 
     const size = this.#resolveSize({ height: 32, width: 200 });
+    const state = this.#focusedMarkId
+      ? { focusedMarkId: this.#focusedMarkId }
+      : undefined;
     const model = computeModel({
       data: data as never,
       size,
       spec,
+      state,
     });
     this.#model = model;
 
