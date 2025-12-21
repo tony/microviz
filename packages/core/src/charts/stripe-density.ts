@@ -6,6 +6,7 @@ import {
   layoutSegmentsByPct,
   normalizeSegments,
 } from "./shared";
+import { applyFillRules } from "../utils/defs";
 import type {
   BitfieldData,
   NormalizedStripeDensity,
@@ -102,7 +103,6 @@ export const stripeDensityChart = {
       if (!run) continue;
       marks.push({
         className: `mv-stripe-density-seg${classSuffix}`,
-        fill: `url(#mv-stripe-density-${i})`,
         h: usableH,
         id: `stripe-density-seg-${i}`,
         type: "rect",
@@ -112,7 +112,12 @@ export const stripeDensityChart = {
       });
     }
 
-    return marks;
+    const fillRules = runs.map((_, i) => ({
+      id: `mv-stripe-density-${i}`,
+      match: { id: `stripe-density-seg-${i}` },
+    }));
+
+    return applyFillRules(marks, fillRules);
   },
   normalize(_spec, data) {
     const segments = normalizeSegments(data);

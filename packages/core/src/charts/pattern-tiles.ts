@@ -2,6 +2,7 @@ import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { layoutSegmentsByPct, normalizeSegments } from "./shared";
+import { applyFillRules } from "../utils/defs";
 import type {
   BitfieldData,
   NormalizedPatternTiles,
@@ -123,7 +124,6 @@ export const patternTilesChart = {
     for (let i = 0; i < runs.length; i++) {
       const run = runs[i];
       if (!run) continue;
-      const patternId = PATTERN_IDS[i % PATTERN_IDS.length];
 
       marks.push({
         className: `mv-pattern-tiles-seg${classSuffix}`,
@@ -138,7 +138,6 @@ export const patternTilesChart = {
 
       marks.push({
         className: `mv-pattern-tiles-pattern${classSuffix}`,
-        fill: `url(#${patternId})`,
         h: usableH,
         id: `pattern-tiles-pattern-${i}`,
         type: "rect",
@@ -148,7 +147,12 @@ export const patternTilesChart = {
       });
     }
 
-    return marks;
+    const fillRules = runs.map((_, i) => ({
+      id: PATTERN_IDS[i % PATTERN_IDS.length],
+      match: { id: `pattern-tiles-pattern-${i}` },
+    }));
+
+    return applyFillRules(marks, fillRules);
   },
   normalize(_spec, data) {
     const segments = normalizeSegments(data);
