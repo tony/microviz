@@ -7,12 +7,14 @@ export type ComputeMode = "main" | "worker";
 export type ChartId = ChartSpec["type"];
 export type ChartSubtype = "all" | "bars" | "dots" | "grids" | "lines";
 export type SidebarTab = "browse" | "debug" | "settings";
+export type PaletteMode = "value" | "random" | "chunks";
 
 export type PlaygroundState = {
   applyNoiseOverlay: boolean;
   chartFilter: string;
   chartSubtype: ChartSubtype;
   computeMode: ComputeMode;
+  paletteMode: PaletteMode;
   fallbackSvgWhenCanvasUnsupported: boolean;
   height: number;
   renderer: Renderer;
@@ -32,6 +34,7 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   chartFilter: "",
   chartSubtype: "all",
   computeMode: "main",
+  paletteMode: "value",
   fallbackSvgWhenCanvasUnsupported: false,
   height: 32,
   renderer: "svg-string",
@@ -55,6 +58,8 @@ type PlaygroundSerializedState = {
   st?: ChartSubtype;
   /** computeMode */
   cm?: ComputeMode;
+  /** paletteMode */
+  pm?: PaletteMode;
   /** fallbackSvgWhenCanvasUnsupported */
   fb?: 1;
   /** height */
@@ -118,6 +123,10 @@ function isComputeMode(value: unknown): value is ComputeMode {
   return value === "main" || value === "worker";
 }
 
+function isPaletteMode(value: unknown): value is PaletteMode {
+  return value === "value" || value === "random" || value === "chunks";
+}
+
 function isSeriesPreset(value: unknown): value is SeriesPreset {
   return (
     value === "trend" ||
@@ -174,6 +183,8 @@ function serializePlaygroundState(
     s.r = state.renderer;
   if (state.computeMode !== DEFAULT_PLAYGROUND_STATE.computeMode)
     s.cm = state.computeMode;
+  if (state.paletteMode !== DEFAULT_PLAYGROUND_STATE.paletteMode)
+    s.pm = state.paletteMode;
   if (state.seriesPreset !== DEFAULT_PLAYGROUND_STATE.seriesPreset)
     s.sp = state.seriesPreset;
 
@@ -224,6 +235,9 @@ function deserializePlaygroundState(
     computeMode: isComputeMode(serialized.cm)
       ? serialized.cm
       : DEFAULT_PLAYGROUND_STATE.computeMode,
+    paletteMode: isPaletteMode(serialized.pm)
+      ? serialized.pm
+      : DEFAULT_PLAYGROUND_STATE.paletteMode,
     fallbackSvgWhenCanvasUnsupported: serialized.fb === 1,
     height:
       typeof serialized.h === "number" && Number.isFinite(serialized.h)

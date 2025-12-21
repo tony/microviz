@@ -31,6 +31,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { buildPaletteColors } from "../demoPalette";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import {
   chartCard,
@@ -48,6 +49,7 @@ import {
   type ChartSubtype,
   type ComputeMode,
   DEFAULT_PLAYGROUND_STATE,
+  type PaletteMode,
   type PlaygroundState,
   type Renderer,
   type SidebarTab,
@@ -547,6 +549,9 @@ export const MicrovizPlayground: FC<{
   const [seriesPreset, setSeriesPreset] = useState<SeriesPreset>(
     () => initialUrlState.seriesPreset,
   );
+  const [paletteMode, setPaletteMode] = useState<PaletteMode>(
+    () => initialUrlState.paletteMode,
+  );
   const [seed, setSeed] = useState(() => initialUrlState.seed);
   const [seriesLength, setSeriesLength] = useState(
     () => initialUrlState.seriesLength,
@@ -593,6 +598,9 @@ export const MicrovizPlayground: FC<{
     setSeriesPreset((prev) =>
       prev === urlState.seriesPreset ? prev : urlState.seriesPreset,
     );
+    setPaletteMode((prev) =>
+      prev === urlState.paletteMode ? prev : urlState.paletteMode,
+    );
     setSeed((prev) => (prev === urlState.seed ? prev : urlState.seed));
     setSeriesLength((prev) =>
       prev === urlState.seriesLength ? prev : urlState.seriesLength,
@@ -623,6 +631,7 @@ export const MicrovizPlayground: FC<{
       chartFilter,
       chartSubtype,
       computeMode,
+      paletteMode,
       fallbackSvgWhenCanvasUnsupported,
       height,
       renderer,
@@ -641,6 +650,7 @@ export const MicrovizPlayground: FC<{
     chartFilter,
     chartSubtype,
     computeMode,
+    paletteMode,
     fallbackSvgWhenCanvasUnsupported,
     height,
     onUrlStateChange,
@@ -709,8 +719,34 @@ export const MicrovizPlayground: FC<{
     [seed],
   );
 
-  const inputs: Record<ChartId, ComputeModelInput> = useMemo(
-    () => ({
+  const inputs: Record<ChartId, ComputeModelInput> = useMemo(() => {
+    const palette = segments.map((segment) => segment.color);
+    const waveformColors = buildPaletteColors({
+      count: 24,
+      mode: paletteMode,
+      palette,
+      segments,
+      seed: `${seed}:waveform`,
+      series,
+    });
+    const equalizerColors = buildPaletteColors({
+      count: 24,
+      mode: paletteMode,
+      palette,
+      segments,
+      seed: `${seed}:equalizer`,
+      series,
+    });
+    const codeMinimapColors = buildPaletteColors({
+      count: 8,
+      mode: paletteMode,
+      palette,
+      segments,
+      seed: `${seed}:code-minimap`,
+      series,
+    });
+
+    return {
       bar: {
         data: { max: 100, value: series[series.length - 1] ?? 0 },
         size,
@@ -759,7 +795,8 @@ export const MicrovizPlayground: FC<{
         data: series,
         size: sizeFor("code-minimap"),
         spec: {
-          colors: segments.map((segment) => segment.color),
+          colors: codeMinimapColors,
+          lines: 8,
           pad: 0,
           type: "code-minimap",
         },
@@ -835,7 +872,7 @@ export const MicrovizPlayground: FC<{
         spec: {
           barWidth: 6,
           bins: 24,
-          colors: segments.map((segment) => segment.color),
+          colors: equalizerColors,
           gap: 1,
           pad: 0,
           type: "equalizer",
@@ -1148,15 +1185,14 @@ export const MicrovizPlayground: FC<{
         spec: {
           barWidth: 6,
           bins: 24,
-          colors: segments.map((segment) => segment.color),
+          colors: waveformColors,
           gap: 1,
           pad: 0,
           type: "waveform",
         },
       },
-    }),
-    [bandSeed, opacities, segments, series, size, sizeFor],
-  );
+    };
+  }, [bandSeed, opacities, paletteMode, segments, seed, series, size, sizeFor]);
 
   const chartIds = useMemo(() => Object.keys(inputs) as ChartId[], [inputs]);
   const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
@@ -1654,6 +1690,18 @@ export const MicrovizPlayground: FC<{
                 min={1}
                 onChange={setSegmentCount}
                 value={segmentCount}
+              />
+
+              <ToggleGroup<PaletteMode>
+                columns={3}
+                label="Palette mapping"
+                onChange={setPaletteMode}
+                options={[
+                  { id: "value", label: "By value" },
+                  { id: "random", label: "Random" },
+                  { id: "chunks", label: "Chunks" },
+                ]}
+                value={paletteMode}
               />
 
               <ToggleGroup<Wrapper>
