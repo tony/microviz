@@ -130,4 +130,23 @@ describe("@microviz/elements", () => {
     el.setAttribute("hit-slop", "0");
     expect(lastHit).toBeNull();
   });
+
+  it("applies a11y summary descriptions", () => {
+    const el = document.createElement("microviz-model") as HTMLElement & {
+      model: RenderModel | null;
+    };
+    document.body.append(el);
+
+    el.model = computeModel({
+      data: [2, 4, 6],
+      size: { height: 12, width: 80 },
+      spec: { type: "sparkline" },
+    });
+
+    expect(el.getAttribute("aria-describedby")).toBe("mv-a11y-summary");
+    const summary = el.shadowRoot?.querySelector("#mv-a11y-summary");
+    expect(summary?.classList.contains("mv-sr-only")).toBe(true);
+    expect(summary?.textContent).toContain("min");
+    expect(summary?.textContent).toContain("max");
+  });
 });
