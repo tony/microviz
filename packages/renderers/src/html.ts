@@ -1,4 +1,13 @@
-import type { Def, Mark, RenderModel } from "@microviz/core";
+import type {
+  Def,
+  FilterDef,
+  Mark,
+  MaskDef,
+  PatternDef,
+  RenderModel,
+} from "@microviz/core";
+import { svgStringToDataUrl } from "./export";
+import { renderSvgString } from "./svg";
 
 export type HtmlUnsupportedMarkEffect =
   | "clipPath"
@@ -13,11 +22,13 @@ export const HTML_SUPPORTED_MARK_TYPES = [
   "text",
 ] as const;
 
-const HTML_SUPPORTED_DEF_TYPES = ["linearGradient", "clipRect"] as const;
-const HTML_SUPPORTED_DEF_TYPE_SET = new Set<Def["type"]>(
-  HTML_SUPPORTED_DEF_TYPES,
-);
-
+const HTML_SUPPORTED_DEF_TYPES = [
+  "linearGradient",
+  "clipRect",
+  "pattern",
+  "mask",
+  "filter",
+] as const;
 const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
   HTML_SUPPORTED_MARK_TYPES,
 );
@@ -28,8 +39,9 @@ const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
  * - Ignores path marks entirely.
  * - Supports linearGradient defs for rect fills.
  * - Supports clipRect defs for rect clipPath.
- * - Ignores other defs (patterns, masks, filters).
- * - Ignores mark effects: mask, filter, strokeDash (clipPath only via clipRect).
+ * - Supports pattern defs for fills and mask defs via CSS masks.
+ * - Supports filter defs when composed only of dropShadow/gaussianBlur.
+ * - Ignores mark effects: mask/filter/strokeDash when unsupported.
  * - Use SVG/Canvas for full-fidelity output.
  */
 export const HTML_RENDERER_POLICY = {
@@ -38,12 +50,32 @@ export const HTML_RENDERER_POLICY = {
   supportedDefs: HTML_SUPPORTED_DEF_TYPES,
   supportedMarkTypes: HTML_SUPPORTED_MARK_TYPES,
   unsupportedDefs: "most",
-  unsupportedMarkEffects: ["mask", "filter", "strokeDash"],
+  unsupportedMarkEffects: ["strokeDash"],
   unsupportedMarkTypes: ["path"],
 } as const;
 
 function uniqueSorted<T extends string>(values: Iterable<T>): T[] {
   return [...new Set(values)].sort();
+}
+
+const SUPPORTED_FILTER_PRIMITIVES = new Set(["dropShadow", "gaussianBlur"]);
+
+function isSupportedFilterDef(def: FilterDef): boolean {
+  return def.primitives.every((primitive) =>
+    SUPPORTED_FILTER_PRIMITIVES.has(primitive.type),
+  );
+}
+
+function isSupportedDef(def: Def): boolean {
+  switch (def.type) {
+    case "linearGradient":
+    case "clipRect":
+    case "pattern":
+    case "mask":
+      return true;
+    case "filter":
+      return isSupportedFilterDef(def);
+  }
 }
 
 export function getHtmlUnsupportedMarkTypes(
@@ -59,9 +91,7 @@ export function getHtmlUnsupportedMarkTypes(
 export function getHtmlUnsupportedDefTypes(model: RenderModel): Def["type"][] {
   if (!model.defs || model.defs.length === 0) return [];
   return uniqueSorted(
-    model.defs
-      .map((def) => def.type)
-      .filter((type) => !HTML_SUPPORTED_DEF_TYPE_SET.has(type)),
+    model.defs.filter((def) => !isSupportedDef(def)).map((def) => def.type),
   );
 }
 
@@ -78,8 +108,20 @@ export function getHtmlUnsupportedMarkEffects(
       const clipDef = defsById.get(clipId);
       if (!clipDef || clipDef.type !== "clipRect") effects.add("clipPath");
     }
-    if ("mask" in mark && mark.mask) effects.add("mask");
-    if ("filter" in mark && mark.filter) effects.add("filter");
+    if ("mask" in mark && mark.mask) {
+      const maskId = extractUrlRefId(mark.mask) ?? mark.mask;
+      const maskDef = defsById.get(maskId);
+      if (!maskDef || maskDef.type !== "mask") effects.add("mask");
+    }
+    if ("filter" in mark && mark.filter) {
+      const filterId = extractUrlRefId(mark.filter) ?? mark.filter;
+      const filterDef = defsById.get(filterId);
+      if (!filterDef || filterDef.type !== "filter") {
+        effects.add("filter");
+      } else if (!isSupportedFilterDef(filterDef)) {
+        effects.add("filter");
+      }
+    }
     if (
       mark.type === "circle" &&
       (mark.strokeDasharray || mark.strokeDashoffset)
@@ -110,6 +152,11 @@ function extractUrlRefId(value: string | undefined): string | null {
   return match?.[2] ?? null;
 }
 
+function resolveDefId(value: string | undefined): string | null {
+  if (!value) return null;
+  return extractUrlRefId(value) ?? value;
+}
+
 function px(value: number | undefined): string | undefined {
   if (value === undefined) return undefined;
   const rounded = Math.round(value * 1000) / 1000;
@@ -129,6 +176,130 @@ function withOpacity(color: string, opacity: number | undefined): string {
   if (clamped >= 1) return color;
   const pct = Math.round(clamped * 1000) / 10;
   return `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+}
+
+const patternCache = new Map<string, string>();
+const maskCache = new Map<string, string>();
+
+function renderPatternMarks(def: PatternDef | MaskDef): RenderModel {
+  const marks = def.marks.map((mark, i) => ({
+    ...mark,
+    id: `html-def-mark-${def.id}-${i}`,
+  })) as Mark[];
+  return {
+    height: def.height ?? 1,
+    marks,
+    width: def.width ?? 1,
+  };
+}
+
+function patternToDataUrl(def: PatternDef): string {
+  const cached = patternCache.get(def.id);
+  if (cached) return cached;
+  const svg = renderSvgString(renderPatternMarks(def), { title: "" });
+  const url = svgStringToDataUrl(svg);
+  patternCache.set(def.id, url);
+  return url;
+}
+
+function maskToDataUrl(def: MaskDef): string {
+  const cached = maskCache.get(def.id);
+  if (cached) return cached;
+  const svg = renderSvgString(renderPatternMarks(def), { title: "" });
+  const url = svgStringToDataUrl(svg);
+  maskCache.set(def.id, url);
+  return url;
+}
+
+type Bounds = { x: number; y: number; w: number; h: number };
+
+function markBounds(mark: Mark): Bounds | null {
+  switch (mark.type) {
+    case "rect":
+      return { h: mark.h, w: mark.w, x: mark.x, y: mark.y };
+    case "circle": {
+      const r = mark.r;
+      return { h: r * 2, w: r * 2, x: mark.cx - r, y: mark.cy - r };
+    }
+    case "line": {
+      const strokeWidth = mark.strokeWidth ?? 1;
+      const x = Math.min(mark.x1, mark.x2);
+      const y = Math.min(mark.y1, mark.y2) - strokeWidth / 2;
+      const w = Math.abs(mark.x2 - mark.x1) || strokeWidth;
+      const h = Math.abs(mark.y2 - mark.y1) || strokeWidth;
+      return { h, w, x, y };
+    }
+    case "text":
+      return { h: 0, w: 0, x: mark.x, y: mark.y };
+    case "path":
+      return null;
+  }
+}
+
+function filterDefToCss(def: FilterDef): string | null {
+  if (!isSupportedFilterDef(def)) return null;
+  const parts = def.primitives.map((primitive) => {
+    if (primitive.type === "dropShadow") {
+      const dx = primitive.dx ?? 0;
+      const dy = primitive.dy ?? 0;
+      const blur = primitive.stdDeviation ?? 0;
+      const colorBase = primitive.floodColor ?? "black";
+      const color = withOpacity(colorBase, primitive.floodOpacity);
+      return `drop-shadow(${dx}px ${dy}px ${blur}px ${color})`;
+    }
+    if (primitive.type === "gaussianBlur") {
+      const blur = primitive.stdDeviation ?? 0;
+      return `blur(${blur}px)`;
+    }
+    return "";
+  });
+  const css = parts.filter(Boolean).join(" ");
+  return css.length > 0 ? css : null;
+}
+
+function maskStyles(mark: Mark, defsById: Map<string, Def>): string[] {
+  if (!("mask" in mark) || !mark.mask) return [];
+  const maskId = resolveDefId(mark.mask);
+  if (!maskId) return [];
+  const def = defsById.get(maskId);
+  if (!def || def.type !== "mask") return [];
+  const bounds = markBounds(mark);
+  const useObjectBoundingBox = def.maskUnits === "objectBoundingBox";
+  const width = def.width ?? bounds?.w ?? 0;
+  const height = def.height ?? bounds?.h ?? 0;
+  if (
+    !useObjectBoundingBox &&
+    (!Number.isFinite(width) || !Number.isFinite(height))
+  )
+    return [];
+  const size = useObjectBoundingBox
+    ? "100% 100%"
+    : `${Math.max(1, width)}px ${Math.max(1, height)}px`;
+  const offsetX = useObjectBoundingBox ? 0 : -(bounds?.x ?? 0) + (def.x ?? 0);
+  const offsetY = useObjectBoundingBox ? 0 : -(bounds?.y ?? 0) + (def.y ?? 0);
+  const position = useObjectBoundingBox ? "0 0" : `${offsetX}px ${offsetY}px`;
+  const url = maskToDataUrl(def);
+  return [
+    stylePair("mask-image", `url("${url}")`),
+    stylePair("-webkit-mask-image", `url("${url}")`),
+    stylePair("mask-size", size),
+    stylePair("-webkit-mask-size", size),
+    stylePair("mask-position", position),
+    stylePair("-webkit-mask-position", position),
+    stylePair("mask-repeat", "no-repeat"),
+    stylePair("-webkit-mask-repeat", "no-repeat"),
+  ];
+}
+
+function filterStyles(mark: Mark, defsById: Map<string, Def>): string[] {
+  if (!("filter" in mark) || !mark.filter) return [];
+  const filterId = resolveDefId(mark.filter);
+  if (!filterId) return [];
+  const def = defsById.get(filterId);
+  if (!def || def.type !== "filter") return [];
+  const css = filterDefToCss(def);
+  if (!css) return [];
+  return [stylePair("filter", css)];
 }
 
 function linearGradientToCss(
@@ -184,13 +355,17 @@ function renderRect(
     fillDef?.type === "linearGradient"
       ? linearGradientToCss(fillDef, mark.fillOpacity)
       : null;
+  const patternFill =
+    fillDef?.type === "pattern" ? patternToDataUrl(fillDef) : null;
   const rawFill = fillRefId ? undefined : mark.fill;
   const fillBase = gradientFill ?? rawFill ?? fallbackPaint(mark, "fill");
   const fill = gradientFill
     ? gradientFill
-    : rawFill === "none"
-      ? undefined
-      : withOpacity(fillBase, mark.fillOpacity);
+    : patternFill
+      ? patternFill
+      : rawFill === "none"
+        ? undefined
+        : withOpacity(fillBase, mark.fillOpacity);
   const strokeBase = mark.stroke ?? fallbackPaint(mark, "stroke");
   const stroke =
     mark.stroke === "none"
@@ -214,12 +389,33 @@ function renderRect(
     stylePair("top", px(mark.y - offsetY)),
     stylePair("width", px(mark.w)),
     stylePair("height", px(mark.h)),
-    stylePair("background", fill ?? "transparent"),
+    patternFill
+      ? stylePair("background-image", `url("${fill}")`)
+      : stylePair("background", fill ?? "transparent"),
+    patternFill
+      ? stylePair(
+          "background-size",
+          fillDef?.type === "pattern"
+            ? `${fillDef.width}px ${fillDef.height}px`
+            : undefined,
+        )
+      : "",
+    patternFill
+      ? stylePair(
+          "background-position",
+          fillDef?.type === "pattern"
+            ? `${-(mark.x - (fillDef.x ?? 0))}px ${-(mark.y - (fillDef.y ?? 0))}px`
+            : undefined,
+        )
+      : "",
+    patternFill ? stylePair("background-repeat", "repeat") : "",
     stylePair("opacity", mark.opacity?.toString()),
     stylePair("border-radius", rx || ry ? `${rx}px / ${ry}px` : undefined),
     stroke && strokeWidth > 0
       ? stylePair("box-shadow", `inset 0 0 0 ${strokeWidth}px ${stroke}`)
       : "",
+    ...maskStyles(mark, defsById),
+    ...filterStyles(mark, defsById),
   ].join("");
 
   const rect = `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", rectStyles)}></div>`;
@@ -244,10 +440,21 @@ function renderRect(
   return `<div${attr("style", clipStyles)}>${rect}</div>`;
 }
 
-function renderCircle(mark: Extract<Mark, { type: "circle" }>): string {
-  const fillBase = mark.fill ?? fallbackPaint(mark, "fill");
+function renderCircle(
+  mark: Extract<Mark, { type: "circle" }>,
+  defsById: Map<string, Def>,
+): string {
+  const fillRefId = extractUrlRefId(mark.fill);
+  const fillDef = fillRefId ? defsById.get(fillRefId) : undefined;
+  const patternFill =
+    fillDef?.type === "pattern" ? patternToDataUrl(fillDef) : null;
+  const rawFill = fillRefId ? undefined : mark.fill;
+  const fillBase = rawFill ?? fallbackPaint(mark, "fill");
   const fill =
-    mark.fill === "none" ? undefined : withOpacity(fillBase, mark.fillOpacity);
+    patternFill ??
+    (mark.fill === "none"
+      ? undefined
+      : withOpacity(fillBase, mark.fillOpacity));
   const strokeBase = mark.stroke ?? fallbackPaint(mark, "stroke");
   const stroke =
     mark.stroke === "none"
@@ -262,18 +469,42 @@ function renderCircle(mark: Extract<Mark, { type: "circle" }>): string {
     stylePair("top", px(mark.cy - mark.r)),
     stylePair("width", px(size)),
     stylePair("height", px(size)),
-    stylePair("background", fill ?? "transparent"),
+    patternFill
+      ? stylePair("background-image", `url("${fill}")`)
+      : stylePair("background", fill ?? "transparent"),
+    patternFill
+      ? stylePair(
+          "background-size",
+          fillDef?.type === "pattern"
+            ? `${fillDef.width}px ${fillDef.height}px`
+            : undefined,
+        )
+      : "",
+    patternFill
+      ? stylePair(
+          "background-position",
+          fillDef?.type === "pattern"
+            ? `${-(mark.cx - mark.r - (fillDef.x ?? 0))}px ${-(mark.cy - mark.r - (fillDef.y ?? 0))}px`
+            : undefined,
+        )
+      : "",
+    patternFill ? stylePair("background-repeat", "repeat") : "",
     stylePair("border-radius", "9999px"),
     stylePair("opacity", mark.opacity?.toString()),
     stroke && strokeWidth > 0
       ? stylePair("box-shadow", `inset 0 0 0 ${strokeWidth}px ${stroke}`)
       : "",
+    ...maskStyles(mark, defsById),
+    ...filterStyles(mark, defsById),
   ].join("");
 
   return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}></div>`;
 }
 
-function renderLine(mark: Extract<Mark, { type: "line" }>): string {
+function renderLine(
+  mark: Extract<Mark, { type: "line" }>,
+  defsById: Map<string, Def>,
+): string {
   const strokeBase = mark.stroke ?? fallbackPaint(mark, "stroke");
   const stroke =
     mark.stroke === "none"
@@ -297,12 +528,17 @@ function renderLine(mark: Extract<Mark, { type: "line" }>): string {
     stylePair("border-radius", radius ? `${radius}px` : undefined),
     stylePair("transform-origin", "0 0"),
     stylePair("transform", `rotate(${angle}deg)`),
+    ...maskStyles(mark, defsById),
+    ...filterStyles(mark, defsById),
   ].join("");
 
   return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}></div>`;
 }
 
-function renderText(mark: Extract<Mark, { type: "text" }>): string {
+function renderText(
+  mark: Extract<Mark, { type: "text" }>,
+  defsById: Map<string, Def>,
+): string {
   const fillBase = mark.fill ?? fallbackPaint(mark, "text");
   const color =
     mark.fill === "none" ? undefined : withOpacity(fillBase, mark.fillOpacity);
@@ -331,6 +567,8 @@ function renderText(mark: Extract<Mark, { type: "text" }>): string {
     stylePair("opacity", mark.opacity?.toString()),
     stylePair("white-space", "pre"),
     stylePair("transform", transform),
+    ...maskStyles(mark, defsById),
+    ...filterStyles(mark, defsById),
   ].join("");
 
   return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}>${escapeHtmlText(mark.text)}</div>`;
@@ -341,11 +579,11 @@ function renderMark(mark: Mark, defsById: Map<string, Def>): string {
     case "rect":
       return renderRect(mark, defsById);
     case "circle":
-      return renderCircle(mark);
+      return renderCircle(mark, defsById);
     case "line":
-      return renderLine(mark);
+      return renderLine(mark, defsById);
     case "text":
-      return renderText(mark);
+      return renderText(mark, defsById);
     case "path":
       return "";
   }
