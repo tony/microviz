@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, isFiniteNumber } from "./shared";
 import type {
@@ -15,6 +15,10 @@ import type {
 export const sparklineBarsChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "sparkline-bars-bar",
+        labelPrefix: "Bar",
+      }),
       label: a11yLabelWithSeriesSummary(
         "Sparkline bars chart",
         normalized.series,
