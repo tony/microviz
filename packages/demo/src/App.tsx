@@ -103,6 +103,7 @@ export const App: FC = () => {
                 size: "md",
               })}
               onClick={() => setView("playground")}
+              title="Playground"
               type="button"
             >
               Playground
@@ -114,6 +115,7 @@ export const App: FC = () => {
                 size: "md",
               })}
               onClick={() => setView("gallery")}
+              title="Gallery"
               type="button"
             >
               Gallery
@@ -128,7 +130,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setColorSchemePreference("system")}
-              title="UI theme: follow system. (Microviz Auto will track this.)"
+              title="UI scheme: system"
               type="button"
             >
               System
@@ -140,7 +142,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setColorSchemePreference("light")}
-              title="UI theme: force light. (Microviz Auto will track this.)"
+              title="UI scheme: light"
               type="button"
             >
               Light
@@ -152,7 +154,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setColorSchemePreference("dark")}
-              title="UI theme: force dark. (Microviz Auto will track this.)"
+              title="UI scheme: dark"
               type="button"
             >
               Dark
@@ -170,7 +172,7 @@ export const App: FC = () => {
                   event.target.value as MicrovizThemePreference,
                 )
               }
-              title="Microviz theme preset (White/G10/G90/G100). Carbon-inspired surfaces + chart token palette. Independent of UI theme unless set to Auto."
+              title="Microviz preset (Auto follows UI)"
               value={microvizThemePreference}
             >
               <option value="auto">Auto</option>
@@ -189,7 +191,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setMicrovizBackgroundPreference("transparent")}
-              title="Microviz surface: keep palette, but don't paint a background (--mv-bg = transparent)."
+              title="Microviz bg: transparent"
               type="button"
             >
               Transparent
@@ -201,7 +203,7 @@ export const App: FC = () => {
                 size: "xs",
               })}
               onClick={() => setMicrovizBackgroundPreference("solid")}
-              title="Microviz surface: paint the preset background (--mv-bg) behind charts."
+              title="Microviz bg: preset"
               type="button"
             >
               Solid

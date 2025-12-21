@@ -1104,6 +1104,7 @@ export const MicroVizAggregateDemo: FC<{
                 max={6}
                 min={3}
                 onChange={(e) => setMaxSlices(Number(e.target.value))}
+                title={`Slices: ${maxSlices}`}
                 type="range"
                 value={maxSlices}
               />
@@ -1129,6 +1130,7 @@ export const MicroVizAggregateDemo: FC<{
                 max={15}
                 min={1}
                 onChange={(e) => setMinPercentage(Number(e.target.value))}
+                title={`Min %: ${minPercentage}`}
                 type="range"
                 value={minPercentage}
               />

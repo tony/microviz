@@ -1376,6 +1376,7 @@ export const MicroVizDemo: FC<{
                 max={6}
                 min={3}
                 onChange={(e) => setMaxSlices(Number(e.target.value))}
+                title={`Slices: ${maxSlices}`}
                 type="range"
                 value={maxSlices}
               />
@@ -1400,6 +1401,7 @@ export const MicroVizDemo: FC<{
                   onChange={(e) =>
                     setTimeGranularity(e.target.value as "months" | "years")
                   }
+                  title="Months"
                   type="radio"
                   value="months"
                 />
@@ -1415,6 +1417,7 @@ export const MicroVizDemo: FC<{
                   onChange={(e) =>
                     setTimeGranularity(e.target.value as "months" | "years")
                   }
+                  title="Years"
                   type="radio"
                   value="years"
                 />
@@ -1433,6 +1436,7 @@ export const MicroVizDemo: FC<{
                 checked={skipEmpty}
                 className="rounded text-blue-500"
                 onChange={(e) => setSkipEmpty(e.target.checked)}
+                title="Skip empty"
                 type="checkbox"
               />
               <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
@@ -1446,6 +1450,7 @@ export const MicroVizDemo: FC<{
                 checked={fadeLight}
                 className="rounded text-blue-500"
                 onChange={(e) => setFadeLight(e.target.checked)}
+                title="Fade light"
                 type="checkbox"
               />
               <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
@@ -1468,6 +1473,7 @@ export const MicroVizDemo: FC<{
                 max={50}
                 min={5}
                 onChange={(e) => setLightThreshold(Number(e.target.value))}
+                title={`Threshold: ${lightThreshold}%`}
                 type="range"
                 value={lightThreshold}
               />

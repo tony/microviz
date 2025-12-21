@@ -333,11 +333,12 @@ function ChartCard({
     <button
       className={chartCard({ active, compact })}
       onClick={() => onSelect(chartId)}
+      title={title}
       type="button"
     >
       <div
         className={statusLed({ status: hasWarnings ? "warning" : "success" })}
-        title={hasWarnings ? "Warnings present" : "No warnings"}
+        title={hasWarnings ? "Warnings" : "OK"}
       />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -1086,6 +1087,7 @@ export const MicrovizPlayground: FC = () => {
                 size: "xs",
               })}
               onClick={() => setSidebarTab("browse")}
+              title="Charts"
               type="button"
             >
               Browse
@@ -1097,6 +1099,7 @@ export const MicrovizPlayground: FC = () => {
                 size: "xs",
               })}
               onClick={() => setSidebarTab("settings")}
+              title="Settings"
               type="button"
             >
               Settings
@@ -1108,6 +1111,7 @@ export const MicrovizPlayground: FC = () => {
                 size: "xs",
               })}
               onClick={() => setSidebarTab("debug")}
+              title="Debug"
               type="button"
             >
               Debug
@@ -1125,6 +1129,7 @@ export const MicrovizPlayground: FC = () => {
                 })}
                 onChange={(e) => setChartFilter(e.target.value)}
                 placeholder="Filter charts..."
+                title="Filter charts"
                 type="text"
                 value={chartFilter}
               />
@@ -1163,6 +1168,7 @@ export const MicrovizPlayground: FC = () => {
                   onChange={(e) =>
                     setSeriesPreset(e.target.value as SeriesPreset)
                   }
+                  title="Series preset"
                   value={seriesPreset}
                 >
                   <option value="trend">Trend</option>
@@ -1180,6 +1186,7 @@ export const MicrovizPlayground: FC = () => {
                   <input
                     className={inputField({ font: "mono" })}
                     onChange={(e) => setSeed(e.target.value)}
+                    title="Seed"
                     value={seed}
                   />
                   <button
@@ -1187,6 +1194,7 @@ export const MicrovizPlayground: FC = () => {
                     onClick={() =>
                       setSeed(`mv-${Math.floor(Math.random() * 10_000)}`)
                     }
+                    title="Random seed"
                     type="button"
                   >
                     Random
@@ -1274,7 +1282,10 @@ export const MicrovizPlayground: FC = () => {
                 Render
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+              <label
+                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                title="Noise overlay (SVG)"
+              >
                 <input
                   checked={applyNoiseOverlay}
                   className="accent-blue-500"
@@ -1286,7 +1297,10 @@ export const MicrovizPlayground: FC = () => {
                 </span>
               </label>
 
-              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+              <label
+                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                title="SVG fallback (Canvas filters)"
+              >
                 <input
                   checked={fallbackSvgWhenCanvasUnsupported}
                   className="accent-blue-500"
@@ -1304,7 +1318,10 @@ export const MicrovizPlayground: FC = () => {
                 </span>
               </label>
 
-              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+              <label
+                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                title="Element hover tooltip"
+              >
                 <input
                   checked={showHoverTooltip}
                   className="accent-blue-500"
@@ -1368,6 +1385,7 @@ export const MicrovizPlayground: FC = () => {
                       key={option.id}
                       onClick={() => setChartSubtype(option.id)}
                       role="tab"
+                      title={`Filter: ${option.label}`}
                       type="button"
                     >
                       {option.label}
@@ -1377,7 +1395,7 @@ export const MicrovizPlayground: FC = () => {
               </div>
               <div
                 className="text-xs text-slate-500 dark:text-slate-400"
-                title={`${visibleCharts.length} of ${chartCatalog.length} charts`}
+                title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
               >
                 {visibleCharts.length} charts
               </div>
@@ -1498,6 +1516,13 @@ export const MicrovizPlayground: FC = () => {
                 })}
                 key={tab}
                 onClick={() => setInspectorTab(tab)}
+                title={
+                  tab === "diagnostics"
+                    ? "Warnings"
+                    : tab === "model"
+                      ? "Render model"
+                      : "Inputs"
+                }
                 type="button"
               >
                 {tab}
@@ -1607,6 +1632,7 @@ const FieldRange: FC<{
       max={max}
       min={min}
       onChange={(e) => onChange(Number(e.target.value))}
+      title={`${label}: ${value}`}
       type="range"
       value={value}
     />
@@ -1629,6 +1655,7 @@ const FieldNumber: FC<{
       max={max}
       min={min}
       onChange={(e) => onChange(Number(e.target.value))}
+      title={label}
       type="number"
       value={value}
     />
@@ -1656,6 +1683,7 @@ const FieldNumberWithRange: FC<{
       max={max}
       min={min}
       onChange={(e) => onChange(Number(e.target.value))}
+      title={`${label}: ${value}`}
       type="range"
       value={value}
     />
