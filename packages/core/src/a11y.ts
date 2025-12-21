@@ -9,6 +9,20 @@ import type {
 
 const MAX_A11Y_ITEMS = 24;
 
+export type A11ySeriesItemOptions = {
+  idPrefix?: string;
+  labelPrefix?: string;
+  maxItems?: number;
+  valueText?: (value: number, index: number) => string | undefined;
+};
+
+export type A11ySegmentItemOptions = {
+  idPrefix?: string;
+  labelFallback?: string;
+  maxItems?: number;
+  valueText?: (pct: number, index: number) => string | undefined;
+};
+
 function formatA11yNumber(value: number): string {
   if (!Number.isFinite(value)) return "0";
   const roundedInt = Math.round(value);
@@ -159,16 +173,23 @@ function sanitizeItemLabel(label: string, fallback: string): string {
   return trimmed.length > 0 ? trimmed : fallback;
 }
 
-function seriesItems(series: ReadonlyArray<number>): A11yItem[] {
+function seriesItems(
+  series: ReadonlyArray<number>,
+  options: A11ySeriesItemOptions = {},
+): A11yItem[] {
   const items: A11yItem[] = [];
-  for (let i = 0; i < series.length && items.length < MAX_A11Y_ITEMS; i += 1) {
+  const maxItems = options.maxItems ?? MAX_A11Y_ITEMS;
+  const idPrefix = options.idPrefix ?? "series";
+  const labelPrefix = options.labelPrefix ?? "Value";
+  for (let i = 0; i < series.length && items.length < maxItems; i += 1) {
     const value = series[i];
     if (!Number.isFinite(value)) continue;
     items.push({
-      id: `series-${i}`,
-      label: `Value ${i + 1}`,
+      id: `${idPrefix}-${i}`,
+      label: `${labelPrefix} ${i + 1}`,
       rank: i + 1,
       value,
+      valueText: options.valueText?.(value, i),
     });
   }
   return items;
@@ -176,22 +197,22 @@ function seriesItems(series: ReadonlyArray<number>): A11yItem[] {
 
 function segmentItems(
   segments: ReadonlyArray<{ pct?: number; name?: string }>,
+  options: A11ySegmentItemOptions = {},
 ): A11yItem[] {
   const items: A11yItem[] = [];
-  for (
-    let i = 0;
-    i < segments.length && items.length < MAX_A11Y_ITEMS;
-    i += 1
-  ) {
+  const maxItems = options.maxItems ?? MAX_A11Y_ITEMS;
+  const idPrefix = options.idPrefix ?? "segment";
+  const labelFallback = options.labelFallback ?? "Segment";
+  for (let i = 0; i < segments.length && items.length < maxItems; i += 1) {
     const seg = segments[i];
     if (!seg || !Number.isFinite(seg.pct)) continue;
     const pct = seg.pct ?? 0;
     items.push({
-      id: `segment-${i}`,
-      label: sanitizeItemLabel(seg.name ?? "", `Segment ${i + 1}`),
+      id: `${idPrefix}-${i}`,
+      label: sanitizeItemLabel(seg.name ?? "", `${labelFallback} ${i + 1}`),
       rank: i + 1,
       value: pct,
-      valueText: `${Math.round(pct)}%`,
+      valueText: options.valueText?.(pct, i) ?? `${Math.round(pct)}%`,
     });
   }
   return items;
@@ -216,4 +237,18 @@ export function inferA11yItems(normalized: unknown): A11yItem[] | undefined {
   }
 
   return undefined;
+}
+
+export function a11yItemsForSeries(
+  series: ReadonlyArray<number>,
+  options?: A11ySeriesItemOptions,
+): A11yItem[] {
+  return seriesItems(series, options);
+}
+
+export function a11yItemsForSegments(
+  segments: ReadonlyArray<{ pct?: number; name?: string }>,
+  options?: A11ySegmentItemOptions,
+): A11yItem[] {
+  return segmentItems(segments, options);
 }
