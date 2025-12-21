@@ -2718,12 +2718,12 @@ export const MicrovizPlayground: FC<{
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {useDrawerLayout && (
           <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
-            <div className="relative flex h-9 items-center justify-center">
+            <div className="flex h-9 flex-nowrap items-center gap-2 overflow-x-auto [scrollbar-gutter:stable]">
               <button
                 aria-expanded={mobileSidebarOpen}
                 className={tabButton({
                   active: mobileSidebarOpen,
-                  className: "absolute left-0 whitespace-nowrap",
+                  className: "shrink-0 whitespace-nowrap",
                   size: "xs",
                   variant: "filled",
                 })}
@@ -2732,28 +2732,43 @@ export const MicrovizPlayground: FC<{
               >
                 Controls
               </button>
-              <label className="flex max-w-[70%] items-center gap-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <span>Filter</span>
-                <select
-                  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-                  onChange={(event) =>
-                    setChartSubtype(event.target.value as ChartSubtype)
-                  }
-                  title="Filter charts"
-                  value={chartSubtype}
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+                <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>Filter</span>
+                  <select
+                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
+                    onChange={(event) =>
+                      setChartSubtype(event.target.value as ChartSubtype)
+                    }
+                    title="Filter charts"
+                    value={chartSubtype}
+                  >
+                    {chartSubtypeOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div
+                  className="min-w-0 max-w-[45vw] truncate text-[10px] text-slate-500 dark:text-slate-400"
+                  title={`${wrapper} · ${renderer} · ${computeModeEffective}`}
                 >
-                  {chartSubtypeOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  {wrapper} · {renderer}
+                  {warningCount > 0 && (
+                    <span className="font-semibold text-amber-600 dark:text-amber-300">
+                      {" "}
+                      · {warningCount} warning{warningCount === 1 ? "" : "s"}
+                    </span>
+                  )}{" "}
+                  · {computeModeEffective}
+                </div>
+              </div>
               <button
                 aria-expanded={mobileInspectorOpen}
                 className={tabButton({
                   active: mobileInspectorOpen,
-                  className: "absolute right-0 whitespace-nowrap",
+                  className: "shrink-0 whitespace-nowrap",
                   size: "xs",
                   variant: "filled",
                 })}
@@ -2797,23 +2812,23 @@ export const MicrovizPlayground: FC<{
                 </div>
               </div>
             )}
-            <div className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-              {!useDrawerLayout && (
+            {!useDrawerLayout && (
+              <div className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 <span
                   title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
                 >
                   {visibleCharts.length} charts ·{" "}
                 </span>
-              )}
-              {wrapper} · {renderer}
-              {warningCount > 0 && (
-                <span className="font-semibold text-amber-600 dark:text-amber-300">
-                  {" "}
-                  · {warningCount} warning{warningCount === 1 ? "" : "s"}
-                </span>
-              )}{" "}
-              · {computeModeEffective}
-            </div>
+                {wrapper} · {renderer}
+                {warningCount > 0 && (
+                  <span className="font-semibold text-amber-600 dark:text-amber-300">
+                    {" "}
+                    · {warningCount} warning{warningCount === 1 ? "" : "s"}
+                  </span>
+                )}{" "}
+                · {computeModeEffective}
+              </div>
+            )}
           </div>
         </div>
 
@@ -3050,241 +3065,241 @@ export const MicrovizPlayground: FC<{
             </div>
             {inspectorTab === "diagnostics" && (
               <div className="space-y-4">
-              <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <span>Diagnostics</span>
-                <button
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  onClick={handleCopyDiagnostics}
-                  type="button"
-                >
-                  {diagnosticsCopied ? "Copied" : "Copy"}
-                </button>
-              </div>
-              {htmlSvgMarkCounts && (
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  HTML marks: {htmlSvgMarkCounts.html} · SVG marks:{" "}
-                  {htmlSvgMarkCounts.svg}
+                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>Diagnostics</span>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    onClick={handleCopyDiagnostics}
+                    type="button"
+                  >
+                    {diagnosticsCopied ? "Copied" : "Copy"}
+                  </button>
                 </div>
-              )}
-
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Selected warnings
-                </div>
-                {selectedWarningSummary.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    {selectedWarningSummary.map((summary) => (
-                      <span
-                        className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
-                        key={summary.code}
-                        title={summary.code}
-                      >
-                        {summary.label} ×{summary.count}
-                      </span>
-                    ))}
+                {htmlSvgMarkCounts && (
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    HTML marks: {htmlSvgMarkCounts.html} · SVG marks:{" "}
+                    {htmlSvgMarkCounts.svg}
                   </div>
                 )}
-                <div className="mt-2">
-                  {formatWarningsList(selectedWarnings)}
-                </div>
-              </div>
 
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  All warnings
-                </div>
-                {allWarningSummary.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    {allWarningSummary.map((summary) => (
-                      <span
-                        className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
-                        key={summary.code}
-                        title={summary.code}
-                      >
-                        {summary.label} ×{summary.count}
-                      </span>
-                    ))}
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Selected warnings
                   </div>
-                )}
-                <div className="mt-2">
-                  {allWarnings.length === 0 ? (
-                    <div className="text-sm">None</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {allWarnings.map((row) => (
-                        <Fragment key={row.chartId}>
-                          <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            {row.chartId}
-                          </div>
-                          <ul className="space-y-1 text-sm">
-                            {row.warnings.map((w, i) => (
-                              <li key={`${row.chartId}-${w.code}-${i}`}>
-                                <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                                  {w.code}
-                                </span>
-                                <span className="ml-2">{w.message}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </Fragment>
+                  {selectedWarningSummary.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      {selectedWarningSummary.map((summary) => (
+                        <span
+                          className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
+                          key={summary.code}
+                          title={summary.code}
+                        >
+                          {summary.label} ×{summary.count}
+                        </span>
                       ))}
                     </div>
                   )}
+                  <div className="mt-2">
+                    {formatWarningsList(selectedWarnings)}
+                  </div>
                 </div>
-              </div>
+
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    All warnings
+                  </div>
+                  {allWarningSummary.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      {allWarningSummary.map((summary) => (
+                        <span
+                          className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
+                          key={summary.code}
+                          title={summary.code}
+                        >
+                          {summary.label} ×{summary.count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    {allWarnings.length === 0 ? (
+                      <div className="text-sm">None</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {allWarnings.map((row) => (
+                          <Fragment key={row.chartId}>
+                            <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                              {row.chartId}
+                            </div>
+                            <ul className="space-y-1 text-sm">
+                              {row.warnings.map((w, i) => (
+                                <li key={`${row.chartId}-${w.code}-${i}`}>
+                                  <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                                    {w.code}
+                                  </span>
+                                  <span className="ml-2">{w.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </Fragment>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-          {inspectorTab === "a11y" && (
-            <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
-              <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <span>A11y</span>
-                <button
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  disabled={!selectedModel?.a11y}
-                  onClick={handleCopyA11y}
-                  type="button"
-                >
-                  {a11yCopied ? "Copied" : "Copy"}
-                </button>
+            {inspectorTab === "a11y" && (
+              <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>A11y</span>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel?.a11y}
+                    onClick={handleCopyA11y}
+                    type="button"
+                  >
+                    {a11yCopied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Label:
+                    </span>
+                    <span>{selectedModel?.a11y?.label ?? "—"}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Role:
+                    </span>
+                    <span>{selectedModel?.a11y?.role ?? "—"}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Summary:
+                    </span>
+                    <span>{formatA11ySummary(a11ySummary) ?? "—"}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Items:
+                    </span>
+                    <span>
+                      {a11yMissingItems
+                        ? "0 (missing)"
+                        : a11yTruncatedItems
+                          ? `${a11yItems.length}/${a11yExpectedCount} (truncated)`
+                          : a11yItems.length}
+                    </span>
+                  </div>
+                  {a11yItems.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      {a11yItems.slice(0, 5).map((item) => (
+                        <li key={item.id}>{formatA11yItem(item)}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-              <div className="mt-2 space-y-1">
-                <div className="flex flex-wrap gap-x-2 gap-y-1">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    Label:
-                  </span>
-                  <span>{selectedModel?.a11y?.label ?? "—"}</span>
+            )}
+
+            {inspectorTab === "export" && (
+              <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Export
                 </div>
-                <div className="flex flex-wrap gap-x-2 gap-y-1">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    Role:
-                  </span>
-                  <span>{selectedModel?.a11y?.role ?? "—"}</span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel}
+                    onClick={handleDownloadSvg}
+                    type="button"
+                  >
+                    Download SVG
+                  </button>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel}
+                    onClick={handleCopySvg}
+                    type="button"
+                  >
+                    Copy SVG
+                  </button>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel || exportingPng}
+                    onClick={handleDownloadPng}
+                    type="button"
+                  >
+                    {exportingPng ? "Exporting PNG…" : "Download PNG"}
+                  </button>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel || copyingPng}
+                    onClick={handleCopyPngDataUrl}
+                    title="Copy PNG as data URL"
+                    type="button"
+                  >
+                    {copyingPng ? "Copying PNG…" : "Copy PNG URL"}
+                  </button>
                 </div>
-                <div className="flex flex-wrap gap-x-2 gap-y-1">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    Summary:
-                  </span>
-                  <span>{formatA11ySummary(a11ySummary) ?? "—"}</span>
-                </div>
-                <div className="flex flex-wrap gap-x-2 gap-y-1">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    Items:
-                  </span>
-                  <span>
-                    {a11yMissingItems
-                      ? "0 (missing)"
-                      : a11yTruncatedItems
-                        ? `${a11yItems.length}/${a11yExpectedCount} (truncated)`
-                        : a11yItems.length}
-                  </span>
-                </div>
-                {a11yItems.length > 0 && (
-                  <ul className="mt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    {a11yItems.slice(0, 5).map((item) => (
-                      <li key={item.id}>{formatA11yItem(item)}</li>
-                    ))}
-                  </ul>
+                {exportNotice && (
+                  <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400">
+                    {exportNotice}
+                  </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {inspectorTab === "export" && (
-            <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Export
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  disabled={!selectedModel}
-                  onClick={handleDownloadSvg}
-                  type="button"
-                >
-                  Download SVG
-                </button>
-                <button
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  disabled={!selectedModel}
-                  onClick={handleCopySvg}
-                  type="button"
-                >
-                  Copy SVG
-                </button>
-                <button
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  disabled={!selectedModel || exportingPng}
-                  onClick={handleDownloadPng}
-                  type="button"
-                >
-                  {exportingPng ? "Exporting PNG…" : "Download PNG"}
-                </button>
-                <button
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  disabled={!selectedModel || copyingPng}
-                  onClick={handleCopyPngDataUrl}
-                  title="Copy PNG as data URL"
-                  type="button"
-                >
-                  {copyingPng ? "Copying PNG…" : "Copy PNG URL"}
-                </button>
-              </div>
-              {exportNotice && (
-                <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400">
-                  {exportNotice}
+                <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  PNG export renders with the Canvas pipeline.
                 </div>
-              )}
-              <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                PNG export renders with the Canvas pipeline.
               </div>
-            </div>
-          )}
+            )}
 
-          {inspectorTab === "model" && (
-            <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
-              <JsonViewer data={selectedModel} />
-            </div>
-          )}
+            {inspectorTab === "model" && (
+              <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
+                <JsonViewer data={selectedModel} />
+              </div>
+            )}
 
-          {inspectorTab === "data" && (
-            <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
-              <JsonViewer
-                data={{
-                  input: selectedInput,
-                  seed,
-                  segments,
-                  series,
-                }}
-              />
-            </div>
-          )}
+            {inspectorTab === "data" && (
+              <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
+                <JsonViewer
+                  data={{
+                    input: selectedInput,
+                    seed,
+                    segments,
+                    series,
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       </ResizablePane>
     </div>
   );
