@@ -7,11 +7,7 @@ import {
   isFiniteNumber,
   resampleSeries,
 } from "./shared";
-import type {
-  NormalizedWaveform,
-  SparklineData,
-  WaveformSpec,
-} from "./types";
+import type { NormalizedWaveform, SparklineData, WaveformSpec } from "./types";
 
 export const waveformChart = {
   a11y(_spec, normalized, _layout) {
@@ -23,6 +19,7 @@ export const waveformChart = {
   category: "bars" as const,
   defaultPad: 0,
   displayName: "Waveform",
+  emptyDataWarningMessage: "No series data.",
   isEmpty(normalized) {
     return normalized.series.length === 0;
   },

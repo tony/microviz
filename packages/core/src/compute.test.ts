@@ -34,14 +34,14 @@ describe("computeModel pipeline", () => {
 
   test("does not emit EMPTY_DATA when chart has no emptyDataWarningMessage", () => {
     const model = computeModel({
-      data: [],
+      data: { max: 100, value: 0 },
       size: { height: 32, width: 200 },
-      spec: { type: "waveform" as const },
+      spec: { type: "bar" as const },
     });
 
-    expect(model.stats?.warnings?.some((w) => w.code === "EMPTY_DATA")).toBe(
-      false,
-    );
+    const hasEmptyWarning =
+      model.stats?.warnings?.some((w) => w.code === "EMPTY_DATA") ?? false;
+    expect(hasEmptyWarning).toBe(false);
   });
 
   test("emits MARK_OUT_OF_BOUNDS when marks exceed the viewport", () => {
