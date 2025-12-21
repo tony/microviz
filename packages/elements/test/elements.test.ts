@@ -185,6 +185,25 @@ describe("@microviz/elements", () => {
     expect(focus?.textContent).toContain("Point");
   });
 
+  it("emits focus events with item detail (microviz-chart)", () => {
+    const el = document.createElement("microviz-chart");
+    el.setAttribute("interactive", "");
+    el.setAttribute("width", "80");
+    el.setAttribute("height", "12");
+    el.setAttribute("spec", JSON.stringify({ type: "sparkline" }));
+    el.setAttribute("data", JSON.stringify([10, 20, 30]));
+    document.body.append(el);
+
+    let detail: { index?: number; item?: { label?: string } } | null = null;
+    el.addEventListener("microviz-focus", (event) => {
+      detail = (event as CustomEvent).detail;
+    });
+
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    expect(detail?.index).toBe(0);
+    expect(detail?.item?.label).toBe("Point 1");
+  });
+
   it("supports keyboard focus navigation", () => {
     const el = document.createElement("microviz-model") as HTMLElement & {
       model: RenderModel | null;
