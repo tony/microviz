@@ -465,62 +465,53 @@ Expert synthesis from 5 independent assessments on making microviz more friendly
 
 | Principle | Expert Consensus | Microviz Status | Gap |
 |-----------|------------------|-----------------|-----|
-| **Bundle size** | ~50KB gzip target | ~80-100KB gzip | 🟡 Need subset bundle |
+| **Bundle size** | ~50KB gzip target | ~80-100KB gzip | 🟡 Investigate |
 | **Progressive API** | One-liner → Config → Full spec | Web Components only | 🔴 Need inference API |
-| **Data flexibility** | Accept CSV, arrays, objects | Strict JSON | 🟡 Add lenient parsing |
+| **Data flexibility** | Accept CSV, arrays, objects | ✅ Lenient parsing | Done (2025-12-19) |
 | **Smart defaults** | Infer chart type from data | Manual type selection | 🔴 Need inference engine |
-| **Zero-config styling** | "Looks good" without CSS | Requires CSS import | 🟡 Add fallback styles |
-| **CDN drop-in** | Single script, no import maps | Requires import map | 🔴 Need standalone bundle |
-| **AI/LLM friendly** | `llms.txt`, strings over functions | Good (declarative) | 🟡 Add llms.txt |
+| **Zero-config styling** | "Looks good" without CSS | ✅ Fallback styles | Done (2025-12-19) |
+| **CDN drop-in** | Single script, no import maps | ESM via esm.sh works | ✅ Verified |
+| **AI/LLM friendly** | `llms.txt`, strings over functions | ✅ llms.txt exists | Done (2025-12-19) |
 | **CSP-safe rendering** | SVG string for sandboxes | `renderSvgString()` exists | ✅ Already good |
 
-**Key insight**: Architecture is expert-approved. Gaps are **packaging and ergonomics**, not fundamentals.
+**Key insight**: Architecture is expert-approved. Phase 1 complete. ESM distribution via esm.sh is sufficient (no separate CDN package needed).
 
 ### Implementation Roadmap
 
-#### Phase 1: Quick Wins (v1.0.x)
-- [ ] **Lenient data parsing**: Accept `data="1,2,3"` and `data="1 2 3"` in elements
-- [ ] **Inline fallback styles**: Inject minimal `--mv-series-*` colors when no theme detected
-- [ ] **Create `llms.txt`**: Few-shot examples + anti-patterns for AI code generation
+#### Phase 1: Quick Wins (v1.0.x) — ✅ COMPLETE
+- [x] **Lenient data parsing**: `packages/elements/src/parse.ts:35-63`
+- [x] **Inline fallback styles**: `packages/elements/src/styles.ts:8-189` (Tableau 10)
+- [x] **Create `llms.txt`**: `packages/site/public/llms.txt` (5821 bytes)
 
-#### Phase 2: CDN Bundle (v1.1)
-- [ ] Ship `@microviz/cdn` with top 10 charts, inlined deps (~50KB gzip target)
-- [ ] IIFE fallback for CodePen/JSFiddle
-- [ ] Per-chart entry points for tree-shaking
-
-#### Phase 3: Inference & Progressive API (v1.2)
+#### Phase 2: Inference & Progressive API (v1.1)
 - [ ] Type inference helpers in core (temporal/quantitative/nominal detection)
 - [ ] `<microviz-auto>` element that guesses chart type
 - [ ] Quick function API: `sparkline([1,2,3])` returns element
 
-#### Phase 4: Data Ecosystem (v1.3+)
+#### Phase 3: Data Ecosystem (v1.2+)
 - [ ] CSV string parsing in core
 - [ ] Arrow/DataFrame support (optional module)
 
-### Key Implementation Notes
+### CDN Distribution — ✅ IMPLEMENTED (2025-12-20)
 
-**Lenient Parsing (Phase 1)**:
-```ts
-function parseFlexibleData(value: string): number[] {
-  if (!value) return [];
-  try { return JSON.parse(value); } catch {}
-  // Comma or space separated
-  if (/^[\d\s,.\-]+$/.test(value.trim())) {
-    return value.trim().split(/[,\s]+/).filter(Boolean).map(Number);
-  }
-  return [];
-}
-```
+**Decision**: Pre-bundled ESM in `dist/cdn/` (no separate package, following Chart.js/ApexCharts pattern).
 
-**Fallback Styles (Phase 1)**:
-Inject minimal CSS via `adoptedStyleSheets` when `--mv-series-1` is undefined. Use Tableau 10 palette for colorblind safety.
+**Implementation**:
+- `packages/elements/vite.cdn.config.ts` - CDN build config
+- `packages/elements/dist/cdn/microviz.js` - 316KB (~54KB gzipped)
+- `package.json` exports `./cdn` + `jsdelivr`/`unpkg` fields
 
-**Target CDN Usage (Phase 2)**:
+**Usage**:
 ```html
-<!-- Goal: 2 steps, no import map -->
-<script type="module" src="https://esm.sh/@microviz/cdn"></script>
-<microviz-sparkline data="1,2,3"></microviz-sparkline>
+<script type="module">
+  import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
+</script>
+<microviz-sparkline data="1, 2, 3"></microviz-sparkline>
 ```
+
+**Sandbox compatibility** (expert-validated 2025-12-20):
+- ✅ CodePen, JSFiddle, StackBlitz, CodeSandbox, Replit, Glitch, v0.dev, Bolt.new
+- ❌ Claude Artifacts (only allows cdnjs.cloudflare.com)
 
 ### Expert References
 - **Expert 1**: General vibe-coding DX principles (progressive disclosure, smart defaults)

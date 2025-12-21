@@ -10,8 +10,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/elements.js"
+    },
+    "./cdn": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/cdn/microviz.js"
     }
   },
+  "jsdelivr": "./dist/cdn/microviz.js",
+  "unpkg": "./dist/cdn/microviz.js",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -26,6 +32,8 @@
     "check": "tsc -p tsconfig.check.json --noEmit",
     "type-check": "tsc -p tsconfig.check.json --noEmit",
     "build": "vite build",
+    "build:cdn": "vite build --config vite.cdn.config.ts",
+    "build:all": "pnpm build && pnpm build:cdn",
     "build:watch": "pnpm build --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

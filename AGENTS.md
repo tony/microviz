@@ -65,6 +65,25 @@ pnpm lint:fix             # Biome fix
 pnpm format               # Biome format
 ```
 
+## CDN Build
+
+The `@microviz/elements` package includes a pre-bundled ESM file at `dist/cdn/microviz.js` with all dependencies (`@microviz/core`, `@microviz/renderers`) inlined. This enables direct browser import without esm.sh or import maps.
+
+**Build commands:**
+```bash
+pnpm --filter @microviz/elements build      # Standard ESM (externals preserved)
+pnpm --filter @microviz/elements build:cdn  # CDN bundle (deps inlined, ~54KB gzip)
+pnpm --filter @microviz/elements build:all  # Both builds
+```
+
+**CDN URLs (after npm publish):**
+- `https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js`
+- `https://unpkg.com/@microviz/elements/cdn/microviz.js`
+
+**Design decision (2025-12-20):** ESM-only, no UMD/IIFE. React 19 dropped UMD in 2024; ESM has 93%+ browser support. All major sandboxes (CodePen, JSFiddle, StackBlitz) support `<script type="module">`.
+
+**Known limitation:** Claude Artifacts only allows `cdnjs.cloudflare.com`. Other CDNs (esm.sh, jsdelivr, unpkg) are blocked by its CSP.
+
 ## Monorepo Structure
 
 This is a layered monorepo. Packages have strict dependency directions:

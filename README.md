@@ -20,7 +20,28 @@ microviz is not a full charting suite; it focuses on small, composable primitive
 
 ## Quick start
 
-### CDN drop-in (no build)
+### CDN drop-in (no build, no bundler)
+
+The simplest way to use microviz. Works in CodePen, JSFiddle, StackBlitz, and anywhere ESM is supported:
+
+```html
+<script type="module">
+  import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
+</script>
+
+<microviz-sparkline data="10, 25, 15, 30, 20"></microviz-sparkline>
+```
+
+The CDN bundle (~54KB gzipped) includes all dependencies and fallback styles. No CSS import needed.
+
+**Alternative CDN URLs:**
+- jsdelivr: `https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js`
+- unpkg: `https://unpkg.com/@microviz/elements/cdn/microviz.js`
+- esm.sh: `https://esm.sh/@microviz/elements` (resolves deps on-demand)
+
+### CDN with import map (advanced)
+
+If you need to resolve bare specifiers or use multiple microviz packages:
 
 ```html
 <script type="importmap">
