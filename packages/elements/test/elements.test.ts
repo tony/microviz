@@ -1,8 +1,12 @@
 import { computeModel, type RenderModel } from "@microviz/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { registerMicrovizElements } from "../src";
 
 describe("@microviz/elements", () => {
+  beforeEach(() => {
+    registerMicrovizElements();
+  });
+
   afterEach(() => {
     document.body.innerHTML = "";
   });
@@ -148,6 +152,37 @@ describe("@microviz/elements", () => {
     expect(summary?.classList.contains("mv-sr-only")).toBe(true);
     expect(summary?.textContent).toContain("min");
     expect(summary?.textContent).toContain("max");
+  });
+
+  it("applies a11y summary descriptions (microviz-chart)", () => {
+    const el = document.createElement("microviz-chart");
+    el.setAttribute("width", "80");
+    el.setAttribute("height", "12");
+    el.setAttribute("spec", JSON.stringify({ type: "sparkline" }));
+    el.setAttribute("data", JSON.stringify([2, 4, 6]));
+    document.body.append(el);
+
+    expect(el.getAttribute("aria-describedby")).toBe("mv-a11y-summary");
+    const summary = el.shadowRoot?.querySelector("#mv-a11y-summary");
+    expect(summary?.classList.contains("mv-sr-only")).toBe(true);
+    expect(summary?.textContent).toContain("min");
+    expect(summary?.textContent).toContain("max");
+  });
+
+  it("supports keyboard focus navigation (microviz-chart)", () => {
+    const el = document.createElement("microviz-chart");
+    el.setAttribute("interactive", "");
+    el.setAttribute("width", "80");
+    el.setAttribute("height", "24");
+    el.setAttribute("spec", JSON.stringify({ type: "sparkline" }));
+    el.setAttribute("data", JSON.stringify([10, 20, 30]));
+    document.body.append(el);
+
+    expect(el.getAttribute("tabindex")).toBe("0");
+
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    const focus = el.shadowRoot?.querySelector("#mv-a11y-focus");
+    expect(focus?.textContent).toContain("Point");
   });
 
   it("supports keyboard focus navigation", () => {
