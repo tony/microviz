@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { layoutSegmentsByPct, normalizeSegments } from "./shared";
@@ -15,8 +16,14 @@ const PATTERN_IDS = [
 ] as const;
 
 export const patternTilesChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Pattern tiles chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Pattern tiles chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,
