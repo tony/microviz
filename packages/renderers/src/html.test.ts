@@ -141,6 +141,72 @@ describe("renderHtmlString", () => {
     expect(html).toContain("background-repeat:repeat");
   });
 
+  it("does not reuse cached pattern URLs across different defs with the same id", () => {
+    const baseModel: RenderModel = {
+      defs: [
+        {
+          height: 4,
+          id: "pattern-1",
+          marks: [
+            {
+              fill: "white",
+              h: 4,
+              type: "rect",
+              w: 2,
+              x: 0,
+              y: 0,
+            },
+          ],
+          type: "pattern",
+          width: 4,
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          fill: "url(#pattern-1)",
+          h: 6,
+          id: "r-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 2,
+        },
+      ],
+      width: 20,
+    };
+
+    const html1 = renderHtmlString(baseModel);
+    const url1 = /background-image:url\("([^"]+)"\)/.exec(html1)?.[1] ?? "";
+
+    const html2 = renderHtmlString({
+      ...baseModel,
+      defs: [
+        {
+          height: 4,
+          id: "pattern-1",
+          marks: [
+            {
+              fill: "black",
+              h: 4,
+              type: "rect",
+              w: 2,
+              x: 0,
+              y: 0,
+            },
+          ],
+          type: "pattern",
+          width: 4,
+        },
+      ],
+    });
+    const url2 = /background-image:url\("([^"]+)"\)/.exec(html2)?.[1] ?? "";
+
+    expect(url1).not.toEqual("");
+    expect(url2).not.toEqual("");
+    expect(url1).not.toEqual(url2);
+  });
+
   it("applies mask defs as CSS masks", () => {
     const model: RenderModel = {
       defs: [
