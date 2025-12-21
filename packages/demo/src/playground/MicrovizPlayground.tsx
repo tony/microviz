@@ -206,6 +206,7 @@ function useModels(
     Partial<Record<ChartId, number | null>>
   >({});
   const workerFlushRafRef = useRef<number | null>(null);
+  const didInitialPrepaintRef = useRef(false);
 
   computeModeRef.current = computeMode;
   inputsRef.current = inputs;
@@ -230,6 +231,33 @@ function useModels(
         computedRunIdsRef.current[chartId] ?? -1,
       ]),
     ) as Record<ChartId, number>;
+
+    if (didInitialPrepaintRef.current) return;
+    if (computeModeRef.current !== "main") return;
+
+    const runId = runIdRef.current;
+    const nextModels: Partial<Record<ChartId, RenderModel | null>> = {};
+    const nextTimings: Partial<Record<ChartId, number | null>> = {};
+
+    for (const chartId of chartIds) {
+      const input = inputsRef.current[chartId];
+      if (!input) continue;
+
+      const start = performance.now();
+      const model = computeModel(input);
+      const end = performance.now();
+
+      computedRunIdsRef.current[chartId] = runId;
+      nextModels[chartId] = model;
+      nextTimings[chartId] = Math.round((end - start) * 1000) / 1000;
+    }
+
+    if (Object.keys(nextModels).length > 0) {
+      setModels((prev) => ({ ...prev, ...nextModels }));
+      setTimingsMs((prev) => ({ ...prev, ...nextTimings }));
+    }
+
+    didInitialPrepaintRef.current = true;
   }, [inputs]);
 
   useEffect(() => {
