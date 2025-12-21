@@ -642,9 +642,9 @@ export const MicrovizPlayground: FC<{
       chartFilter,
       chartSubtype,
       computeMode,
-      paletteMode,
       fallbackSvgWhenCanvasUnsupported,
       height,
+      paletteMode,
       renderer,
       seed,
       segmentCount,
@@ -737,24 +737,24 @@ export const MicrovizPlayground: FC<{
       count: 24,
       mode: paletteMode,
       palette,
-      segments,
       seed: `${seed}:waveform`,
+      segments,
       series,
     });
     const equalizerColors = buildPaletteColors({
       count: 24,
       mode: paletteMode,
       palette,
-      segments,
       seed: `${seed}:equalizer`,
+      segments,
       series,
     });
     const codeMinimapColors = buildPaletteColors({
       count: 8,
       mode: paletteMode,
       palette,
-      segments,
       seed: `${seed}:code-minimap`,
+      segments,
       series,
     });
 
@@ -1687,9 +1687,7 @@ export const MicrovizPlayground: FC<{
                   />
                   <button
                     className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    onClick={() =>
-                      randomizeSeed()
-                    }
+                    onClick={() => randomizeSeed()}
                     title="Random seed"
                     type="button"
                   >

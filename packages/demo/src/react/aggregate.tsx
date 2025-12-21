@@ -782,9 +782,10 @@ export const Equalizer: FC<{ slices: PieSlice[]; bars?: number }> = ({
         })),
     [slices, bars],
   );
-  const series = useMemo(() => segments.map((segment) => segment.pct), [
-    segments,
-  ]);
+  const series = useMemo(
+    () => segments.map((segment) => segment.pct),
+    [segments],
+  );
 
   const model = computeModel({
     data: series,
