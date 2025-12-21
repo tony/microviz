@@ -125,6 +125,10 @@ const HTML_SAFE_MARK_TYPES = new Set<Mark["type"]>([
   "line",
   "text",
 ]);
+const HTML_SUPPORTED_FILTER_PRIMITIVES = new Set([
+  "dropShadow",
+  "gaussianBlur",
+]);
 
 function extractUrlRefId(value: string | undefined): string | null {
   if (!value) return null;
@@ -144,8 +148,22 @@ function isHtmlSafeMark(mark: Mark, defsById: Map<string, Def>): boolean {
     const clipDef = clipId ? defsById.get(clipId) : null;
     if (!clipDef || clipDef.type !== "clipRect") return false;
   }
-  if ("mask" in mark && mark.mask) return false;
-  if ("filter" in mark && mark.filter) return false;
+  if ("mask" in mark && mark.mask) {
+    const maskId = resolveDefId(mark.mask);
+    const maskDef = maskId ? defsById.get(maskId) : null;
+    if (!maskDef || maskDef.type !== "mask") return false;
+  }
+  if ("filter" in mark && mark.filter) {
+    const filterId = resolveDefId(mark.filter);
+    const filterDef = filterId ? defsById.get(filterId) : null;
+    if (!filterDef || filterDef.type !== "filter") return false;
+    if (
+      !filterDef.primitives.every((primitive) =>
+        HTML_SUPPORTED_FILTER_PRIMITIVES.has(primitive.type),
+      )
+    )
+      return false;
+  }
   if ("strokeDasharray" in mark && mark.strokeDasharray) return false;
   if ("strokeDashoffset" in mark && mark.strokeDashoffset) return false;
   const fill = "fill" in mark ? mark.fill : undefined;
@@ -153,7 +171,15 @@ function isHtmlSafeMark(mark: Mark, defsById: Map<string, Def>): boolean {
   const fillRefId = extractUrlRefId(fill);
   if (fillRefId) {
     const fillDef = defsById.get(fillRefId);
-    if (!fillDef || fillDef.type !== "linearGradient" || mark.type !== "rect")
+    if (!fillDef) return false;
+    if (fillDef.type === "linearGradient" && mark.type !== "rect") return false;
+    if (
+      fillDef.type === "pattern" &&
+      mark.type !== "rect" &&
+      mark.type !== "circle"
+    )
+      return false;
+    if (fillDef.type !== "linearGradient" && fillDef.type !== "pattern")
       return false;
   }
   const strokeRefId = extractUrlRefId(stroke);

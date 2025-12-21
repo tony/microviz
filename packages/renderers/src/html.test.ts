@@ -100,6 +100,114 @@ describe("renderHtmlString", () => {
     expect(html).toContain("overflow:hidden");
     expect(html).toContain("border-radius:2px / 2px");
   });
+
+  it("renders pattern fills as background images", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          height: 6,
+          id: "pattern-1",
+          marks: [
+            {
+              fill: "white",
+              h: 6,
+              type: "rect",
+              w: 2,
+              x: 0,
+              y: 0,
+            },
+          ],
+          type: "pattern",
+          width: 6,
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          fill: "url(#pattern-1)",
+          h: 6,
+          id: "r-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 2,
+        },
+      ],
+      width: 20,
+    };
+
+    const html = renderHtmlString(model);
+    expect(html).toContain("background-image:url");
+    expect(html).toContain("background-repeat:repeat");
+  });
+
+  it("applies mask defs as CSS masks", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          height: 1,
+          id: "mask-1",
+          marks: [{ cx: 0.5, cy: 0.5, fill: "white", r: 0.5, type: "circle" }],
+          maskContentUnits: "objectBoundingBox",
+          maskUnits: "objectBoundingBox",
+          type: "mask",
+          width: 1,
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          fill: "red",
+          h: 6,
+          id: "r-1",
+          mask: "mask-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 2,
+        },
+      ],
+      width: 20,
+    };
+
+    const html = renderHtmlString(model);
+    expect(html).toContain("mask-image:url");
+  });
+
+  it("applies drop-shadow filters via CSS", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          id: "filter-1",
+          primitives: [
+            {
+              dx: 1,
+              dy: 2,
+              stdDeviation: 3,
+              type: "dropShadow",
+            },
+          ],
+          type: "filter",
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          filter: "filter-1",
+          h: 6,
+          id: "r-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 2,
+        },
+      ],
+      width: 20,
+    };
+
+    const html = renderHtmlString(model);
+    expect(html).toContain("drop-shadow");
+  });
 });
 
 describe("HTML renderer diagnostics", () => {
@@ -122,6 +230,36 @@ describe("HTML renderer diagnostics", () => {
           ],
           type: "linearGradient",
         },
+        {
+          height: 4,
+          id: "pattern-1",
+          marks: [
+            {
+              fill: "white",
+              h: 2,
+              type: "rect",
+              w: 2,
+              x: 0,
+              y: 0,
+            },
+          ],
+          type: "pattern",
+          width: 4,
+        },
+        {
+          height: 1,
+          id: "mask-1",
+          marks: [{ d: "M0 0 L1 1", fill: "white", type: "path" }],
+          maskContentUnits: "objectBoundingBox",
+          maskUnits: "objectBoundingBox",
+          type: "mask",
+          width: 1,
+        },
+        {
+          id: "filter-1",
+          primitives: [{ stdDeviation: 2, type: "gaussianBlur" }],
+          type: "filter",
+        },
       ],
       height: 10,
       marks: [
@@ -132,8 +270,10 @@ describe("HTML renderer diagnostics", () => {
         },
         {
           clipPath: "clip-1",
+          filter: "filter-1",
           h: 4,
           id: "r-1",
+          mask: "mask-1",
           type: "rect",
           w: 4,
           x: 1,
@@ -146,6 +286,34 @@ describe("HTML renderer diagnostics", () => {
     expect(getHtmlUnsupportedMarkTypes(model)).toEqual(["path"]);
     expect(getHtmlUnsupportedDefTypes(model)).toEqual([]);
     expect(getHtmlUnsupportedMarkEffects(model)).toEqual([]);
+  });
+
+  it("reports unsupported filter primitives", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          id: "filter-1",
+          primitives: [{ type: "turbulence" }],
+          type: "filter",
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          filter: "filter-1",
+          h: 4,
+          id: "r-1",
+          type: "rect",
+          w: 4,
+          x: 1,
+          y: 1,
+        },
+      ],
+      width: 10,
+    };
+
+    expect(getHtmlUnsupportedDefTypes(model)).toEqual(["filter"]);
+    expect(getHtmlUnsupportedMarkEffects(model)).toEqual(["filter"]);
   });
 
   it("still reports unsupported clipPath references", () => {
