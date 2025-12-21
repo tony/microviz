@@ -14,6 +14,7 @@ import { applyMicrovizStyles } from "./styles";
 
 type Size = { width: number; height: number };
 type Point = { x: number; y: number };
+type ClientPoint = { x: number; y: number };
 
 function parseJson(value: string | null): unknown | null {
   if (!value) return null;
@@ -56,6 +57,9 @@ export class MicrovizChart extends HTMLElement {
   #measuredSize: Size | null = null;
   #isInteractive = false;
   #model: RenderModel | null = null;
+  #lastPointerClient: ClientPoint | null = null;
+  #lastHitKey: string | null = null;
+  #lastPoint: Point | null = null;
 
   constructor() {
     super();
@@ -135,40 +139,90 @@ export class MicrovizChart extends HTMLElement {
       return;
     }
 
+    this.#lastPointerClient = null;
+    this.#lastHitKey = null;
+    this.#lastPoint = null;
+
     this.removeEventListener("pointermove", this.#onPointerMove);
     this.removeEventListener("pointerleave", this.#onPointerLeave);
   }
 
-  #toModelPoint(event: PointerEvent): Point | null {
+  #toModelPoint(client: ClientPoint): Point | null {
     if (!this.#model) return null;
     const svg = this.#root.querySelector("svg");
     if (!svg) return null;
     const rect = svg.getBoundingClientRect();
     if (!(rect.width > 0) || !(rect.height > 0)) return null;
 
-    const x = ((event.clientX - rect.left) / rect.width) * this.#model.width;
-    const y = ((event.clientY - rect.top) / rect.height) * this.#model.height;
+    const x = ((client.x - rect.left) / rect.width) * this.#model.width;
+    const y = ((client.y - rect.top) / rect.height) * this.#model.height;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
 
     return { x, y };
   }
 
-  #onPointerMove = (event: PointerEvent): void => {
+  #hitKey(hit: ReturnType<typeof hitTest>): string | null {
+    return hit ? `${hit.markType}:${hit.markId}` : null;
+  }
+
+  #maybeReemitHit(): void {
+    if (!this.#isInteractive) return;
     if (!this.#model) return;
-    const point = this.#toModelPoint(event);
+    if (!this.#lastPointerClient) return;
+
+    const point = this.#toModelPoint(this.#lastPointerClient);
     if (!point) return;
 
     const hit = hitTest(this.#model, point);
+    const key = this.#hitKey(hit);
+
+    const prev = this.#lastPoint;
+    const samePoint =
+      prev &&
+      Math.abs(prev.x - point.x) < 1e-6 &&
+      Math.abs(prev.y - point.y) < 1e-6;
+
+    if (key === this.#lastHitKey && samePoint) return;
+
+    this.#lastHitKey = key;
+    this.#lastPoint = point;
     this.dispatchEvent(
       new CustomEvent("microviz-hit", {
         bubbles: true,
         composed: true,
-        detail: { client: { x: event.clientX, y: event.clientY }, hit, point },
+        detail: {
+          client: this.#lastPointerClient,
+          hit,
+          point,
+        },
+      }),
+    );
+  }
+
+  #onPointerMove = (event: PointerEvent): void => {
+    if (!this.#model) return;
+    const client = { x: event.clientX, y: event.clientY };
+    this.#lastPointerClient = client;
+
+    const point = this.#toModelPoint(client);
+    if (!point) return;
+
+    const hit = hitTest(this.#model, point);
+    this.#lastHitKey = this.#hitKey(hit);
+    this.#lastPoint = point;
+    this.dispatchEvent(
+      new CustomEvent("microviz-hit", {
+        bubbles: true,
+        composed: true,
+        detail: { client, hit, point },
       }),
     );
   };
 
   #onPointerLeave = (event: PointerEvent): void => {
+    this.#lastPointerClient = null;
+    this.#lastHitKey = null;
+    this.#lastPoint = null;
     this.dispatchEvent(
       new CustomEvent("microviz-hit", {
         bubbles: true,
@@ -219,6 +273,17 @@ export class MicrovizChart extends HTMLElement {
       this.#model = null;
       applyMicrovizA11y(this, this.#internals, null);
       clearSvgFromShadowRoot(this.#root);
+      if (this.#isInteractive && this.#lastHitKey !== null) {
+        this.#lastHitKey = null;
+        this.#lastPoint = null;
+        this.dispatchEvent(
+          new CustomEvent("microviz-hit", {
+            bubbles: true,
+            composed: true,
+            detail: { hit: null },
+          }),
+        );
+      }
       return;
     }
 
@@ -236,5 +301,6 @@ export class MicrovizChart extends HTMLElement {
         ? renderSkeletonSvg(size)
         : renderSvgString(model);
     renderSvgIntoShadowRoot(this.#root, svg);
+    this.#maybeReemitHit();
   }
 }
