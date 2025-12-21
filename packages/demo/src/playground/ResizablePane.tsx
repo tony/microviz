@@ -229,7 +229,9 @@ export const ResizablePane: FC<Props> = ({
       }}
     >
       <div className="relative h-full w-full">
-        <div className="h-full w-full overflow-auto">{children}</div>
+        <div className="h-full w-full overflow-auto [scrollbar-gutter:stable]">
+          {children}
+        </div>
 
         {/* Edge interaction zone - contains drag handle and collapse button */}
         <div className={resizableEdgeZone({ side })} style={{ width: 12 }}>
