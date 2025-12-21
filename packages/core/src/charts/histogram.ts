@@ -1,5 +1,5 @@
 import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
-import type { Def } from "../model";
+import type { Def, Mark } from "../model";
 import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -109,7 +109,7 @@ export const histogramChart = {
 
     if (spec.gap === undefined) {
       const bw = (w - pad * 2) / n;
-      const marks = sampled.map((bar, i) => {
+      const marks: Mark[] = sampled.map((bar, i) => {
         const x = pad + i * bw + 0.4;
         const barH = (bar.value / 100) * (h - pad * 2);
         const y = h - pad - barH;
@@ -145,7 +145,7 @@ export const histogramChart = {
 
     const x0 = pad;
     const xEnd = pad + usableW;
-    const marks = sampled.map((bar, i) => {
+    const marks: Mark[] = sampled.map((bar, i) => {
       const x = x0 + i * (barW + gap);
       const barWidth = i === n - 1 ? Math.max(0, xEnd - x) : barW;
       const barH = (bar.value / 100) * (h - pad * 2);
