@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -18,6 +18,10 @@ const DEFAULT_SEPARATOR_STROKE = "rgba(255,255,255,0.2)";
 export const segmentedPillChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "segmented-pill-seg",
+        labelFallback: "Segment",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Segmented pill chart",
         normalized.segments,
