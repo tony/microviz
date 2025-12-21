@@ -108,6 +108,24 @@ describe("hitTest", () => {
     expect(hitTest(model, { x: 1, y: 1 })).toBeNull();
   });
 
+  test("respects winding for polygon paths with holes", () => {
+    const model: RenderModel = {
+      height: 100,
+      marks: [
+        {
+          d: "M 10 10 L 40 10 L 40 40 L 10 40 Z M 20 20 L 20 30 L 30 30 L 30 20 Z",
+          fill: "black",
+          id: "hole",
+          type: "path",
+        },
+      ],
+      width: 100,
+    };
+
+    expect(hitTest(model, { x: 15, y: 15 })?.markId).toBe("hole");
+    expect(hitTest(model, { x: 25, y: 25 })).toBeNull();
+  });
+
   test("ignores non-polygon path commands", () => {
     const model: RenderModel = {
       height: 100,
