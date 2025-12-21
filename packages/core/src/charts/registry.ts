@@ -45,6 +45,7 @@ import { radialBurstChart } from "./radial-burst";
 import { rangeBandChart } from "./range-band";
 import { rankedLanesChart } from "./ranked-lanes";
 import { segmentedBarChart } from "./segmented-bar";
+import { segmentedPillChart } from "./segmented-pill";
 import { segmentedRingChart } from "./segmented-ring";
 import { shadowDepthChart } from "./shadow-depth";
 import { shapeRowChart } from "./shape-row";
@@ -111,6 +112,7 @@ export const chartRegistry = createChartRegistry({
   "range-band": rangeBandChart,
   "ranked-lanes": rankedLanesChart,
   "segmented-bar": segmentedBarChart,
+  "segmented-pill": segmentedPillChart,
   "segmented-ring": segmentedRingChart,
   "shadow-depth": shadowDepthChart,
   "shape-row": shapeRowChart,

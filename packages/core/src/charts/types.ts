@@ -188,6 +188,15 @@ export type SegmentedBarSpec = {
   className?: string;
 };
 
+export type SegmentedPillSpec = {
+  type: "segmented-pill";
+  pad?: number;
+  separatorStroke?: string;
+  separatorStrokeWidth?: number;
+  separatorStrokeOpacity?: number;
+  className?: string;
+};
+
 export type StackedChipsSpec = {
   type: "stacked-chips";
   pad?: number;
@@ -538,6 +547,11 @@ export type NormalizedStackedChips = {
 
 export type NormalizedSegmentedBar = {
   type: "segmented-bar";
+  segments: Array<{ name?: string; pct: number; color: string }>;
+};
+
+export type NormalizedSegmentedPill = {
+  type: "segmented-pill";
   segments: Array<{ name?: string; pct: number; color: string }>;
 };
 

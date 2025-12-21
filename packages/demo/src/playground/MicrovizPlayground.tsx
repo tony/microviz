@@ -889,6 +889,11 @@ export const MicrovizPlayground: FC<{
         size,
         spec: { gap: 2, type: "segmented-bar" },
       },
+      "segmented-pill": {
+        data: segments,
+        size,
+        spec: { pad: 0, type: "segmented-pill" },
+      },
       "segmented-ring": {
         data: segments,
         size: sizeFor("segmented-ring"),
