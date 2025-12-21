@@ -23,6 +23,7 @@ import {
   type FC,
   Fragment,
   type ReactNode,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -186,20 +187,100 @@ function useModels(
   );
 
   const computeModeRef = useRef(computeMode);
+  const inputsRef = useRef(inputs);
+  const computedRunIdsRef = useRef<Record<ChartId, number>>(
+    createRecordFromKeys<ChartId, number>(initialChartIds, -1),
+  );
   const runIdRef = useRef(0);
   const inFlightRef = useRef<Map<ChartId, number>>(new Map());
+  const mainQueueRef = useRef<ChartId[]>([]);
+  const mainQueuedSetRef = useRef<Set<ChartId>>(new Set());
+  const mainRafRef = useRef<number | null>(null);
+
+  computeModeRef.current = computeMode;
+  inputsRef.current = inputs;
 
   useLayoutEffect(() => {
-    computeModeRef.current = computeMode;
     runIdRef.current += 1;
     inFlightRef.current.clear();
+    mainQueueRef.current = [];
+    mainQueuedSetRef.current.clear();
+    if (mainRafRef.current !== null) cancelAnimationFrame(mainRafRef.current);
+    mainRafRef.current = null;
 
     const chartIds = Object.keys(inputs) as ChartId[];
-    setModels(
-      createRecordFromKeys<ChartId, RenderModel | null>(chartIds, null),
-    );
-    setTimingsMs(createRecordFromKeys<ChartId, number | null>(chartIds, null));
-  }, [computeMode, inputs]);
+    computedRunIdsRef.current = Object.fromEntries(
+      chartIds.map((chartId) => [
+        chartId,
+        computedRunIdsRef.current[chartId] ?? -1,
+      ]),
+    ) as Record<ChartId, number>;
+  }, [inputs]);
+
+  useEffect(() => {
+    return () => {
+      if (mainRafRef.current !== null) cancelAnimationFrame(mainRafRef.current);
+    };
+  }, []);
+
+  const scheduleMainCompute = useCallback((runId: number) => {
+    if (mainRafRef.current !== null) return;
+
+    const budgetMs = 8;
+
+    const runChunk = () => {
+      mainRafRef.current = null;
+
+      if (runId !== runIdRef.current) {
+        mainQueueRef.current = [];
+        mainQueuedSetRef.current.clear();
+        return;
+      }
+
+      if (computeModeRef.current !== "main") {
+        mainQueueRef.current = [];
+        mainQueuedSetRef.current.clear();
+        return;
+      }
+
+      const chunkStart = performance.now();
+      const nextModels: Partial<Record<ChartId, RenderModel | null>> = {};
+      const nextTimings: Partial<Record<ChartId, number | null>> = {};
+
+      while (mainQueueRef.current.length > 0) {
+        const chartId = mainQueueRef.current.shift();
+        if (!chartId) break;
+        mainQueuedSetRef.current.delete(chartId);
+
+        if (runId !== runIdRef.current) break;
+        if (computedRunIdsRef.current[chartId] === runId) continue;
+
+        const input = inputsRef.current[chartId];
+        if (!input) continue;
+
+        const start = performance.now();
+        const model = computeModel(input);
+        const end = performance.now();
+
+        computedRunIdsRef.current[chartId] = runId;
+        nextModels[chartId] = model;
+        nextTimings[chartId] = Math.round((end - start) * 1000) / 1000;
+
+        if (performance.now() - chunkStart >= budgetMs) break;
+      }
+
+      if (Object.keys(nextModels).length > 0) {
+        setModels((prev) => ({ ...prev, ...nextModels }));
+        setTimingsMs((prev) => ({ ...prev, ...nextTimings }));
+      }
+
+      if (mainQueueRef.current.length > 0 && runId === runIdRef.current) {
+        mainRafRef.current = requestAnimationFrame(runChunk);
+      }
+    };
+
+    mainRafRef.current = requestAnimationFrame(runChunk);
+  }, []);
 
   useEffect(() => {
     const chartIds = requestedChartIds;
@@ -208,30 +289,29 @@ function useModels(
     const runId = runIdRef.current;
 
     if (computeMode === "main") {
-      const toCompute = chartIds.filter((chartId) => models[chartId] === null);
-      if (toCompute.length === 0) return;
-
-      const nextModels = { ...models };
-      const nextTimings = { ...timingsMs };
-
-      for (const chartId of toCompute) {
-        const start = performance.now();
-        const model = computeModel(inputs[chartId]);
-        const end = performance.now();
-        nextModels[chartId] = model;
-        nextTimings[chartId] = Math.round((end - start) * 1000) / 1000;
+      const requestedSet = new Set(chartIds);
+      if (mainQueueRef.current.length > 0) {
+        mainQueueRef.current = mainQueueRef.current.filter((chartId) =>
+          requestedSet.has(chartId),
+        );
+        mainQueuedSetRef.current = new Set(mainQueueRef.current);
       }
 
-      if (runId !== runIdRef.current) return;
-      setModels(nextModels);
-      setTimingsMs(nextTimings);
+      for (const chartId of chartIds) {
+        if (computedRunIdsRef.current[chartId] === runId) continue;
+        if (mainQueuedSetRef.current.has(chartId)) continue;
+        mainQueuedSetRef.current.add(chartId);
+        mainQueueRef.current.push(chartId);
+      }
+
+      if (mainQueueRef.current.length > 0) scheduleMainCompute(runId);
       return;
     }
 
     const worker = ensureWorkerClient();
 
     for (const chartId of chartIds) {
-      if (models[chartId] !== null) continue;
+      if (computedRunIdsRef.current[chartId] === runId) continue;
       if (inFlightRef.current.get(chartId) === runId) continue;
 
       inFlightRef.current.set(chartId, runId);
@@ -242,6 +322,7 @@ function useModels(
         .then((model) => {
           const end = performance.now();
           if (runId !== runIdRef.current) return;
+          computedRunIdsRef.current[chartId] = runId;
 
           setModels((prev) => ({ ...prev, [chartId]: model }));
           setTimingsMs((prev) => ({
@@ -258,9 +339,8 @@ function useModels(
     computeMode,
     ensureWorkerClient,
     inputs,
-    models,
     requestedChartIds,
-    timingsMs,
+    scheduleMainCompute,
   ]);
 
   return { models, timingsMs };
