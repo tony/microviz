@@ -41,6 +41,31 @@ Then use any chart element directly:
 ></microviz-chart>
 ```
 
+### Renderer selection (experimental HTML)
+
+By default, elements render SVG. You can opt into the experimental HTML renderer:
+
+```html
+<microviz-chart
+  renderer="html"
+  autosize
+  style="width: 240px; height: 64px"
+  spec='{"type":"sparkline"}'
+  data="[6,10,7,12,9,14]"
+></microviz-chart>
+```
+
+HTML renderer limitations:
+- Supports `rect`, `circle`, `line`, and `text` marks only; `path` marks are ignored.
+- Supports `linearGradient`, `pattern`, `mask`, `clipRect`, and `filter` defs (dropShadow/gaussianBlur only).
+- Other defs/effects are ignored; use SVG for full fidelity.
+
+The same `renderer` attribute works for `<microviz-model>`:
+
+```html
+<microviz-model renderer="html"></microviz-model>
+```
+
 ## Interaction events (tooltip primitives)
 
 `<microviz-model>` and `<microviz-chart>` can emit high-level hit-test events when `interactive` is present:
