@@ -152,6 +152,8 @@ Add an **HTML renderer surface** (positioned divs) *or* keep those few patterns 
 
 Many “Texture & Creative” effects can be re-expressed in SVG via defs (Unlock 3), so an HTML renderer is not strictly required, but it reduces work for box-shadow / CSS-mask-heavy variants.
 
+Pragmatic default: **defer Unlock 5** until we hit a pattern that is either (a) meaningfully better in HTML/CSS or (b) prohibitively complex to rewrite with SVG defs. Keep any remaining CSS-only experiments in the demo until then.
+
 ---
 
 ## Inventory + port classification
