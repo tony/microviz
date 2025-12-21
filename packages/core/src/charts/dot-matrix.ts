@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -17,6 +17,11 @@ import type {
 export const dotMatrixChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "dot-matrix-dot",
+        labelPrefix: "Dot",
+        valueText: (value) => `${Math.round(normalizedPct(value))}%`,
+      }),
       label: a11yLabelWithSeriesSummary("Dot matrix chart", normalized.series),
       role: "img",
     };

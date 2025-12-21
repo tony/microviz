@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteInt, isFiniteNumber, normalizedPct } from "./shared";
 import type { HeatgridData, HeatgridSpec, NormalizedHeatgrid } from "./types";
@@ -6,6 +6,11 @@ import type { HeatgridData, HeatgridSpec, NormalizedHeatgrid } from "./types";
 export const heatgridChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "heatgrid-cell",
+        labelPrefix: "Cell",
+        valueText: (value) => `${Math.round(normalizedPct(value))}%`,
+      }),
       label: a11yLabelWithSeriesSummary("Heatgrid chart", normalized.series),
       role: "img",
     };
