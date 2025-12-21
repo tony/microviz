@@ -1,6 +1,7 @@
 import { hitTest, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
+import { parseOptionalNumber } from "./parse";
 import { clearSvgFromShadowRoot, renderSvgIntoShadowRoot } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
@@ -9,12 +10,13 @@ type Point = { x: number; y: number };
 type ClientPoint = { x: number; y: number };
 
 export class MicrovizModel extends HTMLElement {
-  static observedAttributes = ["interactive", "skeleton"];
+  static observedAttributes = ["interactive", "skeleton", "hit-slop"];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
   #model: RenderModel | null = null;
   #isInteractive = false;
+  #strokeSlopPxOverride: number | undefined = undefined;
   #lastPointerClient: ClientPoint | null = null;
   #lastHitKey: string | null = null;
   #lastPoint: Point | null = null;
@@ -31,6 +33,7 @@ export class MicrovizModel extends HTMLElement {
 
   connectedCallback(): void {
     this.#syncInteractivity();
+    this.#syncHitSlop();
     this.render();
   }
 
@@ -38,8 +41,19 @@ export class MicrovizModel extends HTMLElement {
     this.#setInteractive(false);
   }
 
-  attributeChangedCallback(): void {
-    this.#syncInteractivity();
+  attributeChangedCallback(name: string): void {
+    if (name === "interactive") {
+      this.#syncInteractivity();
+      return;
+    }
+
+    if (name === "hit-slop") {
+      this.#syncHitSlop();
+      this.#maybeReemitHit();
+      return;
+    }
+
+    this.render();
   }
 
   get model(): RenderModel | null {
@@ -73,6 +87,21 @@ export class MicrovizModel extends HTMLElement {
     this.removeEventListener("pointerleave", this.#onPointerLeave);
   }
 
+  #syncHitSlop(): void {
+    const slop = parseOptionalNumber(this.getAttribute("hit-slop"));
+    this.#strokeSlopPxOverride =
+      slop === undefined ? undefined : Math.max(0, slop);
+  }
+
+  #hitTestAt(point: Point): ReturnType<typeof hitTest> {
+    if (!this.#model) return null;
+    return this.#strokeSlopPxOverride === undefined
+      ? hitTest(this.#model, point)
+      : hitTest(this.#model, point, {
+          strokeSlopPx: this.#strokeSlopPxOverride,
+        });
+  }
+
   #toModelPoint(client: ClientPoint): Point | null {
     if (!this.#model) return null;
     const svg = this.#root.querySelector("svg");
@@ -99,7 +128,7 @@ export class MicrovizModel extends HTMLElement {
     const point = this.#toModelPoint(this.#lastPointerClient);
     if (!point) return;
 
-    const hit = hitTest(this.#model, point);
+    const hit = this.#hitTestAt(point);
     const key = this.#hitKey(hit);
 
     const prev = this.#lastPoint;
@@ -133,7 +162,7 @@ export class MicrovizModel extends HTMLElement {
     const point = this.#toModelPoint(client);
     if (!point) return;
 
-    const hit = hitTest(this.#model, point);
+    const hit = this.#hitTestAt(point);
     this.#lastHitKey = this.#hitKey(hit);
     this.#lastPoint = point;
     this.dispatchEvent(
