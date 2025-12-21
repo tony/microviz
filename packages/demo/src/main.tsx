@@ -2,6 +2,22 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import "./styles.css";
+import {
+  applyResolvedColorScheme,
+  readColorSchemePreference,
+  resolveColorScheme,
+} from "./ui/colorScheme";
+import {
+  applyMicrovizTheme,
+  readMicrovizThemePreference,
+  resolveMicrovizTheme,
+} from "./ui/microvizTheme";
+
+const initialColorScheme = resolveColorScheme(readColorSchemePreference());
+applyResolvedColorScheme(initialColorScheme);
+applyMicrovizTheme(
+  resolveMicrovizTheme(readMicrovizThemePreference(), initialColorScheme),
+);
 
 const container = document.getElementById("root");
 if (!container) {
