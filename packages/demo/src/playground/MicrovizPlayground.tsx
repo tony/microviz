@@ -1887,6 +1887,30 @@ export const MicrovizPlayground: FC<{
     flashExportNotice("SVG downloaded");
   }, [downloadBlob, flashExportNotice, selectedChart, selectedModel]);
 
+  const handleCopySvg = useCallback(() => {
+    if (!selectedModel) return;
+    const payload = renderSvgString(selectedModel);
+    const finish = () => flashExportNotice("SVG copied");
+
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(payload).then(finish).catch(finish);
+      return;
+    }
+
+    if (typeof document === "undefined") return;
+    const textarea = document.createElement("textarea");
+    textarea.value = payload;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    finish();
+  }, [flashExportNotice, selectedModel]);
+
   const handleDownloadPng = useCallback(async () => {
     if (!selectedModel || exportingPng) return;
     setExportingPng(true);
@@ -2955,6 +2979,18 @@ export const MicrovizPlayground: FC<{
                     type="button"
                   >
                     Download SVG
+                  </button>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel}
+                    onClick={handleCopySvg}
+                    type="button"
+                  >
+                    Copy SVG
                   </button>
                   <button
                     className={tabButton({
