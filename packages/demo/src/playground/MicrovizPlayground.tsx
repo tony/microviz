@@ -1824,6 +1824,8 @@ export const MicrovizPlayground: FC<{
     model: "Model",
   };
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
+  const [a11yCopied, setA11yCopied] = useState(false);
+  const a11yCopyTimeoutRef = useRef<number | null>(null);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -1947,6 +1949,14 @@ export const MicrovizPlayground: FC<{
 
   const selectedInput = inputs[selectedChart];
 
+  useEffect(() => {
+    return () => {
+      if (a11yCopyTimeoutRef.current !== null) {
+        window.clearTimeout(a11yCopyTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const allWarnings = useMemo(() => {
     if (inspectorTab !== "diagnostics")
       return [] as Array<{ chartId: ChartId; warnings: WarningLike[] }>;
@@ -1976,6 +1986,38 @@ export const MicrovizPlayground: FC<{
       summarizeWarningCounts(allWarnings.flatMap((row) => row.warnings ?? [])),
     [allWarnings],
   );
+
+  const handleCopyA11y = useCallback(() => {
+    if (!selectedModel?.a11y) return;
+    const payload = JSON.stringify(selectedModel.a11y, null, 2);
+    const finish = () => {
+      setA11yCopied(true);
+      if (a11yCopyTimeoutRef.current !== null) {
+        window.clearTimeout(a11yCopyTimeoutRef.current);
+      }
+      a11yCopyTimeoutRef.current = window.setTimeout(() => {
+        setA11yCopied(false);
+      }, 1200);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(payload).then(finish).catch(finish);
+      return;
+    }
+
+    if (typeof document === "undefined") return;
+    const textarea = document.createElement("textarea");
+    textarea.value = payload;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    finish();
+  }, [selectedModel?.a11y]);
 
   return (
     <div className="flex h-full min-h-0 w-full">
@@ -2667,8 +2709,20 @@ export const MicrovizPlayground: FC<{
           {inspectorTab === "model" && (
             <div className="space-y-3">
               <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  A11y
+                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>A11y</span>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel?.a11y}
+                    onClick={handleCopyA11y}
+                    type="button"
+                  >
+                    {a11yCopied ? "Copied" : "Copy"}
+                  </button>
                 </div>
                 <div className="mt-2 space-y-1">
                   <div className="flex flex-wrap gap-x-2 gap-y-1">
