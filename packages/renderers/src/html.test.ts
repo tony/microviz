@@ -67,12 +67,53 @@ describe("renderHtmlString", () => {
     const html = renderHtmlString(model);
     expect(html).toContain("linear-gradient");
   });
+
+  it("wraps clipped rects in an overflow container", () => {
+    const model: RenderModel = {
+      defs: [
+        {
+          h: 6,
+          id: "clip-1",
+          rx: 2,
+          type: "clipRect",
+          w: 10,
+          x: 2,
+          y: 1,
+        },
+      ],
+      height: 10,
+      marks: [
+        {
+          clipPath: "clip-1",
+          h: 8,
+          id: "r-1",
+          type: "rect",
+          w: 12,
+          x: 1,
+          y: 0,
+        },
+      ],
+      width: 20,
+    };
+
+    const html = renderHtmlString(model);
+    expect(html).toContain("overflow:hidden");
+    expect(html).toContain("border-radius:2px / 2px");
+  });
 });
 
 describe("HTML renderer diagnostics", () => {
   it("reports unsupported marks/defs/effects", () => {
     const model: RenderModel = {
       defs: [
+        {
+          h: 4,
+          id: "clip-1",
+          type: "clipRect",
+          w: 4,
+          x: 1,
+          y: 1,
+        },
         {
           id: "grad-1",
           stops: [
@@ -104,6 +145,26 @@ describe("HTML renderer diagnostics", () => {
 
     expect(getHtmlUnsupportedMarkTypes(model)).toEqual(["path"]);
     expect(getHtmlUnsupportedDefTypes(model)).toEqual([]);
+    expect(getHtmlUnsupportedMarkEffects(model)).toEqual([]);
+  });
+
+  it("still reports unsupported clipPath references", () => {
+    const model: RenderModel = {
+      height: 10,
+      marks: [
+        {
+          clipPath: "missing-clip",
+          h: 4,
+          id: "r-1",
+          type: "rect",
+          w: 4,
+          x: 1,
+          y: 1,
+        },
+      ],
+      width: 10,
+    };
+
     expect(getHtmlUnsupportedMarkEffects(model)).toEqual(["clipPath"]);
   });
 });
