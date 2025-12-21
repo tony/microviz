@@ -909,7 +909,7 @@ export const MicrovizPlayground: FC<{
         data: segments,
         size,
         spec: {
-          cardHeightPct: 70,
+          cardHeightPct: 100,
           cardWidthPct: 35,
           fanAngle: 40,
           pad: 0,
