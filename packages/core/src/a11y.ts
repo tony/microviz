@@ -1,10 +1,13 @@
 import type {
+  A11yItem,
   A11ySegmentsSummary,
   A11ySeriesSummary,
   A11ySummary,
   A11yTree,
   RenderModel,
 } from "./model";
+
+const MAX_A11Y_ITEMS = 24;
 
 function formatA11yNumber(value: number): string {
   if (!Number.isFinite(value)) return "0";
@@ -146,6 +149,70 @@ export function inferA11ySummary(normalized: unknown): A11ySummary | undefined {
       segments as ReadonlyArray<{ pct: number; name?: string }>,
     );
     if (summary) return summary;
+  }
+
+  return undefined;
+}
+
+function sanitizeItemLabel(label: string, fallback: string): string {
+  const trimmed = label.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+}
+
+function seriesItems(series: ReadonlyArray<number>): A11yItem[] {
+  const items: A11yItem[] = [];
+  for (let i = 0; i < series.length && items.length < MAX_A11Y_ITEMS; i += 1) {
+    const value = series[i];
+    if (!Number.isFinite(value)) continue;
+    items.push({
+      id: `series-${i}`,
+      label: `Value ${i + 1}`,
+      rank: i + 1,
+      value,
+    });
+  }
+  return items;
+}
+
+function segmentItems(
+  segments: ReadonlyArray<{ pct?: number; name?: string }>,
+): A11yItem[] {
+  const items: A11yItem[] = [];
+  for (
+    let i = 0;
+    i < segments.length && items.length < MAX_A11Y_ITEMS;
+    i += 1
+  ) {
+    const seg = segments[i];
+    if (!seg || !Number.isFinite(seg.pct)) continue;
+    const pct = seg.pct ?? 0;
+    items.push({
+      id: `segment-${i}`,
+      label: sanitizeItemLabel(seg.name ?? "", `Segment ${i + 1}`),
+      rank: i + 1,
+      value: pct,
+      valueText: `${Math.round(pct)}%`,
+    });
+  }
+  return items;
+}
+
+export function inferA11yItems(normalized: unknown): A11yItem[] | undefined {
+  if (!normalized || typeof normalized !== "object") return undefined;
+  const record = normalized as Record<string, unknown>;
+
+  const series = record.series;
+  if (Array.isArray(series)) {
+    const items = seriesItems(series as number[]);
+    return items.length > 0 ? items : undefined;
+  }
+
+  const segments = record.segments;
+  if (Array.isArray(segments)) {
+    const items = segmentItems(
+      segments as ReadonlyArray<{ pct?: number; name?: string }>,
+    );
+    return items.length > 0 ? items : undefined;
   }
 
   return undefined;

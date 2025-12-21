@@ -1,4 +1,4 @@
-import { inferA11ySummary } from "./a11y";
+import { inferA11yItems, inferA11ySummary } from "./a11y";
 import type {
   ChartDefinition,
   PreferredAspectRatio,
@@ -340,9 +340,14 @@ export function computeA11y(
   if (spec.type !== normalized.type)
     return { label: `Chart (${spec.type})`, role: "img" };
   const tree = getChartDefinition(spec.type).a11y(spec, normalized, layout);
-  if (tree.summary) return tree;
-  const summary = inferA11ySummary(normalized);
-  return summary ? { ...tree, summary } : tree;
+  const summary = tree.summary ?? inferA11ySummary(normalized);
+  const items = tree.items ?? inferA11yItems(normalized);
+  if (!summary && !items) return tree;
+  return {
+    ...tree,
+    ...(summary ? { summary } : {}),
+    ...(items ? { items } : {}),
+  };
 }
 
 type Bounds = { maxX: number; maxY: number; minX: number; minY: number };
