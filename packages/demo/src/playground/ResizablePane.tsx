@@ -9,6 +9,7 @@ type Props = {
   className?: string;
   collapsible?: boolean;
   defaultSize: number;
+  forceExpanded?: boolean;
   minSize?: number;
   name: string;
   onCollapsedChange?: (collapsed: boolean) => void;
@@ -104,6 +105,7 @@ export const ResizablePane: FC<Props> = ({
   className,
   collapsible = false,
   defaultSize,
+  forceExpanded = false,
   minSize = 180,
   name,
   onCollapsedChange,
@@ -130,11 +132,12 @@ export const ResizablePane: FC<Props> = ({
   } | null>(null);
 
   const toggleCollapse = useCallback(() => {
+    if (forceExpanded) return;
     const next = !collapsed;
     setCollapsed(next);
     storeCollapsed(collapsedKey, next);
     onCollapsedChange?.(next);
-  }, [collapsed, collapsedKey, onCollapsedChange]);
+  }, [collapsed, collapsedKey, forceExpanded, onCollapsedChange]);
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -190,7 +193,7 @@ export const ResizablePane: FC<Props> = ({
   }, [defaultSize, storageKey]);
 
   // Collapsed state - show thin bar with expand button
-  if (collapsed) {
+  if (collapsed && !forceExpanded) {
     return (
       <div
         className={`flex h-full flex-shrink-0 flex-col items-center bg-white/70 py-4 dark:bg-slate-950/40 ${resizablePaneBorder({ side })}`}
@@ -245,7 +248,7 @@ export const ResizablePane: FC<Props> = ({
           />
 
           {/* Collapse button - appears on hover */}
-          {collapsible && (
+          {collapsible && !forceExpanded && (
             <button
               className="absolute left-1/2 top-4 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 opacity-0 shadow-sm transition-all duration-150 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-200"
               onClick={toggleCollapse}
