@@ -108,7 +108,7 @@ function RootComponent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="hidden flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50 md:flex">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
               className={tabButton({
                 active: !showGallery,
@@ -134,24 +134,8 @@ function RootComponent() {
               Gallery
             </button>
           </div>
-          <label className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200 md:hidden">
-            <span className="sr-only">Page</span>
-            <select
-              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-              onChange={(event) =>
-                navigate({
-                  to: event.target.value === "gallery" ? "/gallery" : "/",
-                })
-              }
-              title="Page"
-              value={showGallery ? "gallery" : "playground"}
-            >
-              <option value="playground">Playground</option>
-              <option value="gallery">Gallery</option>
-            </select>
-          </label>
 
-          <div className="hidden items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50 md:flex">
+          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
               className={tabButton({
                 active: colorSchemePreference === "system",
@@ -189,23 +173,6 @@ function RootComponent() {
               Dark
             </button>
           </div>
-          <label className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200 md:hidden">
-            <span className="sr-only">UI scheme</span>
-            <select
-              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-              onChange={(event) =>
-                setColorSchemePreference(
-                  event.target.value as ColorSchemePreference,
-                )
-              }
-              title="UI scheme"
-              value={colorSchemePreference}
-            >
-              <option value="system">System</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </label>
 
           <label className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
             <span className="hidden whitespace-nowrap text-slate-600 dark:text-slate-300 lg:inline">
@@ -229,7 +196,7 @@ function RootComponent() {
             </select>
           </label>
 
-          <div className="hidden items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50 md:flex">
+          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
               className={tabButton({
                 active: microvizBackgroundPreference === "transparent",
@@ -255,22 +222,6 @@ function RootComponent() {
               Solid
             </button>
           </div>
-          <label className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200 md:hidden">
-            <span className="sr-only">Microviz background</span>
-            <select
-              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-              onChange={(event) =>
-                setMicrovizBackgroundPreference(
-                  event.target.value as MicrovizBackgroundPreference,
-                )
-              }
-              title="Microviz background"
-              value={microvizBackgroundPreference}
-            >
-              <option value="transparent">Transparent</option>
-              <option value="solid">Solid</option>
-            </select>
-          </label>
         </div>
       </header>
 
