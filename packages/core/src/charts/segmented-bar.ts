@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
@@ -11,8 +12,14 @@ import type {
 } from "./types";
 
 export const segmentedBarChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Segmented bar chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Segmented bar chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "bars" as const,
   defaultPad: 0,

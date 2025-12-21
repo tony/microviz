@@ -1,3 +1,4 @@
+import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -9,8 +10,14 @@ import {
 import type { BitfieldData, BitfieldSpec, NormalizedBitfield } from "./types";
 
 export const bitfieldChart = {
-  a11y(_spec, _normalized, _layout) {
-    return { label: "Bitfield chart", role: "img" };
+  a11y(_spec, normalized, _layout) {
+    return {
+      label: a11yLabelWithSegmentsSummary(
+        "Bitfield chart",
+        normalized.segments,
+      ),
+      role: "img",
+    };
   },
   category: "dots" as const,
   defaultPad: 0,
