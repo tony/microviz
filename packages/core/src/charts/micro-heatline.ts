@@ -64,8 +64,7 @@ export const microHeatlineChart = {
       const seg = displaySegments[i];
       if (!seg) continue;
 
-      const lineW =
-        maxPct > 0 ? (seg.pct / maxPct) * usableW : 0;
+      const lineW = maxPct > 0 ? (seg.pct / maxPct) * usableW : 0;
       const lineY = yOffset + i * (lineHeight + gap);
 
       marks.push({

@@ -34,9 +34,9 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   chartFilter: "",
   chartSubtype: "all",
   computeMode: "main",
-  paletteMode: "value",
   fallbackSvgWhenCanvasUnsupported: false,
   height: 32,
+  paletteMode: "value",
   renderer: "svg-string",
   seed: "mv-1",
   segmentCount: 5,
@@ -235,14 +235,14 @@ function deserializePlaygroundState(
     computeMode: isComputeMode(serialized.cm)
       ? serialized.cm
       : DEFAULT_PLAYGROUND_STATE.computeMode,
-    paletteMode: isPaletteMode(serialized.pm)
-      ? serialized.pm
-      : DEFAULT_PLAYGROUND_STATE.paletteMode,
     fallbackSvgWhenCanvasUnsupported: serialized.fb === 1,
     height:
       typeof serialized.h === "number" && Number.isFinite(serialized.h)
         ? clamp(Math.round(serialized.h), 16, 140)
         : DEFAULT_PLAYGROUND_STATE.height,
+    paletteMode: isPaletteMode(serialized.pm)
+      ? serialized.pm
+      : DEFAULT_PLAYGROUND_STATE.paletteMode,
     renderer: isRenderer(serialized.r)
       ? serialized.r
       : DEFAULT_PLAYGROUND_STATE.renderer,
