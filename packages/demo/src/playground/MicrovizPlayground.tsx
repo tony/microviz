@@ -1780,7 +1780,6 @@ export const MicrovizPlayground: FC<{
     model: "Model",
   };
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
-  const [inspectorTabTouched, setInspectorTabTouched] = useState(false);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -1898,14 +1897,6 @@ export const MicrovizPlayground: FC<{
     };
   }, [renderer, selectedModel]);
 
-  useEffect(() => {
-    if (inspectorTabTouched) return;
-    if (selectedWarnings.length > 0) {
-      setInspectorTab("diagnostics");
-    } else {
-      setInspectorTab("model");
-    }
-  }, [inspectorTabTouched, selectedWarnings.length]);
   const selectedInput = inputs[selectedChart];
 
   const allWarnings = useMemo(() => {
@@ -2521,10 +2512,7 @@ export const MicrovizPlayground: FC<{
                       variant: "muted",
                     })}
                     key={tab}
-                    onClick={() => {
-                      setInspectorTabTouched(true);
-                      setInspectorTab(tab);
-                    }}
+                    onClick={() => setInspectorTab(tab)}
                     role="tab"
                     title={
                       tab === "diagnostics"
