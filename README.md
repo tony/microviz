@@ -146,6 +146,34 @@ microviz follows a layered design with hard boundaries:
 
 Interaction is explicit: state (hovered/selected/focused IDs) flows into computation; rendering is a pure transform of the model.
 
+## Model overlays (optional)
+
+Need to add a few marks/defs without forking a chart? Use the overlay helpers:
+
+```ts
+import { createModelIdAllocator, patchRenderModel } from "@microviz/core";
+
+const { defId } = createModelIdAllocator(model);
+const overlayFilterId = defId("mv-overlay-noise");
+
+const next = patchRenderModel(
+  model,
+  {
+    defs: [
+      {
+        id: overlayFilterId,
+        type: "filter",
+        primitives: [{ type: "gaussianBlur", stdDeviation: 1.5 }],
+      },
+    ],
+    marks: model.marks.map((mark) =>
+      mark.filter ? mark : { ...mark, filter: overlayFilterId },
+    ),
+  },
+  { marksMode: "replace" },
+);
+```
+
 ## Export utilities
 
 Small helpers are available for turning render output into shareable artifacts:
