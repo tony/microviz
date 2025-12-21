@@ -7,7 +7,8 @@ export type Renderer =
   | "offscreen-canvas"
   | "svg-dom"
   | "svg-string"
-  | "html";
+  | "html"
+  | "html-svg";
 export type ComputeMode = "main" | "worker";
 export type ChartId = ChartSpec["type"];
 export type ChartSubtype = "all" | "bars" | "dots" | "grids" | "lines";
@@ -125,7 +126,8 @@ function isRenderer(value: unknown): value is Renderer {
     value === "svg-dom" ||
     value === "canvas" ||
     value === "offscreen-canvas" ||
-    value === "html"
+    value === "html" ||
+    value === "html-svg"
   );
 }
 
