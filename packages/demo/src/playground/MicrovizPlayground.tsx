@@ -862,13 +862,13 @@ export const MicrovizPlayground: FC<{
     setMobileSidebarOpen(false);
     setMobileInspectorOpen(false);
   }, []);
-  const openMobileSidebar = useCallback(() => {
+  const toggleMobileSidebar = useCallback(() => {
     setMobileInspectorOpen(false);
-    setMobileSidebarOpen(true);
+    setMobileSidebarOpen((prev) => !prev);
   }, []);
-  const openMobileInspector = useCallback(() => {
+  const toggleMobileInspector = useCallback(() => {
     setMobileSidebarOpen(false);
-    setMobileInspectorOpen(true);
+    setMobileInspectorOpen((prev) => !prev);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2325,397 +2325,432 @@ export const MicrovizPlayground: FC<{
       {mobileDrawerOpen && (
         <button
           aria-label="Close panels"
-          className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-[1px] lg:hidden"
+          className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-[1px]"
           onClick={closeMobilePanels}
           type="button"
         />
       )}
+      {useDrawerLayout && !mobileDrawerOpen && (
+        <div className="pointer-events-none fixed inset-y-0 left-0 right-0 z-20 flex items-center justify-between px-1">
+          <button
+            aria-expanded={mobileSidebarOpen}
+            aria-label="Open controls panel"
+            className="pointer-events-auto flex h-20 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:bg-slate-950 dark:hover:text-slate-100"
+            onClick={toggleMobileSidebar}
+            style={{ textOrientation: "mixed", writingMode: "vertical-rl" }}
+            type="button"
+          >
+            Controls
+          </button>
+          <button
+            aria-expanded={mobileInspectorOpen}
+            aria-label="Open inspector panel"
+            className="pointer-events-auto flex h-20 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:bg-slate-950 dark:hover:text-slate-100"
+            onClick={toggleMobileInspector}
+            style={{ textOrientation: "mixed", writingMode: "vertical-rl" }}
+            type="button"
+          >
+            Inspector
+          </button>
+        </div>
+      )}
       <ResizablePane
         className={`h-full border-r border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 left-0 z-40 shadow-xl transition-transform duration-200 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}` : "static shadow-none"}`}
-        defaultSize={280}
+        contentClassName="h-full w-full overflow-hidden"
+        defaultSize={260}
         name="sidebar"
         side="left"
       >
-        <div className="p-3">
-          {useDrawerLayout && (
-            <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/100 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/100">
+        <div className="flex h-full flex-col">
+          <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+            <div className="flex items-center justify-between gap-2">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Controls
               </div>
+              {useDrawerLayout && (
+                <button
+                  aria-label="Close controls"
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  onClick={() => setMobileSidebarOpen(false)}
+                  type="button"
+                >
+                  Close
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1 [scrollbar-gutter:stable] dark:bg-slate-800/50">
               <button
-                aria-label="Close controls"
                 className={tabButton({
-                  active: false,
+                  active: sidebarTab === "browse",
+                  className: "flex-1 whitespace-nowrap",
                   size: "xs",
-                  variant: "muted",
                 })}
-                onClick={() => setMobileSidebarOpen(false)}
+                onClick={() => setSidebarTab("browse")}
+                title="Charts"
                 type="button"
               >
-                Close
+                Browse
+              </button>
+              <button
+                className={tabButton({
+                  active: sidebarTab === "settings",
+                  className: "flex-1 whitespace-nowrap",
+                  size: "xs",
+                })}
+                onClick={() => setSidebarTab("settings")}
+                title="Settings"
+                type="button"
+              >
+                Settings
+              </button>
+              <button
+                className={tabButton({
+                  active: sidebarTab === "debug",
+                  className: "flex-1 whitespace-nowrap",
+                  size: "xs",
+                })}
+                onClick={() => setSidebarTab("debug")}
+                title="Debug"
+                type="button"
+              >
+                Debug
               </button>
             </div>
-          )}
-          {/* Tab switcher */}
-          <div className="mb-3 flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
-            <button
-              className={tabButton({
-                active: sidebarTab === "browse",
-                className: "flex-1",
-                size: "xs",
-              })}
-              onClick={() => setSidebarTab("browse")}
-              title="Charts"
-              type="button"
-            >
-              Browse
-            </button>
-            <button
-              className={tabButton({
-                active: sidebarTab === "settings",
-                className: "flex-1",
-                size: "xs",
-              })}
-              onClick={() => setSidebarTab("settings")}
-              title="Settings"
-              type="button"
-            >
-              Settings
-            </button>
-            <button
-              className={tabButton({
-                active: sidebarTab === "debug",
-                className: "flex-1",
-                size: "xs",
-              })}
-              onClick={() => setSidebarTab("debug")}
-              title="Debug"
-              type="button"
-            >
-              Debug
-            </button>
           </div>
 
-          {/* Browse tab */}
-          {sidebarTab === "browse" && (
-            <div className="space-y-2">
-              <input
-                className={inputField({
-                  className:
-                    "placeholder:text-slate-400 dark:placeholder:text-slate-500",
-                  size: "md",
-                })}
-                onChange={(e) => setChartFilter(e.target.value)}
-                placeholder="Filter charts..."
-                title="Filter charts"
-                type="text"
-                value={chartFilter}
-              />
-              <div
-                className="overflow-auto pr-1"
-                style={{ maxHeight: "calc(100vh - 160px)" }}
-              >
-                <div className="grid grid-cols-2 gap-1">
-                  {filteredCharts.map((chart) => (
-                    <SidebarItem
-                      active={selectedChart === chart.chartId}
-                      key={chart.chartId}
-                      label={chart.title}
-                      onClick={() => setSelectedChart(chart.chartId)}
-                    />
-                  ))}
-                </div>
-                {filteredCharts.length === 0 && (
-                  <div className="py-4 text-center text-xs text-slate-400">
-                    No matching charts
+          <div className="min-h-0 flex-1 overflow-hidden px-3 py-3">
+            {/* Browse tab */}
+            {sidebarTab === "browse" && (
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <input
+                  className={inputField({
+                    className:
+                      "placeholder:text-slate-400 dark:placeholder:text-slate-500",
+                    size: "md",
+                  })}
+                  onChange={(e) => setChartFilter(e.target.value)}
+                  placeholder="Filter charts..."
+                  title="Filter charts"
+                  type="text"
+                  value={chartFilter}
+                />
+                <div className="min-h-0 flex-1 overflow-auto pr-1">
+                  <div className="grid grid-cols-2 gap-1">
+                    {filteredCharts.map((chart) => (
+                      <SidebarItem
+                        active={selectedChart === chart.chartId}
+                        key={chart.chartId}
+                        label={chart.title}
+                        onClick={() => setSelectedChart(chart.chartId)}
+                      />
+                    ))}
                   </div>
-                )}
+                  {filteredCharts.length === 0 && (
+                    <div className="py-4 text-center text-xs text-slate-400">
+                      No matching charts
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Settings tab */}
-          {sidebarTab === "settings" && (
-            <div className="space-y-2">
-              <label className="block text-sm" title={seriesPresetTooltip}>
-                <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                  Data preset
-                </div>
-                <select
-                  className={inputField()}
-                  onChange={(e) => setDataPreset(e.target.value as DataPreset)}
-                  title="Data preset"
-                  value={dataPreset}
-                >
-                  {dataPresetOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            {/* Settings tab */}
+            {sidebarTab === "settings" && (
+              <div className="h-full overflow-auto pr-1">
+                <div className="space-y-2">
+                  <label className="block text-sm" title={seriesPresetTooltip}>
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Data preset
+                    </div>
+                    <select
+                      className={inputField()}
+                      onChange={(e) =>
+                        setDataPreset(e.target.value as DataPreset)
+                      }
+                      title="Data preset"
+                      value={dataPreset}
+                    >
+                      {dataPresetOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-              <label className="block text-sm">
-                <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                  Series preset
-                </div>
-                <select
-                  className={`${inputField()} disabled:cursor-not-allowed disabled:border-slate-200/60 disabled:bg-slate-100/80 disabled:text-slate-400 dark:disabled:border-slate-700/50 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-500`}
-                  disabled={seriesPresetDisabled}
-                  onChange={(e) =>
-                    setSeriesPreset(e.target.value as SeriesPreset)
-                  }
-                  title={seriesPresetTooltip}
-                  value={seriesPreset}
-                >
-                  <option value="trend">Trend</option>
-                  <option value="seasonal">Seasonal</option>
-                  <option value="spiky">Spiky</option>
-                  <option value="random-walk">Random walk</option>
-                </select>
-              </label>
+                  <label className="block text-sm">
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Series preset
+                    </div>
+                    <select
+                      className={`${inputField()} disabled:cursor-not-allowed disabled:border-slate-200/60 disabled:bg-slate-100/80 disabled:text-slate-400 dark:disabled:border-slate-700/50 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-500`}
+                      disabled={seriesPresetDisabled}
+                      onChange={(e) =>
+                        setSeriesPreset(e.target.value as SeriesPreset)
+                      }
+                      title={seriesPresetTooltip}
+                      value={seriesPreset}
+                    >
+                      <option value="trend">Trend</option>
+                      <option value="seasonal">Seasonal</option>
+                      <option value="spiky">Spiky</option>
+                      <option value="random-walk">Random walk</option>
+                    </select>
+                  </label>
 
-              <label className="block text-sm">
-                <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                  Seed
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    className={inputField({ font: "mono" })}
-                    onChange={(e) => setSeed(e.target.value)}
-                    title="Seed"
-                    value={seed}
+                  <label className="block text-sm">
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Seed
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        className={inputField({ font: "mono" })}
+                        onChange={(e) => setSeed(e.target.value)}
+                        title="Seed"
+                        value={seed}
+                      />
+                      <button
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        onClick={() => randomizeSeed()}
+                        title="Random seed"
+                        type="button"
+                      >
+                        Random
+                      </button>
+                    </div>
+                  </label>
+
+                  <FieldRange
+                    label="Series length"
+                    max={80}
+                    min={3}
+                    onChange={setSeriesLength}
+                    value={seriesLength}
                   />
-                  <button
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    onClick={() => randomizeSeed()}
-                    title="Random seed"
-                    type="button"
+
+                  <FieldRange
+                    label="Segment count"
+                    max={8}
+                    min={1}
+                    onChange={setSegmentCount}
+                    value={segmentCount}
+                  />
+
+                  <ToggleGroup<PaletteMode>
+                    columns={3}
+                    label="Palette mapping"
+                    onChange={handlePaletteModeChange}
+                    options={[
+                      { id: "value", label: "By value" },
+                      { id: "random", label: "Random" },
+                      { id: "chunks", label: "Chunks" },
+                    ]}
+                    value={paletteMode}
+                  />
+
+                  <ToggleGroup<Wrapper>
+                    columns={3}
+                    label="Wrapper"
+                    onChange={setWrapper}
+                    options={[
+                      { id: "vanilla", label: "Vanilla (TS)" },
+                      { id: "react", label: "React" },
+                      { id: "elements", label: "Web components" },
+                    ]}
+                    value={wrapper}
+                  />
+
+                  <ToggleGroup<Renderer>
+                    columns={2}
+                    disabled={wrapper === "elements"}
+                    label="Renderer"
+                    onChange={setRenderer}
+                    options={[
+                      { id: "svg-string", label: "SVG (string)" },
+                      { id: "svg-dom", label: "SVG (DOM)" },
+                      { id: "canvas", label: "Canvas" },
+                      {
+                        id: "offscreen-canvas",
+                        label: "OffscreenCanvas (worker)",
+                      },
+                      { id: "html", label: "HTML (experimental)" },
+                      { id: "html-svg", label: "HTML + SVG (overlay)" },
+                    ]}
+                    value={renderer}
+                  />
+
+                  <ToggleGroup<HtmlFilter>
+                    columns={3}
+                    disabled={renderer !== "html" && renderer !== "html-svg"}
+                    label="HTML compatibility"
+                    onChange={setHtmlFilter}
+                    options={[
+                      { id: "all", label: "All" },
+                      { id: "safe", label: "Safe" },
+                      { id: "broken", label: "Broken" },
+                    ]}
+                    value={htmlFilter}
+                  />
+
+                  <label
+                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                    title="Show SVG overlay when using HTML + SVG renderer"
                   >
-                    Random
-                  </button>
-                </div>
-              </label>
+                    <input
+                      checked={showHtmlSvgOverlay}
+                      className="accent-blue-500"
+                      disabled={renderer !== "html-svg"}
+                      onChange={(e) => setShowHtmlSvgOverlay(e.target.checked)}
+                      type="checkbox"
+                    />
+                    <span className="text-sm">Show SVG overlay</span>
+                  </label>
 
-              <FieldRange
-                label="Series length"
-                max={80}
-                min={3}
-                onChange={setSeriesLength}
-                value={seriesLength}
-              />
+                  <ToggleGroup<ComputeMode>
+                    columns={2}
+                    disabled={renderer === "offscreen-canvas"}
+                    label="Compute"
+                    onChange={setComputeMode}
+                    options={[
+                      { id: "main", label: "Main thread" },
+                      { id: "worker", label: "Worker" },
+                    ]}
+                    value={computeModeEffective}
+                  />
 
-              <FieldRange
-                label="Segment count"
-                max={8}
-                min={1}
-                onChange={setSegmentCount}
-                value={segmentCount}
-              />
-
-              <ToggleGroup<PaletteMode>
-                columns={3}
-                label="Palette mapping"
-                onChange={handlePaletteModeChange}
-                options={[
-                  { id: "value", label: "By value" },
-                  { id: "random", label: "Random" },
-                  { id: "chunks", label: "Chunks" },
-                ]}
-                value={paletteMode}
-              />
-
-              <ToggleGroup<Wrapper>
-                columns={3}
-                label="Wrapper"
-                onChange={setWrapper}
-                options={[
-                  { id: "vanilla", label: "Vanilla (TS)" },
-                  { id: "react", label: "React" },
-                  { id: "elements", label: "Web components" },
-                ]}
-                value={wrapper}
-              />
-
-              <ToggleGroup<Renderer>
-                columns={2}
-                disabled={wrapper === "elements"}
-                label="Renderer"
-                onChange={setRenderer}
-                options={[
-                  { id: "svg-string", label: "SVG (string)" },
-                  { id: "svg-dom", label: "SVG (DOM)" },
-                  { id: "canvas", label: "Canvas" },
-                  { id: "offscreen-canvas", label: "OffscreenCanvas (worker)" },
-                  { id: "html", label: "HTML (experimental)" },
-                  { id: "html-svg", label: "HTML + SVG (overlay)" },
-                ]}
-                value={renderer}
-              />
-
-              <ToggleGroup<HtmlFilter>
-                columns={3}
-                disabled={renderer !== "html" && renderer !== "html-svg"}
-                label="HTML compatibility"
-                onChange={setHtmlFilter}
-                options={[
-                  { id: "all", label: "All" },
-                  { id: "safe", label: "Safe" },
-                  { id: "broken", label: "Broken" },
-                ]}
-                value={htmlFilter}
-              />
-
-              <label
-                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-                title="Show SVG overlay when using HTML + SVG renderer"
-              >
-                <input
-                  checked={showHtmlSvgOverlay}
-                  className="accent-blue-500"
-                  disabled={renderer !== "html-svg"}
-                  onChange={(e) => setShowHtmlSvgOverlay(e.target.checked)}
-                  type="checkbox"
-                />
-                <span className="text-sm">Show SVG overlay</span>
-              </label>
-
-              <ToggleGroup<ComputeMode>
-                columns={2}
-                disabled={renderer === "offscreen-canvas"}
-                label="Compute"
-                onChange={setComputeMode}
-                options={[
-                  { id: "main", label: "Main thread" },
-                  { id: "worker", label: "Worker" },
-                ]}
-                value={computeModeEffective}
-              />
-
-              <div className="rounded-lg border border-slate-200 bg-white/70 p-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Tip
-                </div>
-                <div className="mt-1">
-                  Export SVG/PNG from the Inspector → Model tab.
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <FieldNumberWithRange
-                  label="Width"
-                  max={520}
-                  min={80}
-                  onChange={setWidth}
-                  value={width}
-                />
-                <FieldNumberWithRange
-                  label="Height"
-                  max={140}
-                  min={16}
-                  onChange={setHeight}
-                  value={height}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Debug tab */}
-          {sidebarTab === "debug" && (
-            <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Render
-              </div>
-
-              <label
-                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-                title="Noise overlay (SVG)"
-              >
-                <input
-                  checked={applyNoiseOverlay}
-                  className="accent-blue-500"
-                  onChange={(e) => setApplyNoiseOverlay(e.target.checked)}
-                  type="checkbox"
-                />
-                <span className="text-sm">
-                  Overlay noise displacement filter (SVG-only)
-                </span>
-              </label>
-
-              <label
-                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-                title="SVG fallback (Canvas filters)"
-              >
-                <input
-                  checked={fallbackSvgWhenCanvasUnsupported}
-                  className="accent-blue-500"
-                  disabled={
-                    wrapper === "elements" ||
-                    (renderer !== "canvas" && renderer !== "offscreen-canvas")
-                  }
-                  onChange={(e) =>
-                    setFallbackSvgWhenCanvasUnsupported(e.target.checked)
-                  }
-                  type="checkbox"
-                />
-                <span className="text-sm">
-                  Fallback to SVG when Canvas ignores filters
-                </span>
-              </label>
-
-              <label
-                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-                title="Element hover tooltip"
-              >
-                <input
-                  checked={showHoverTooltip}
-                  className="accent-blue-500"
-                  disabled={wrapper !== "elements"}
-                  onChange={(e) => setShowHoverTooltip(e.target.checked)}
-                  type="checkbox"
-                />
-                <span className="text-sm">Hover tooltip (elements)</span>
-              </label>
-
-              {wrapper !== "elements" && (
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Only available for web components (uses `microviz-hit`
-                  events).
-                </div>
-              )}
-
-              {wrapper === "elements" && (
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Canvas fallback is disabled for web components (SVG-only).
-                </div>
-              )}
-
-              {wrapper !== "elements" &&
-                renderer !== "canvas" &&
-                renderer !== "offscreen-canvas" && (
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    Only applies when using Canvas renderers.
+                  <div className="rounded-lg border border-slate-200 bg-white/70 p-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300">
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Tip
+                    </div>
+                    <div className="mt-1">
+                      Export SVG/PNG from the Inspector → Model tab.
+                    </div>
                   </div>
-                )}
-            </div>
-          )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <FieldNumberWithRange
+                      label="Width"
+                      max={520}
+                      min={80}
+                      onChange={setWidth}
+                      value={width}
+                    />
+                    <FieldNumberWithRange
+                      label="Height"
+                      max={140}
+                      min={16}
+                      onChange={setHeight}
+                      value={height}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Debug tab */}
+            {sidebarTab === "debug" && (
+              <div className="h-full overflow-auto pr-1">
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Render
+                  </div>
+
+                  <label
+                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                    title="Noise overlay (SVG)"
+                  >
+                    <input
+                      checked={applyNoiseOverlay}
+                      className="accent-blue-500"
+                      onChange={(e) => setApplyNoiseOverlay(e.target.checked)}
+                      type="checkbox"
+                    />
+                    <span className="text-sm">
+                      Overlay noise displacement filter (SVG-only)
+                    </span>
+                  </label>
+
+                  <label
+                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                    title="SVG fallback (Canvas filters)"
+                  >
+                    <input
+                      checked={fallbackSvgWhenCanvasUnsupported}
+                      className="accent-blue-500"
+                      disabled={
+                        wrapper === "elements" ||
+                        (renderer !== "canvas" &&
+                          renderer !== "offscreen-canvas")
+                      }
+                      onChange={(e) =>
+                        setFallbackSvgWhenCanvasUnsupported(e.target.checked)
+                      }
+                      type="checkbox"
+                    />
+                    <span className="text-sm">
+                      Fallback to SVG when Canvas ignores filters
+                    </span>
+                  </label>
+
+                  <label
+                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                    title="Element hover tooltip"
+                  >
+                    <input
+                      checked={showHoverTooltip}
+                      className="accent-blue-500"
+                      disabled={wrapper !== "elements"}
+                      onChange={(e) => setShowHoverTooltip(e.target.checked)}
+                      type="checkbox"
+                    />
+                    <span className="text-sm">Hover tooltip (elements)</span>
+                  </label>
+
+                  {wrapper !== "elements" && (
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Only available for web components (uses `microviz-hit`
+                      events).
+                    </div>
+                  )}
+
+                  {wrapper === "elements" && (
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Canvas fallback is disabled for web components (SVG-only).
+                    </div>
+                  )}
+
+                  {wrapper !== "elements" &&
+                    renderer !== "canvas" &&
+                    renderer !== "offscreen-canvas" && (
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Only applies when using Canvas renderers.
+                      </div>
+                    )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </ResizablePane>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="px-4 pt-4">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Playground</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+        <div className="px-4 pt-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <h2 className="text-base font-semibold">Playground</h2>
+              <p className="hidden whitespace-nowrap text-xs text-slate-600 dark:text-slate-300 xl:block">
                 Compare wrappers, renderers, and compute modes.
               </p>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <div
                   aria-label="Chart subtype filter"
-                  className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
                   role="tablist"
                 >
                   {chartSubtypeOptions.map((option) => {
@@ -2746,7 +2781,7 @@ export const MicrovizPlayground: FC<{
                   {visibleCharts.length} charts
                 </div>
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
+              <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 {wrapper} · {renderer}
                 {warningCount > 0 && (
                   <span className="font-semibold text-amber-600 dark:text-amber-300">
@@ -2758,34 +2793,6 @@ export const MicrovizPlayground: FC<{
               </div>
             </div>
           </div>
-          {useDrawerLayout && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              <button
-                aria-expanded={mobileSidebarOpen}
-                className={tabButton({
-                  active: mobileSidebarOpen,
-                  size: "sm",
-                  variant: "filled",
-                })}
-                onClick={openMobileSidebar}
-                type="button"
-              >
-                Controls
-              </button>
-              <button
-                aria-expanded={mobileInspectorOpen}
-                className={tabButton({
-                  active: mobileInspectorOpen,
-                  size: "sm",
-                  variant: "filled",
-                })}
-                onClick={openMobileInspector}
-                type="button"
-              >
-                Inspector
-              </button>
-            </div>
-          )}
         </div>
 
         <div
@@ -2951,67 +2958,68 @@ export const MicrovizPlayground: FC<{
       <ResizablePane
         className={`h-full border-l border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 right-0 z-40 shadow-xl transition-transform duration-200 ${mobileInspectorOpen ? "translate-x-0" : "translate-x-full"}` : "static shadow-none"}`}
         collapsible
-        defaultSize={380}
+        contentClassName="h-full w-full overflow-hidden"
+        defaultSize={340}
         forceExpanded={useDrawerLayout && mobileInspectorOpen}
         name="inspector"
         side="right"
       >
-        <div className="p-4">
-          {useDrawerLayout && (
-            <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-white/100 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/100">
+        <div className="flex h-full flex-col">
+          <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-4 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+            <div className="flex items-center justify-between gap-2">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Inspector
               </div>
-              <button
-                aria-label="Close inspector"
-                className={tabButton({
-                  active: false,
-                  size: "xs",
-                  variant: "muted",
-                })}
-                onClick={() => setMobileInspectorOpen(false)}
-                type="button"
+              {useDrawerLayout && (
+                <button
+                  aria-label="Close inspector"
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  onClick={() => setMobileInspectorOpen(false)}
+                  type="button"
+                >
+                  Close
+                </button>
+              )}
+            </div>
+            <div className="flex min-w-0 items-center gap-2">
+              <div
+                aria-label="Inspector tabs"
+                className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 [scrollbar-gutter:stable] dark:border-slate-800 dark:bg-slate-900"
+                role="tablist"
               >
-                Close
-              </button>
-            </div>
-          )}
-          <div className="mb-3">
-            <div
-              aria-label="Inspector tabs"
-              className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
-              role="tablist"
-            >
-              {inspectorTabOptions.map((tab) => {
-                const selected = inspectorTab === tab;
-                return (
-                  <button
-                    aria-selected={selected}
-                    className={tabButton({
-                      active: selected,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    key={tab}
-                    onClick={() => setInspectorTab(tab)}
-                    role="tab"
-                    title={inspectorTabTitles[tab]}
-                    type="button"
-                  >
-                    {inspectorTabLabels[tab]}
-                  </button>
-                );
-              })}
+                {inspectorTabOptions.map((tab) => {
+                  const selected = inspectorTab === tab;
+                  return (
+                    <button
+                      aria-selected={selected}
+                      className={tabButton({
+                        active: selected,
+                        size: "xs",
+                        variant: "muted",
+                      })}
+                      key={tab}
+                      onClick={() => setInspectorTab(tab)}
+                      role="tab"
+                      title={inspectorTabTitles[tab]}
+                      type="button"
+                    >
+                      {inspectorTabLabels[tab]}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="max-w-[45%] truncate text-[11px] text-slate-500 dark:text-slate-400">
+                {selectedChart}
+              </div>
             </div>
           </div>
 
-          <div className="mb-3 flex items-end justify-between gap-3">
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              {selectedChart}
-            </div>
-          </div>
-
-          {inspectorTab === "diagnostics" && (
+          <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
+            {inspectorTab === "diagnostics" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span>Diagnostics</span>
@@ -3247,6 +3255,7 @@ export const MicrovizPlayground: FC<{
             </div>
           )}
         </div>
+      </div>
       </ResizablePane>
     </div>
   );
