@@ -28,6 +28,27 @@ describe("hitTest", () => {
     expect(hitTest(model, { x: 80, y: 80 })).toBeNull();
   });
 
+  test("hits stroked circle rings when fill is none", () => {
+    const model: RenderModel = {
+      height: 100,
+      marks: [
+        {
+          cx: 50,
+          cy: 50,
+          fill: "none",
+          id: "ring",
+          r: 10,
+          strokeWidth: 2,
+          type: "circle",
+        },
+      ],
+      width: 100,
+    };
+
+    expect(hitTest(model, { x: 60, y: 50 })?.markId).toBe("ring");
+    expect(hitTest(model, { x: 50, y: 50 })).toBeNull();
+  });
+
   test("hits line marks with stroke tolerance", () => {
     const model: RenderModel = {
       height: 100,
@@ -102,5 +123,31 @@ describe("hitTest", () => {
     };
 
     expect(hitTest(model, { x: 1, y: 1 })).toBeNull();
+  });
+
+  test("hits arc path marks when Path2D is available", () => {
+    const canUseCanvasPath2D =
+      typeof Path2D !== "undefined" &&
+      (typeof OffscreenCanvas !== "undefined" ||
+        (typeof document !== "undefined" &&
+          typeof document.createElement === "function"));
+
+    if (!canUseCanvasPath2D) return;
+
+    const model: RenderModel = {
+      height: 100,
+      marks: [
+        {
+          d: "M 50 40 A 10 10 0 1 0 50 60 A 10 10 0 1 0 50 40 Z",
+          fill: "black",
+          id: "arc",
+          type: "path",
+        },
+      ],
+      width: 100,
+    };
+
+    expect(hitTest(model, { x: 50, y: 50 })?.markId).toBe("arc");
+    expect(hitTest(model, { x: 10, y: 10 })).toBeNull();
   });
 });
