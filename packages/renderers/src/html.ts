@@ -178,8 +178,60 @@ function withOpacity(color: string, opacity: number | undefined): string {
   return `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 }
 
+const PATTERN_CACHE_LIMIT = 200;
+const MASK_CACHE_LIMIT = 200;
+
 const patternCache = new Map<string, string>();
 const maskCache = new Map<string, string>();
+
+function cacheGet(cache: Map<string, string>, key: string): string | undefined {
+  const cached = cache.get(key);
+  if (!cached) return undefined;
+  cache.delete(key);
+  cache.set(key, cached);
+  return cached;
+}
+
+function cacheSet(
+  cache: Map<string, string>,
+  key: string,
+  value: string,
+  limit: number,
+): void {
+  cache.set(key, value);
+  if (cache.size <= limit) return;
+  const firstKey = cache.keys().next().value;
+  if (firstKey !== undefined) cache.delete(firstKey);
+}
+
+function patternCacheKey(def: PatternDef): string {
+  return JSON.stringify({
+    height: def.height,
+    id: def.id,
+    marks: def.marks,
+    patternContentUnits: def.patternContentUnits,
+    patternTransform: def.patternTransform,
+    patternUnits: def.patternUnits,
+    type: def.type,
+    width: def.width,
+    x: def.x,
+    y: def.y,
+  });
+}
+
+function maskCacheKey(def: MaskDef): string {
+  return JSON.stringify({
+    height: def.height,
+    id: def.id,
+    marks: def.marks,
+    maskContentUnits: def.maskContentUnits,
+    maskUnits: def.maskUnits,
+    type: def.type,
+    width: def.width,
+    x: def.x,
+    y: def.y,
+  });
+}
 
 function renderPatternMarks(def: PatternDef | MaskDef): RenderModel {
   const marks = def.marks.map((mark, i) => ({
@@ -194,20 +246,22 @@ function renderPatternMarks(def: PatternDef | MaskDef): RenderModel {
 }
 
 function patternToDataUrl(def: PatternDef): string {
-  const cached = patternCache.get(def.id);
+  const key = patternCacheKey(def);
+  const cached = cacheGet(patternCache, key);
   if (cached) return cached;
   const svg = renderSvgString(renderPatternMarks(def), { title: "" });
   const url = svgStringToDataUrl(svg);
-  patternCache.set(def.id, url);
+  cacheSet(patternCache, key, url, PATTERN_CACHE_LIMIT);
   return url;
 }
 
 function maskToDataUrl(def: MaskDef): string {
-  const cached = maskCache.get(def.id);
+  const key = maskCacheKey(def);
+  const cached = cacheGet(maskCache, key);
   if (cached) return cached;
   const svg = renderSvgString(renderPatternMarks(def), { title: "" });
   const url = svgStringToDataUrl(svg);
-  maskCache.set(def.id, url);
+  cacheSet(maskCache, key, url, MASK_CACHE_LIMIT);
   return url;
 }
 
