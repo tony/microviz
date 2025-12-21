@@ -26,6 +26,12 @@
     "@microviz/react": "workspace:*",
     "@microviz/renderers": "workspace:*",
     "@microviz/themes": "workspace:*",
+    "@tanstack/devtools-event-client": "^0.4.0",
+    "@tanstack/react-router": "^1.141.6",
+    "@tanstack/react-router-devtools": "^1.141.6",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.13",
+    "@tanstack/zod-adapter": "^1.141.6",
     "class-variance-authority": "^0.7.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
@@ -33,6 +39,10 @@
   "devDependencies": {
     "@biomejs/biome": "2.3.9",
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/devtools-vite": "^0.3.12",
+    "@tanstack/react-devtools": "^0.8.4",
+    "@tanstack/router-cli": "^1.141.7",
+    "@tanstack/router-plugin": "^1.141.7",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
