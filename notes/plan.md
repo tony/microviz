@@ -20,7 +20,7 @@ We’re “ready” when:
 
 ---
 
-## Current status (2025-12-17)
+## Current status (2025-12-18)
 
 ### Core + renderer capabilities
 - ✅ Mark-level paint + opacity (`fill`, `stroke`, `fillOpacity`, `strokeOpacity`, `strokeWidth`, `opacity`) across SVG string + Canvas.
@@ -314,7 +314,7 @@ Deliverables:
 Deliverables:
 - ✅ Linear gradients in model + SVG renderer (Unlock 3).
 - ✅ Patterns/masks/filters in model + SVG renderer (Unlock 3).
-- Port Texture & Creative + Pattern Tiles.
+- ✅ Port Texture & Creative + Pattern Tiles.
 - ✅ Decision: keep SVG-only for “Shadow Depth” / heavy CSS effects; defer Unlock 5 (HTML renderer) until proven necessary.
 
 ---
