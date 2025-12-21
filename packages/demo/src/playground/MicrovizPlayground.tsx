@@ -490,6 +490,7 @@ function ChartCard({
   model,
   onSelect,
   render,
+  showHtmlBrokenBadge,
   timingMs,
   title,
 }: {
@@ -501,6 +502,7 @@ function ChartCard({
   model: RenderModel | null;
   onSelect: (chartId: ChartId) => void;
   render: ReactNode;
+  showHtmlBrokenBadge?: boolean;
   timingMs: number | null;
   title: string;
 }): ReactNode {
@@ -530,6 +532,13 @@ function ChartCard({
             {title}
           </div>
         </div>
+        {showHtmlBrokenBadge && (
+          <div className="flex shrink-0 items-center">
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+              HTML broken
+            </span>
+          </div>
+        )}
       </div>
       <div
         className={`${chartCardContent({ centered })}${isWideCard ? " flex-1" : ""}`}
@@ -1611,6 +1620,7 @@ export const MicrovizPlayground: FC<{
     getCanvasUnsupportedFilters,
     getHtmlWarnings,
   );
+  const warningCount = selectedWarnings.length;
 
   useEffect(() => {
     if (inspectorTabTouched) return;
@@ -1991,7 +2001,14 @@ export const MicrovizPlayground: FC<{
                 </div>
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400">
-                {wrapper} · {renderer} · {computeModeEffective}
+                {wrapper} · {renderer}
+                {warningCount > 0 && (
+                  <span className="font-semibold text-amber-600 dark:text-amber-300">
+                    {" "}
+                    · {warningCount} warning{warningCount === 1 ? "" : "s"}
+                  </span>
+                )}{" "}
+                · {computeModeEffective}
               </div>
             </div>
           </div>
@@ -2037,20 +2054,24 @@ export const MicrovizPlayground: FC<{
                           >
                             {block.charts.map((chart) => {
                               const model = getEffectiveModel(chart.chartId);
+                              const hasWarnings = hasDiagnosticsWarnings(
+                                model,
+                                renderer,
+                                getCanvasUnsupportedFilters,
+                                getHtmlWarnings,
+                              );
                               return (
                                 <ChartCard
                                   active={selectedChart === chart.chartId}
                                   chartId={chart.chartId}
-                                  hasWarnings={hasDiagnosticsWarnings(
-                                    model,
-                                    renderer,
-                                    getCanvasUnsupportedFilters,
-                                    getHtmlWarnings,
-                                  )}
+                                  hasWarnings={hasWarnings}
                                   key={chart.chartId}
                                   model={model}
                                   onSelect={setSelectedChart}
                                   render={renderSurface(chart.chartId)}
+                                  showHtmlBrokenBadge={
+                                    renderer === "html" && hasWarnings
+                                  }
                                   timingMs={timingsMs[chart.chartId]}
                                   title={chart.title}
                                 />
@@ -2068,21 +2089,25 @@ export const MicrovizPlayground: FC<{
                           >
                             {block.charts.map((chart) => {
                               const model = getEffectiveModel(chart.chartId);
+                              const hasWarnings = hasDiagnosticsWarnings(
+                                model,
+                                renderer,
+                                getCanvasUnsupportedFilters,
+                                getHtmlWarnings,
+                              );
                               return (
                                 <ChartCard
                                   active={selectedChart === chart.chartId}
                                   centered
                                   chartId={chart.chartId}
-                                  hasWarnings={hasDiagnosticsWarnings(
-                                    model,
-                                    renderer,
-                                    getCanvasUnsupportedFilters,
-                                    getHtmlWarnings,
-                                  )}
+                                  hasWarnings={hasWarnings}
                                   key={chart.chartId}
                                   model={model}
                                   onSelect={setSelectedChart}
                                   render={renderSurface(chart.chartId)}
+                                  showHtmlBrokenBadge={
+                                    renderer === "html" && hasWarnings
+                                  }
                                   timingMs={timingsMs[chart.chartId]}
                                   title={chart.title}
                                 />
@@ -2095,21 +2120,25 @@ export const MicrovizPlayground: FC<{
                           <div className="flex flex-wrap gap-3">
                             {block.charts.map((chart) => {
                               const model = getEffectiveModel(chart.chartId);
+                              const hasWarnings = hasDiagnosticsWarnings(
+                                model,
+                                renderer,
+                                getCanvasUnsupportedFilters,
+                                getHtmlWarnings,
+                              );
                               return (
                                 <ChartCard
                                   active={selectedChart === chart.chartId}
                                   chartId={chart.chartId}
                                   compact
-                                  hasWarnings={hasDiagnosticsWarnings(
-                                    model,
-                                    renderer,
-                                    getCanvasUnsupportedFilters,
-                                    getHtmlWarnings,
-                                  )}
+                                  hasWarnings={hasWarnings}
                                   key={chart.chartId}
                                   model={model}
                                   onSelect={setSelectedChart}
                                   render={renderSurface(chart.chartId)}
+                                  showHtmlBrokenBadge={
+                                    renderer === "html" && hasWarnings
+                                  }
                                   timingMs={timingsMs[chart.chartId]}
                                   title={chart.title}
                                 />
