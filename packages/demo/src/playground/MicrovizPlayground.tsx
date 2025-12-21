@@ -847,6 +847,11 @@ export const MicrovizPlayground: FC<{
   const [chartFilter, setChartFilter] = useState(
     () => initialUrlState.chartFilter,
   );
+  const seriesPresetDisabled =
+    dataPreset === "distribution" || dataPreset === "compare";
+  const seriesPresetTooltip = seriesPresetDisabled
+    ? `Series preset is ignored for the "${dataPreset}" data preset.`
+    : "Series preset";
   const randomizeSeed = useCallback(() => {
     setSeed(`mv-${Math.floor(Math.random() * 10_000)}`);
   }, []);
@@ -2340,7 +2345,7 @@ export const MicrovizPlayground: FC<{
           {/* Settings tab */}
           {sidebarTab === "settings" && (
             <div className="space-y-2">
-              <label className="block text-sm">
+              <label className="block text-sm" title={seriesPresetTooltip}>
                 <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
                   Data preset
                 </div>
@@ -2363,11 +2368,12 @@ export const MicrovizPlayground: FC<{
                   Series preset
                 </div>
                 <select
-                  className={inputField()}
+                  className={`${inputField()} disabled:cursor-not-allowed disabled:border-slate-200/60 disabled:bg-slate-100/80 disabled:text-slate-400 dark:disabled:border-slate-700/50 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-500`}
+                  disabled={seriesPresetDisabled}
                   onChange={(e) =>
                     setSeriesPreset(e.target.value as SeriesPreset)
                   }
-                  title="Series preset"
+                  title={seriesPresetTooltip}
                   value={seriesPreset}
                 >
                   <option value="trend">Trend</option>
