@@ -135,13 +135,13 @@ These exist as first-class `spec.type` values in `@microviz/core` and are covere
 ### Next pragmatic wins (demo UX + performance: TanStack)
 These don’t change the rendering pipeline, but they make the demo a better engineering tool:
 
-- 🟡 **Route-level code splitting:** use TanStack Router so Playground doesn’t eagerly bundle the large gallery modules.
+- ✅ **Route-level code splitting:** gallery route is lazy-loaded via TanStack Router (`packages/demo/src/routes/gallery.tsx`).
   - Goal: fast reloads + faster first paint in the playground.
   - Reference: `~/study/typescript/tanstack-router/` and `~/work/cv/packages/react/src/router.tsx`.
-- 🟡 **Shareable repro links:** encode Playground state into typed URL search params (seed, selected chart, wrapper/renderer/compute mode, sizes, filters, debug toggles).
+- ✅ **Shareable repro links:** Playground state is encoded in URL search params (`packages/demo/src/routes/index.tsx`, `packages/demo/src/playground/playgroundUrlState.ts`).
   - Goal: copy/paste a link that reproduces a rendering/perf issue.
   - Reference: `~/work/cv/packages/react/src/hud/url-state.ts` (compact encoding + zod adapter).
-- 🟡 **Virtualize the chart grid:** use TanStack Virtual to render only visible chart cards.
+- ✅ **Virtualize the chart grid:** TanStack Virtual is used to render only visible chart cards (`packages/demo/src/playground/MicrovizPlayground.tsx`).
   - Goal: reduce DOM/render work and unlock “compute models only for visible charts (+ overscan)” later.
   - Reference: `~/study/typescript/tanstack-virtual/` and `~/work/cv/packages/react/src/HUD.tsx` (`useVirtualizer`).
 - 🟡 **Optional:** virtualize long gallery pages (patterns/aggregate) if scroll perf becomes a problem (often unnecessary once code-split).
