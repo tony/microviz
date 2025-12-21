@@ -1952,27 +1952,39 @@ export const MicrovizPlayground: FC<{
             </div>
           </div>
 
-          <div className="mb-3 flex flex-wrap gap-2">
-            {inspectorTabOptions.map((tab) => (
-              <button
-                className={tabButton({
-                  active: inspectorTab === tab,
-                  variant: "filled",
-                })}
-                key={tab}
-                onClick={() => setInspectorTab(tab)}
-                title={
-                  tab === "diagnostics"
-                    ? "Warnings"
-                    : tab === "model"
-                      ? "Render model"
-                      : "Inputs"
-                }
-                type="button"
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="mb-3">
+            <div
+              aria-label="Inspector tabs"
+              className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
+              role="tablist"
+            >
+              {inspectorTabOptions.map((tab) => {
+                const selected = inspectorTab === tab;
+                return (
+                  <button
+                    aria-selected={selected}
+                    className={tabButton({
+                      active: selected,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    key={tab}
+                    onClick={() => setInspectorTab(tab)}
+                    role="tab"
+                    title={
+                      tab === "diagnostics"
+                        ? "Warnings"
+                        : tab === "model"
+                          ? "Render model"
+                          : "Inputs"
+                    }
+                    type="button"
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {inspectorTab === "diagnostics" && (

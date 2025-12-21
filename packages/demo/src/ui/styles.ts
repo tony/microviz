@@ -7,7 +7,7 @@ import { cva } from "class-variance-authority";
  * Variants:
  * - default: white bg when active, transparent when inactive
  * - muted: slate-200 bg when active, transparent when inactive (chart subtype filter)
- * - filled: slate-200 bg when active, slate-100 bg when inactive (inspector tabs)
+ * - filled: slate-200 bg when active, slate-100 bg when inactive
  */
 export const tabButton = cva("rounded-md font-medium transition", {
   compoundVariants: [
