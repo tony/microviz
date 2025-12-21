@@ -42,6 +42,35 @@ renderCanvas(ctx, model, {
 });
 ```
 
+## Render to HTML (experimental)
+
+Useful for CSS-first effects or embedding inside non-SVG layouts. This renderer is parity-deferred.
+
+```ts
+import { renderHtmlString } from "@microviz/renderers";
+
+const html = renderHtmlString(model);
+```
+
+HTML renderer limitations:
+- Supports `rect`, `circle`, `line`, and `text` marks only; `path` marks are ignored.
+- Supports `linearGradient`, `pattern`, `mask`, `clipRect`, and `filter` defs (dropShadow/gaussianBlur only).
+- Other defs/effects are ignored; use SVG/Canvas for full fidelity.
+
+To detect unsupported HTML features:
+
+```ts
+import {
+  getHtmlUnsupportedDefTypes,
+  getHtmlUnsupportedMarkEffects,
+  getHtmlUnsupportedMarkTypes,
+} from "@microviz/renderers";
+
+const unsupportedMarks = getHtmlUnsupportedMarkTypes(model);
+const unsupportedDefs = getHtmlUnsupportedDefTypes(model);
+const unsupportedEffects = getHtmlUnsupportedMarkEffects(model);
+```
+
 ## Export utilities
 
 Small helpers for turning render output into sharable artifacts.
