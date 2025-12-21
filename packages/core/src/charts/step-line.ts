@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, isFiniteNumber } from "./shared";
@@ -35,6 +35,10 @@ function stepLinePoints(
 export const stepLineChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "step-line-point",
+        labelPrefix: "Step",
+      }),
       label: a11yLabelWithSeriesSummary("Step line chart", normalized.series),
       role: "img",
     };

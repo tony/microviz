@@ -17,7 +17,7 @@ describe("a11y summary", () => {
       min: 1,
       trend: "up",
     });
-    expect(model.a11y?.items?.[0]?.label).toBe("Value 1");
+    expect(model.a11y?.items?.[0]?.label).toBe("Point 1");
   });
 
   test("infers segment summaries", () => {

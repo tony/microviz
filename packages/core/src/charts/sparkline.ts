@@ -1,4 +1,4 @@
-import { a11yLabelWithSeriesSummary } from "../a11y";
+import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -15,6 +15,10 @@ import type {
 export const sparklineChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSeries(normalized.series, {
+        idPrefix: "sparkline-point",
+        labelPrefix: "Point",
+      }),
       label: a11yLabelWithSeriesSummary("Sparkline chart", normalized.series),
       role: "img",
     };
