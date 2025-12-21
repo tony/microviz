@@ -519,6 +519,7 @@ type WarningLike = { code: string; message: string };
 
 type GetCanvasUnsupportedFilters = (model: RenderModel) => readonly string[];
 type GetHtmlWarnings = (model: RenderModel) => WarningLike[];
+type HtmlWarningTag = { detail: string; label: string };
 
 function hasDiagnosticsWarnings(
   model: RenderModel | null,
@@ -530,7 +531,8 @@ function hasDiagnosticsWarnings(
   if ((model.stats?.warnings?.length ?? 0) > 0) return true;
   if (renderer === "canvas" || renderer === "offscreen-canvas")
     return getCanvasUnsupportedFilters(model).length > 0;
-  if (renderer === "html") return getHtmlWarnings(model).length > 0;
+  if (renderer === "html" || renderer === "html-svg")
+    return getHtmlWarnings(model).length > 0;
   return false;
 }
 
@@ -557,7 +559,7 @@ function getDiagnosticsWarnings(
     }
   }
 
-  if (renderer === "html") {
+  if (renderer === "html" || renderer === "html-svg") {
     warnings.push(...getHtmlWarnings(model));
   }
 
@@ -581,12 +583,33 @@ function formatWarningsList(warnings: WarningLike[]): ReactNode {
   );
 }
 
+function getHtmlWarningTags(model: RenderModel | null): HtmlWarningTag[] {
+  if (!model) return [];
+  const tags: HtmlWarningTag[] = [];
+  const unsupportedMarks = getHtmlUnsupportedMarkTypes(model);
+  const unsupportedDefs = getHtmlUnsupportedDefTypes(model);
+  const unsupportedEffects = getHtmlUnsupportedMarkEffects(model);
+
+  if (unsupportedMarks.length > 0) {
+    tags.push({ detail: unsupportedMarks.join(", "), label: "Marks" });
+  }
+  if (unsupportedDefs.length > 0) {
+    tags.push({ detail: unsupportedDefs.join(", "), label: "Defs" });
+  }
+  if (unsupportedEffects.length > 0) {
+    tags.push({ detail: unsupportedEffects.join(", "), label: "Effects" });
+  }
+
+  return tags;
+}
+
 function ChartCard({
   active,
   centered,
   chartId,
   compact,
   hasWarnings,
+  htmlWarningTags,
   model,
   onSelect,
   render,
@@ -599,6 +622,7 @@ function ChartCard({
   chartId: ChartId;
   compact?: boolean;
   hasWarnings: boolean;
+  htmlWarningTags?: HtmlWarningTag[];
   model: RenderModel | null;
   onSelect: (chartId: ChartId) => void;
   render: ReactNode;
@@ -631,6 +655,19 @@ function ChartCard({
           >
             {title}
           </div>
+          {htmlWarningTags && htmlWarningTags.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {htmlWarningTags.map((tag) => (
+                <span
+                  className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200"
+                  key={tag.label}
+                  title={`${tag.label}: ${tag.detail}`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         {showHtmlBrokenBadge && (
           <div className="flex shrink-0 items-center">
@@ -2295,6 +2332,12 @@ export const MicrovizPlayground: FC<{
                                   active={selectedChart === chart.chartId}
                                   chartId={chart.chartId}
                                   hasWarnings={hasWarnings}
+                                  htmlWarningTags={
+                                    renderer === "html" ||
+                                    renderer === "html-svg"
+                                      ? getHtmlWarningTags(model)
+                                      : undefined
+                                  }
                                   key={chart.chartId}
                                   model={model}
                                   onSelect={setSelectedChart}
@@ -2331,6 +2374,12 @@ export const MicrovizPlayground: FC<{
                                   centered
                                   chartId={chart.chartId}
                                   hasWarnings={hasWarnings}
+                                  htmlWarningTags={
+                                    renderer === "html" ||
+                                    renderer === "html-svg"
+                                      ? getHtmlWarningTags(model)
+                                      : undefined
+                                  }
                                   key={chart.chartId}
                                   model={model}
                                   onSelect={setSelectedChart}
@@ -2362,6 +2411,12 @@ export const MicrovizPlayground: FC<{
                                   chartId={chart.chartId}
                                   compact
                                   hasWarnings={hasWarnings}
+                                  htmlWarningTags={
+                                    renderer === "html" ||
+                                    renderer === "html-svg"
+                                      ? getHtmlWarningTags(model)
+                                      : undefined
+                                  }
                                   key={chart.chartId}
                                   model={model}
                                   onSelect={setSelectedChart}
