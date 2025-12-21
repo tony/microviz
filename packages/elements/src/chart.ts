@@ -1,4 +1,5 @@
 import {
+  type A11yItem,
   type ChartSpec,
   computeModel,
   hitTest,
@@ -6,7 +7,7 @@ import {
   type RenderModel,
 } from "@microviz/core";
 import { renderHtmlString, renderSvgString } from "@microviz/renderers";
-import { applyMicrovizA11y } from "./a11y";
+import { applyMicrovizA11y, getA11yItems, updateA11yFocus } from "./a11y";
 import { parseNumber, parseOptionalNumber } from "./parse";
 import {
   clearHtmlFromShadowRoot,
@@ -68,6 +69,8 @@ export class MicrovizChart extends HTMLElement {
   #lastPointerClient: ClientPoint | null = null;
   #lastHitKey: string | null = null;
   #lastPoint: Point | null = null;
+  #a11yItems: A11yItem[] = [];
+  #focusIndex: number | null = null;
 
   constructor() {
     super();
@@ -154,16 +157,104 @@ export class MicrovizChart extends HTMLElement {
     if (enabled) {
       this.addEventListener("pointermove", this.#onPointerMove);
       this.addEventListener("pointerleave", this.#onPointerLeave);
+      this.addEventListener("keydown", this.#onKeyDown);
+      this.addEventListener("blur", this.#onBlur);
       return;
     }
 
     this.#lastPointerClient = null;
     this.#lastHitKey = null;
     this.#lastPoint = null;
+    this.#focusIndex = null;
+    updateA11yFocus(this.#root, null);
 
     this.removeEventListener("pointermove", this.#onPointerMove);
     this.removeEventListener("pointerleave", this.#onPointerLeave);
+    this.removeEventListener("keydown", this.#onKeyDown);
+    this.removeEventListener("blur", this.#onBlur);
   }
+
+  #syncKeyboardAccess(): void {
+    const shouldFocus = this.#isInteractive && this.#a11yItems.length > 0;
+    if (shouldFocus) {
+      this.tabIndex = 0;
+    } else {
+      this.removeAttribute("tabindex");
+      this.#focusIndex = null;
+      updateA11yFocus(this.#root, null);
+    }
+  }
+
+  #setA11yItems(next: A11yItem[]): void {
+    this.#a11yItems = next;
+    if (
+      this.#focusIndex !== null &&
+      this.#focusIndex >= this.#a11yItems.length
+    ) {
+      this.#focusIndex = this.#a11yItems.length > 0 ? 0 : null;
+    }
+    this.#syncKeyboardAccess();
+  }
+
+  #announceFocus(): void {
+    if (this.#focusIndex === null) return;
+    const item = this.#a11yItems[this.#focusIndex];
+    if (!item) return;
+    updateA11yFocus(this.#root, item, this.#focusIndex);
+    this.dispatchEvent(
+      new CustomEvent("microviz-focus", {
+        bubbles: true,
+        composed: true,
+        detail: { index: this.#focusIndex, item },
+      }),
+    );
+  }
+
+  #onKeyDown = (event: KeyboardEvent): void => {
+    if (this.#a11yItems.length === 0) return;
+
+    const lastIndex = this.#a11yItems.length - 1;
+    const currentIndex = this.#focusIndex ?? -1;
+    let nextIndex = currentIndex;
+
+    switch (event.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        nextIndex =
+          currentIndex < 0
+            ? 0
+            : currentIndex >= lastIndex
+              ? 0
+              : currentIndex + 1;
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        nextIndex =
+          currentIndex < 0
+            ? lastIndex
+            : currentIndex <= 0
+              ? lastIndex
+              : currentIndex - 1;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = lastIndex;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    this.#focusIndex = nextIndex;
+    this.#announceFocus();
+  };
+
+  #onBlur = (): void => {
+    this.#focusIndex = null;
+    updateA11yFocus(this.#root, null);
+  };
 
   #syncHitSlop(): void {
     const slop = parseOptionalNumber(this.getAttribute("hit-slop"));
@@ -306,6 +397,7 @@ export class MicrovizChart extends HTMLElement {
     if (!spec || data === null) {
       this.#model = null;
       applyMicrovizA11y(this, this.#internals, null);
+      this.#setA11yItems([]);
       clearSvgFromShadowRoot(this.#root);
       clearHtmlFromShadowRoot(this.#root);
       if (this.#isInteractive && this.#lastHitKey !== null) {
@@ -331,6 +423,7 @@ export class MicrovizChart extends HTMLElement {
     this.#model = model;
 
     applyMicrovizA11y(this, this.#internals, model);
+    this.#setA11yItems(getA11yItems(model));
     const wantsSkeleton =
       this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
     const renderer = this.getAttribute("renderer");
