@@ -96,6 +96,7 @@ export const sparklineBarsChart = {
     const max = series.length > 0 ? Math.max(...series) : 1;
     return { max, min, series, type: "sparkline-bars" as const };
   },
+  preferredAspectRatio: "square" as const,
   type: "sparkline-bars",
 } satisfies ChartDefinition<
   "sparkline-bars",

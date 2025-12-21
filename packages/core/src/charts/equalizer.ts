@@ -99,6 +99,7 @@ export const equalizerChart = {
     const max = series.length > 0 ? Math.max(...series) : 1;
     return { max, min, series, type: "equalizer" as const };
   },
+  preferredAspectRatio: "square" as const,
   type: "equalizer",
 } satisfies ChartDefinition<
   "equalizer",
