@@ -46,6 +46,7 @@ import { MicrovizRadialBurst } from "./radial-burst";
 import { MicrovizRangeBand } from "./range-band";
 import { MicrovizRankedLanes } from "./ranked-lanes";
 import { MicrovizSegmentedBar } from "./segmented-bar";
+import { MicrovizSegmentedPill } from "./segmented-pill";
 import { MicrovizSegmentedRing } from "./segmented-ring";
 import { MicrovizShadowDepth } from "./shadow-depth";
 import { MicrovizShapeRow } from "./shape-row";
@@ -123,6 +124,7 @@ export {
   MicrovizShadowDepth,
   MicrovizSegmentedRing,
   MicrovizSegmentedBar,
+  MicrovizSegmentedPill,
   MicrovizShapeRow,
   MicrovizSkyline,
   MicrovizSparkArea,
@@ -300,6 +302,10 @@ export function registerMicrovizElements(): void {
 
   if (!customElements.get("microviz-segmented-bar")) {
     customElements.define("microviz-segmented-bar", MicrovizSegmentedBar);
+  }
+
+  if (!customElements.get("microviz-segmented-pill")) {
+    customElements.define("microviz-segmented-pill", MicrovizSegmentedPill);
   }
 
   if (!customElements.get("microviz-stacked-chips")) {
