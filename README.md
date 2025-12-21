@@ -190,6 +190,27 @@ const next = patchRenderModel(
 );
 ```
 
+## Defs + fill rules
+
+Apply `defs` (patterns/gradients) to marks using fill rules:
+
+```ts
+import { applyFillRules } from "@microviz/core";
+
+const next = {
+  ...model,
+  defs: [
+    { id: "mv-stripes", type: "pattern", ...patternDef },
+  ],
+  marks: applyFillRules(model.marks, [
+    { id: "mv-stripes", match: { className: "mv-bar" } },
+  ]),
+};
+```
+
+By default rules only apply when a mark has no explicit `fill`. Pass
+`{ overwrite: true }` to force re-application.
+
 ## Export utilities
 
 Small helpers are available for turning render output into shareable artifacts:
