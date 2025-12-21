@@ -245,11 +245,23 @@ function renderPatternMarks(def: PatternDef | MaskDef): RenderModel {
   };
 }
 
+function wrapSvgContent(svg: string, transform: string | undefined): string {
+  if (!transform) return svg;
+  const start = svg.indexOf(">");
+  const end = svg.lastIndexOf("</svg>");
+  if (start < 0 || end < 0 || end <= start) return svg;
+  const head = svg.slice(0, start + 1);
+  const inner = svg.slice(start + 1, end);
+  const tail = svg.slice(end);
+  return `${head}<g transform="${escapeHtmlText(transform)}">${inner}</g>${tail}`;
+}
+
 function patternToDataUrl(def: PatternDef): string {
   const key = patternCacheKey(def);
   const cached = cacheGet(patternCache, key);
   if (cached) return cached;
-  const svg = renderSvgString(renderPatternMarks(def), { title: "" });
+  const baseSvg = renderSvgString(renderPatternMarks(def), { title: "" });
+  const svg = wrapSvgContent(baseSvg, def.patternTransform);
   const url = svgStringToDataUrl(svg);
   cacheSet(patternCache, key, url, PATTERN_CACHE_LIMIT);
   return url;
