@@ -109,7 +109,7 @@ export const dotMatrixChart = {
     const opacities = data.opacities?.filter(isFiniteNumber);
     return { opacities, series, type: "dot-matrix" };
   },
-  preferredAspectRatio: "wide" as const,
+  preferredAspectRatio: "square" as const,
   type: "dot-matrix",
 } satisfies ChartDefinition<
   "dot-matrix",
