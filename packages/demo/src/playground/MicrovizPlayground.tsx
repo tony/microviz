@@ -20,7 +20,6 @@ import {
 import "@microviz/elements";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
-  type CSSProperties,
   type FC,
   Fragment,
   type ReactNode,
@@ -1214,15 +1213,7 @@ export const MicrovizPlayground: FC<{
     const input = inputs[chartId];
     if (!model)
       return (
-        <div
-          className="h-[var(--mv-surface-h)] w-[var(--mv-surface-w)] animate-pulse rounded bg-slate-200 dark:bg-slate-800"
-          style={
-            {
-              "--mv-surface-h": `${input.size.height}px`,
-              "--mv-surface-w": `${input.size.width}px`,
-            } as CSSProperties
-          }
-        />
+        <div className="h-8 w-[200px] animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
       );
 
     if (wrapper === "elements") {
