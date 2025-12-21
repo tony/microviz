@@ -1961,6 +1961,20 @@ export const MicrovizPlayground: FC<{
     getHtmlWarnings,
   );
   const warningCount = selectedWarnings.length;
+  const a11ySummary = selectedModel?.a11y?.summary;
+  const a11yItems = selectedModel?.a11y?.items ?? [];
+  const a11yExpectedCount =
+    a11ySummary?.kind === "series" || a11ySummary?.kind === "segments"
+      ? a11ySummary.count
+      : null;
+  const a11yMissingItems =
+    a11yExpectedCount !== null &&
+    a11yExpectedCount > 0 &&
+    a11yItems.length === 0;
+  const a11yTruncatedItems =
+    a11yExpectedCount !== null &&
+    a11yItems.length > 0 &&
+    a11yItems.length < a11yExpectedCount;
   const selectedWarningSummary = useMemo(
     () => summarizeWarningCounts(selectedWarnings),
     [selectedWarnings],
@@ -2839,19 +2853,23 @@ export const MicrovizPlayground: FC<{
                     <span className="text-slate-500 dark:text-slate-400">
                       Summary:
                     </span>
-                    <span>
-                      {formatA11ySummary(selectedModel?.a11y?.summary) ?? "—"}
-                    </span>
+                    <span>{formatA11ySummary(a11ySummary) ?? "—"}</span>
                   </div>
                   <div className="flex flex-wrap gap-x-2 gap-y-1">
                     <span className="text-slate-500 dark:text-slate-400">
                       Items:
                     </span>
-                    <span>{selectedModel?.a11y?.items?.length ?? 0}</span>
+                    <span>
+                      {a11yMissingItems
+                        ? "0 (missing)"
+                        : a11yTruncatedItems
+                          ? `${a11yItems.length}/${a11yExpectedCount} (truncated)`
+                          : a11yItems.length}
+                    </span>
                   </div>
-                  {(selectedModel?.a11y?.items?.length ?? 0) > 0 && (
+                  {a11yItems.length > 0 && (
                     <ul className="mt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                      {selectedModel?.a11y?.items?.slice(0, 5).map((item) => (
+                      {a11yItems.slice(0, 5).map((item) => (
                         <li key={item.id}>{formatA11yItem(item)}</li>
                       ))}
                     </ul>
