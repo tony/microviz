@@ -5,7 +5,7 @@ import type {
 } from "@microviz/core";
 import { computeModel, normalizeSlices as normalize } from "@microviz/core";
 import { MicrovizSvg } from "@microviz/react";
-import { type FC, type ReactNode, useMemo, useState } from "react";
+import { type FC, type ReactNode, useEffect, useMemo, useState } from "react";
 import { VirtualizedStack } from "../ui/VirtualizedStack";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1037,11 +1037,17 @@ export const Legend: FC<{ slices: PieSlice[] }> = ({ slices }) => {
   );
 };
 
-export const SectionHeader: FC<{ title: string; description: string }> = ({
-  title,
-  description,
-}) => (
-  <div className="mb-4 mt-8 first:mt-0 border-b border-slate-200 dark:border-slate-800/50 pb-2">
+export const SectionHeader: FC<{
+  title: string;
+  description: string;
+  isFirst?: boolean;
+}> = ({ title, description, isFirst = false }) => (
+  <div
+    className={[
+      "mb-4 border-b border-slate-200 pb-2 dark:border-slate-800/50",
+      isFirst ? "mt-0" : "mt-8",
+    ].join(" ")}
+  >
     <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
       <span className="h-4 w-1 rounded-full bg-blue-500" />
       {title}
@@ -1051,6 +1057,105 @@ export const SectionHeader: FC<{ title: string; description: string }> = ({
     </p>
   </div>
 );
+
+type VirtualBlock = {
+  key: string;
+  node: ReactNode;
+  estimateSize?: number;
+};
+
+type GridColumns = {
+  base: number;
+  sm?: number;
+  lg?: number;
+};
+
+type GridSection = {
+  key: string;
+  title: string;
+  description: string;
+  gridClassName: string;
+  rowGapClass: string;
+  rowTailClass?: string;
+  columns: GridColumns;
+  estimateRowSize?: number;
+  cards: ReactNode[];
+};
+
+const DEFAULT_VIEWPORT_WIDTH = 1024;
+const TAILWIND_SM = 640;
+const TAILWIND_LG = 1024;
+
+function useViewportWidth(): number {
+  const [width, setWidth] = useState(() =>
+    typeof window === "undefined" ? DEFAULT_VIEWPORT_WIDTH : window.innerWidth,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return width;
+}
+
+function resolveColumns(width: number, columns: GridColumns): number {
+  if (width >= TAILWIND_LG) return columns.lg ?? columns.sm ?? columns.base;
+  if (width >= TAILWIND_SM) return columns.sm ?? columns.base;
+  return columns.base;
+}
+
+function chunkRows<T>(items: readonly T[], columns: number): T[][] {
+  const rows: T[][] = [];
+  const step = Math.max(columns, 1);
+  for (let i = 0; i < items.length; i += step) {
+    rows.push(items.slice(i, i + step));
+  }
+  return rows;
+}
+
+function buildSectionBlocks(
+  sections: readonly GridSection[],
+  width: number,
+): VirtualBlock[] {
+  const blocks: VirtualBlock[] = [];
+
+  sections.forEach((section, sectionIndex) => {
+    blocks.push({
+      estimateSize: 72,
+      key: `${section.key}-header`,
+      node: (
+        <SectionHeader
+          description={section.description}
+          isFirst={sectionIndex === 0}
+          title={section.title}
+        />
+      ),
+    });
+
+    const cols = resolveColumns(width, section.columns);
+    const rows = chunkRows(section.cards, cols);
+    rows.forEach((row, rowIndex) => {
+      const isLast = rowIndex === rows.length - 1;
+      const rowClassName = [
+        section.gridClassName,
+        isLast ? (section.rowTailClass ?? "") : section.rowGapClass,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      blocks.push({
+        estimateSize: section.estimateRowSize ?? 200,
+        key: `${section.key}-row-${rowIndex}`,
+        node: <div className={rowClassName}>{row}</div>,
+      });
+    });
+  });
+
+  return blocks;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Demo Component
@@ -1068,257 +1173,256 @@ export const MicroVizAggregateDemo: FC<{
     [allSlices, maxSlices, minPercentage],
   );
 
-  const sectionBlocks = [
+  const viewportWidth = useViewportWidth();
+
+  const sections: GridSection[] = [
     {
+      cards: [
+        <VizCard footprint="32×32px" key="nano-ring" title="Nano Ring">
+          <NanoRing slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="mini-pie" title="Mini Pie (SVG)">
+          <MiniPie slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="orbital" title="Orbital">
+          <Orbital slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="orbital-dots" title="Orbital Dots">
+          <OrbitalDots slices={slices} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description: "Compact circular indicators for tight spaces",
+      gridClassName: "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4",
       key: "circles",
-      node: (
-        <>
-          <SectionHeader
-            description="Compact circular indicators for tight spaces"
-            title="1. Circles"
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard footprint="32×32px" title="Nano Ring">
-              <NanoRing slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Mini Pie (SVG)">
-              <MiniPie slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Orbital">
-              <Orbital slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Orbital Dots">
-              <OrbitalDots slices={slices} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-3",
+      title: "1. Circles",
     },
     {
+      cards: [
+        <VizCard footprint="26×26px" key="dot-matrix" title="Dot Matrix">
+          <DotMatrix slices={slices} />
+        </VizCard>,
+        <VizCard footprint="30×30px" key="mosaic-grid" title="Mosaic Grid">
+          <MosaicGrid slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="bit-grid" title="Bit Grid">
+          <BitGrid slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="mosaic-8x8" title="Mosaic 8×8">
+          <Mosaic8x8 slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="pixel-treemap" title="Pixel Treemap">
+          <PixelTreemap slices={slices} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "Grid-based patterns for discrete visualization",
+      gridClassName: "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3",
       key: "clusters",
-      node: (
-        <>
-          <SectionHeader
-            description="Grid-based patterns for discrete visualization"
-            title="2. Clusters / Mosaics"
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard footprint="26×26px" title="Dot Matrix">
-              <DotMatrix slices={slices} />
-            </VizCard>
-            <VizCard footprint="30×30px" title="Mosaic Grid">
-              <MosaicGrid slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Bit Grid">
-              <BitGrid slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Mosaic 8×8">
-              <Mosaic8x8 slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Pixel Treemap">
-              <PixelTreemap slices={slices} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-3",
+      title: "2. Clusters / Mosaics",
     },
     {
+      cards: [
+        <VizCard footprint="32×32px" key="code-minimap" title="Code Minimap">
+          <CodeMinimap slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×8px" key="barcode-strip" title="Barcode Strip">
+          <BarcodeStrip slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="equalizer" title="Equalizer">
+          <Equalizer slices={slices} />
+        </VizCard>,
+        <VizCard
+          footprint="32×32px"
+          key="sparkline-bars"
+          title="Sparkline Bars"
+        >
+          <SparklineBars slices={slices} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description: "Minimap and equalizer-style visualizations",
+      gridClassName: "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4",
       key: "mini-charts",
-      node: (
-        <>
-          <SectionHeader
-            description="Minimap and equalizer-style visualizations"
-            title="3. Mini-Charts"
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard footprint="32×32px" title="Code Minimap">
-              <CodeMinimap slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×8px" title="Barcode Strip">
-              <BarcodeStrip slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Equalizer">
-              <Equalizer slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Sparkline Bars">
-              <SparklineBars slices={slices} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-3",
+      title: "3. Mini-Charts",
     },
     {
+      cards: [
+        <VizCard footprint="32×8px" key="stacked-bar" title="Stacked Bar">
+          <StackedBar slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×8px" key="bar-gaps" title="Bar + Gaps">
+          <StackedBarGaps slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×8px" key="progress-pills" title="Progress Pills">
+          <ProgressPills slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×8px" key="segmented-pill" title="Segmented Pill">
+          <SegmentedPill slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×8px" key="pixel-pill" title="Pixel Pill">
+          <PixelStackedBar slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×16px" key="curved-bar" title="Curved Bar">
+          <CurvedBar slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×12px" key="stacked-chips" title="Stacked Chips">
+          <StackedChips slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×8px" key="pattern-tiles" title="Pattern Tiles">
+          <PatternTiles slices={slices} />
+        </VizCard>,
+        <VizCard footprint="8×32px" key="vertical-stack" title="Vertical Stack">
+          <VerticalStack slices={slices} />
+        </VizCard>,
+        <VizCard footprint="8×32px" key="pixel-column" title="Pixel Column">
+          <PixelStackedColumn slices={slices} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "Horizontal and vertical bar-based layouts",
+      gridClassName: "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3",
       key: "bars",
-      node: (
-        <>
-          <SectionHeader
-            description="Horizontal and vertical bar-based layouts"
-            title="4. Bars"
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard footprint="32×8px" title="Stacked Bar">
-              <StackedBar slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×8px" title="Bar + Gaps">
-              <StackedBarGaps slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×8px" title="Progress Pills">
-              <ProgressPills slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×8px" title="Segmented Pill">
-              <SegmentedPill slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×8px" title="Pixel Pill">
-              <PixelStackedBar slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×16px" title="Curved Bar">
-              <CurvedBar slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×12px" title="Stacked Chips">
-              <StackedChips slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×8px" title="Pattern Tiles">
-              <PatternTiles slices={slices} />
-            </VizCard>
-            <VizCard footprint="8×32px" title="Vertical Stack">
-              <VerticalStack slices={slices} />
-            </VizCard>
-            <VizCard footprint="8×32px" title="Pixel Column">
-              <PixelStackedColumn slices={slices} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-3",
+      title: "4. Bars",
     },
     {
+      cards: [
+        <VizCard footprint="32×32px" key="donut" title="Donut">
+          <DonutChart slices={slices} />
+        </VizCard>,
+        <VizCard
+          footprint="32×32px"
+          key="segmented-ring"
+          title="Segmented Ring"
+        >
+          <SegmentedRing slices={slices} />
+        </VizCard>,
+        <VizCard
+          footprint="32×32px"
+          key="concentric-arcs"
+          title="Concentric Arcs"
+        >
+          <ConcentricArcs slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×32px" key="radial-bars" title="Radial Bars">
+          <RadialBars slices={slices} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description: "Ring and arc-based circular patterns",
+      gridClassName: "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4",
       key: "circular",
-      node: (
-        <>
-          <SectionHeader
-            description="Ring and arc-based circular patterns"
-            title="5. Circular"
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard footprint="32×32px" title="Donut">
-              <DonutChart slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Segmented Ring">
-              <SegmentedRing slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Concentric Arcs">
-              <ConcentricArcs slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×32px" title="Radial Bars">
-              <RadialBars slices={slices} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-3",
+      title: "5. Circular",
     },
     {
+      cards: [
+        <VizCard footprint="32×8px" key="shape-row" title="Shape Row">
+          <ShapeRow slices={slices} />
+        </VizCard>,
+        <VizCard footprint="32×4px" key="dot-row" title="Dot Row">
+          <DotRow slices={slices} />
+        </VizCard>,
+      ],
+      columns: { base: 1, sm: 2 },
+      description: "Unconventional shapes and layouts",
+      gridClassName: "grid grid-cols-1 gap-3 sm:grid-cols-2",
       key: "odd",
-      node: (
-        <>
-          <SectionHeader
-            description="Unconventional shapes and layouts"
-            title="6. Odd"
-          />
-          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <VizCard footprint="32×8px" title="Shape Row">
-              <ShapeRow slices={slices} />
-            </VizCard>
-            <VizCard footprint="32×4px" title="Dot Row">
-              <DotRow slices={slices} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-3",
+      rowTailClass: "mb-6",
+      title: "6. Odd",
     },
+  ];
+
+  const sectionBlocks = [
+    ...buildSectionBlocks(sections, viewportWidth),
     {
+      estimateSize: 260,
       key: "size-comparison",
       node: (
-        <>
-          {/* Actual Size Comparison */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <p className="mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-              Actual size comparison
-            </p>
-            <div className="flex flex-wrap items-center gap-6 rounded-lg bg-slate-100 p-3 dark:bg-slate-700">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Bar:
-                </span>
-                <StackedBarGaps slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Arcs:
-                </span>
-                <ConcentricArcs slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Dots:
-                </span>
-                <DotRow slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Pills:
-                </span>
-                <ProgressPills slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Ring:
-                </span>
-                <SegmentedRing slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Nano:
-                </span>
-                <NanoRing slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Grid:
-                </span>
-                <BitGrid slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Chips:
-                </span>
-                <StackedChips slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Pixel:
-                </span>
-                <PixelStackedBar slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  8×8:
-                </span>
-                <Mosaic8x8 slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Barcode:
-                </span>
-                <BarcodeStrip slices={slices} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Orbital:
-                </span>
-                <Orbital slices={slices} />
-              </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+          <p className="mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+            Actual size comparison
+          </p>
+          <div className="flex flex-wrap items-center gap-6 rounded-lg bg-slate-100 p-3 dark:bg-slate-700">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Bar:
+              </span>
+              <StackedBarGaps slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Arcs:
+              </span>
+              <ConcentricArcs slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Dots:
+              </span>
+              <DotRow slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Pills:
+              </span>
+              <ProgressPills slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Ring:
+              </span>
+              <SegmentedRing slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Nano:
+              </span>
+              <NanoRing slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Grid:
+              </span>
+              <BitGrid slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Chips:
+              </span>
+              <StackedChips slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Pixel:
+              </span>
+              <PixelStackedBar slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                8×8:
+              </span>
+              <Mosaic8x8 slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Barcode:
+              </span>
+              <BarcodeStrip slices={slices} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                Orbital:
+              </span>
+              <Orbital slices={slices} />
             </div>
           </div>
-        </>
+        </div>
       ),
     },
   ];

@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type FC,
   type ReactNode,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -1202,11 +1203,17 @@ export const VizCard: FC<VizCardProps> = ({ title, children, tags = [] }) => (
   </div>
 );
 
-export const SectionHeader: FC<{ title: string; description: string }> = ({
-  title,
-  description,
-}) => (
-  <div className="mb-4 mt-8 first:mt-0 border-b border-slate-200 dark:border-slate-800/50 pb-2">
+export const SectionHeader: FC<{
+  title: string;
+  description: string;
+  isFirst?: boolean;
+}> = ({ title, description, isFirst = false }) => (
+  <div
+    className={[
+      "mb-4 border-b border-slate-200 pb-2 dark:border-slate-800/50",
+      isFirst ? "mt-0" : "mt-8",
+    ].join(" ")}
+  >
     <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
       <span className="h-4 w-1 rounded-full bg-blue-500" />
       {title}
@@ -1235,6 +1242,104 @@ export const Legend: FC<{ data: Segment[] }> = ({ data }) => (
     ))}
   </div>
 );
+
+type VirtualBlock = {
+  key: string;
+  node: ReactNode;
+  estimateSize?: number;
+};
+
+type GridColumns = {
+  base: number;
+  sm?: number;
+  lg?: number;
+};
+
+type GridSection = {
+  key: string;
+  title: string;
+  description: string;
+  gridClassName: string;
+  rowGapClass: string;
+  columns: GridColumns;
+  estimateRowSize?: number;
+  cards: ReactNode[];
+};
+
+const DEFAULT_VIEWPORT_WIDTH = 1024;
+const TAILWIND_SM = 640;
+const TAILWIND_LG = 1024;
+
+function useViewportWidth(): number {
+  const [width, setWidth] = useState(() =>
+    typeof window === "undefined" ? DEFAULT_VIEWPORT_WIDTH : window.innerWidth,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return width;
+}
+
+function resolveColumns(width: number, columns: GridColumns): number {
+  if (width >= TAILWIND_LG) return columns.lg ?? columns.sm ?? columns.base;
+  if (width >= TAILWIND_SM) return columns.sm ?? columns.base;
+  return columns.base;
+}
+
+function chunkRows<T>(items: readonly T[], columns: number): T[][] {
+  const rows: T[][] = [];
+  const step = Math.max(columns, 1);
+  for (let i = 0; i < items.length; i += step) {
+    rows.push(items.slice(i, i + step));
+  }
+  return rows;
+}
+
+function buildSectionBlocks(
+  sections: readonly GridSection[],
+  width: number,
+): VirtualBlock[] {
+  const blocks: VirtualBlock[] = [];
+
+  sections.forEach((section, sectionIndex) => {
+    blocks.push({
+      estimateSize: 72,
+      key: `${section.key}-header`,
+      node: (
+        <SectionHeader
+          description={section.description}
+          isFirst={sectionIndex === 0}
+          title={section.title}
+        />
+      ),
+    });
+
+    const cols = resolveColumns(width, section.columns);
+    const rows = chunkRows(section.cards, cols);
+    rows.forEach((row, rowIndex) => {
+      const isLast = rowIndex === rows.length - 1;
+      const rowClassName = [
+        section.gridClassName,
+        isLast ? "" : section.rowGapClass,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      blocks.push({
+        estimateSize: section.estimateRowSize ?? 200,
+        key: `${section.key}-row-${rowIndex}`,
+        node: <div className={rowClassName}>{row}</div>,
+      });
+    });
+  });
+
+  return blocks;
+}
 
 // ============================================
 // MAIN DEMO COMPONENT
@@ -1337,6 +1442,7 @@ export const MicroVizDemo: FC<{
     () => months.reduce((acc, m) => acc + m.count, 0) % 1000,
     [months],
   );
+  const viewportWidth = useViewportWidth();
 
   if (data.length === 0) {
     return (
@@ -1348,334 +1454,344 @@ export const MicroVizDemo: FC<{
     );
   }
 
-  const sectionBlocks = [
+  const sections: GridSection[] = [
     {
+      cards: [
+        <VizCard key="sparkline" tags={["SVG", "Trend"]} title="Sparkline">
+          <Sparkline color={primaryColor} series={seriesValues} />
+        </VizCard>,
+        <VizCard key="spark-area" tags={["SVG", "Area"]} title="Spark Area">
+          <SparkArea color={primaryColor} series={seriesValues} />
+        </VizCard>,
+        <VizCard
+          key="mini-histogram"
+          tags={["SVG", "Bars"]}
+          title="Mini Histogram"
+        >
+          <MiniHistogram
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard key="range-band" tags={["SVG", "Min/Max"]} title="Range Band">
+          <RangeBand
+            bandSeed={bandSeed}
+            color={primaryColor}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard key="heatgrid" tags={["SVG", "Calendar"]} title="Heatgrid">
+          <MicroHeatgrid
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard
+          key="bullet-delta"
+          tags={["SVG", "Delta"]}
+          title="Bullet Delta"
+        >
+          <BulletDelta
+            color={primaryColor}
+            current={current}
+            previous={previous}
+          />
+        </VizCard>,
+        <VizCard key="dumbbell" tags={["SVG", "Compare"]} title="Dumbbell">
+          <DumbbellCompare
+            color={primaryColor}
+            current={data[0]?.pct ?? 50}
+            target={target}
+          />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description:
+        "Compact SVG charts for time series (use controls above to switch months/years)",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4",
       key: "micro-charts",
-      node: (
-        <>
-          <SectionHeader
-            description="Compact SVG charts for time series (use controls above to switch months/years)"
-            title="1. Micro-Charts (SVG)"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard tags={["SVG", "Trend"]} title="Sparkline">
-              <Sparkline color={primaryColor} series={seriesValues} />
-            </VizCard>
-            <VizCard tags={["SVG", "Area"]} title="Spark Area">
-              <SparkArea color={primaryColor} series={seriesValues} />
-            </VizCard>
-            <VizCard tags={["SVG", "Bars"]} title="Mini Histogram">
-              <MiniHistogram
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Min/Max"]} title="Range Band">
-              <RangeBand
-                bandSeed={bandSeed}
-                color={primaryColor}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Calendar"]} title="Heatgrid">
-              <MicroHeatgrid
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Delta"]} title="Bullet Delta">
-              <BulletDelta
-                color={primaryColor}
-                current={current}
-                previous={previous}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Compare"]} title="Dumbbell">
-              <DumbbellCompare
-                color={primaryColor}
-                current={data[0]?.pct ?? 50}
-                target={target}
-              />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "1. Micro-Charts (SVG)",
     },
     {
+      cards: [
+        <VizCard
+          key="activity-cadence"
+          tags={["CSS", "HUD"]}
+          title="Activity Cadence"
+        >
+          <ActivityCadence
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard key="tight-bars" tags={["CSS", "Dense"]} title="Tight Bars">
+          <ActivityCadenceTight
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard key="dot-matrix" tags={["CSS", "Dots"]} title="Dot Matrix">
+          <ActivityCadenceDots
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard
+          key="rounded-bars"
+          tags={["SVG", "Rounded"]}
+          title="Rounded Bars"
+        >
+          <MiniHistogramRounded
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard
+          key="gradient-bars"
+          tags={["SVG", "Gradient"]}
+          title="Gradient Bars"
+        >
+          <MiniHistogramGradient
+            color={primaryColor}
+            opacities={seriesOpacities}
+            series={seriesValues}
+          />
+        </VizCard>,
+        <VizCard key="step-line" tags={["SVG", "Stepped"]} title="Step Line">
+          <MiniHistogramLine color={primaryColor} series={seriesValues} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description:
+        "Histogram and bar chart variants (use controls above to switch months/years)",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4",
       key: "activity",
-      node: (
-        <>
-          <SectionHeader
-            description="Histogram and bar chart variants (use controls above to switch months/years)"
-            title="2. Activity Cadence"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard tags={["CSS", "HUD"]} title="Activity Cadence">
-              <ActivityCadence
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["CSS", "Dense"]} title="Tight Bars">
-              <ActivityCadenceTight
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["CSS", "Dots"]} title="Dot Matrix">
-              <ActivityCadenceDots
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Rounded"]} title="Rounded Bars">
-              <MiniHistogramRounded
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Gradient"]} title="Gradient Bars">
-              <MiniHistogramGradient
-                color={primaryColor}
-                opacities={seriesOpacities}
-                series={seriesValues}
-              />
-            </VizCard>
-            <VizCard tags={["SVG", "Stepped"]} title="Step Line">
-              <MiniHistogramLine color={primaryColor} series={seriesValues} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "2. Activity Cadence",
     },
     {
+      cards: [
+        <VizCard key="bitfield" tags={["Mask"]} title="Bitfield">
+          <BitfieldBar data={data} />
+        </VizCard>,
+        <VizCard
+          key="stripe-density"
+          tags={["Repeating"]}
+          title="Stripe Density"
+        >
+          <StripeDensity data={data} />
+        </VizCard>,
+        <VizCard key="gradient-fade" tags={["Gradient"]} title="Gradient Fade">
+          <GradientFade data={data} />
+        </VizCard>,
+        <VizCard
+          key="noise-displacement"
+          tags={["SVG Filter"]}
+          title="Noise Displacement"
+        >
+          <NoiseDisplacement data={data} />
+        </VizCard>,
+        <VizCard key="perforated" tags={["Stitched"]} title="Perforated">
+          <PerforatedBar data={data} />
+        </VizCard>,
+        <VizCard key="masked-wave" tags={["SVG Mask"]} title="Masked Wave">
+          <MaskedWaveformStrip data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "CSS masks, gradients, and visual effects",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
       key: "texture",
-      node: (
-        <>
-          <SectionHeader
-            description="CSS masks, gradients, and visual effects"
-            title="3. Texture & Creative"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard tags={["Mask"]} title="Bitfield">
-              <BitfieldBar data={data} />
-            </VizCard>
-            <VizCard tags={["Repeating"]} title="Stripe Density">
-              <StripeDensity data={data} />
-            </VizCard>
-            <VizCard tags={["Gradient"]} title="Gradient Fade">
-              <GradientFade data={data} />
-            </VizCard>
-            <VizCard tags={["SVG Filter"]} title="Noise Displacement">
-              <NoiseDisplacement data={data} />
-            </VizCard>
-            <VizCard tags={["Stitched"]} title="Perforated">
-              <PerforatedBar data={data} />
-            </VizCard>
-            <VizCard tags={["SVG Mask"]} title="Masked Wave">
-              <MaskedWaveformStrip data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "3. Texture & Creative",
     },
     {
+      cards: [
+        <VizCard key="pixel-grid" tags={["32 Cells"]} title="Pixel Grid">
+          <PixelGrid data={data} />
+        </VizCard>,
+        <VizCard key="barcode" tags={["48 Bins"]} title="Barcode">
+          <BarcodeStrip data={data} />
+        </VizCard>,
+        <VizCard key="waveform" tags={["Discrete"]} title="Waveform">
+          <WaveformBars series={monthSeries} />
+        </VizCard>,
+        <VizCard key="dot-cascade" tags={["Scatter"]} title="Dot Cascade">
+          <RankedDotCascade data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description: "Quantized views using dots and pixels",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4",
       key: "grid",
-      node: (
-        <>
-          <SectionHeader
-            description="Quantized views using dots and pixels"
-            title="4. Discrete & Grid"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard tags={["32 Cells"]} title="Pixel Grid">
-              <PixelGrid data={data} />
-            </VizCard>
-            <VizCard tags={["48 Bins"]} title="Barcode">
-              <BarcodeStrip data={data} />
-            </VizCard>
-            <VizCard tags={["Discrete"]} title="Waveform">
-              <WaveformBars series={monthSeries} />
-            </VizCard>
-            <VizCard tags={["Scatter"]} title="Dot Cascade">
-              <RankedDotCascade data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "4. Discrete & Grid",
     },
     {
+      cards: [
+        <VizCard key="mosaic" tags={["Long-Tail"]} title="Mosaic">
+          <MosaicBar data={data} />
+        </VizCard>,
+        <VizCard
+          key="concentric-arcs"
+          tags={["Border"]}
+          title="Concentric Arcs"
+        >
+          <ConcentricArcsHoriz data={data} />
+        </VizCard>,
+        <VizCard key="split-ribbon" tags={["Top/Bottom"]} title="Split Ribbon">
+          <SplitRibbon data={data} />
+        </VizCard>,
+        <VizCard key="micro-heatline" tags={["Minimal"]} title="Micro Heatline">
+          <MicroHeatline data={data} />
+        </VizCard>,
+        <VizCard key="radial-burst" tags={["Conic"]} title="Radial Burst">
+          <RadialBurst data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "Unique approaches for specific contexts",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
       key: "specialty",
-      node: (
-        <>
-          <SectionHeader
-            description="Unique approaches for specific contexts"
-            title="5. Specialty Patterns"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard tags={["Long-Tail"]} title="Mosaic">
-              <MosaicBar data={data} />
-            </VizCard>
-            <VizCard tags={["Border"]} title="Concentric Arcs">
-              <ConcentricArcsHoriz data={data} />
-            </VizCard>
-            <VizCard tags={["Top/Bottom"]} title="Split Ribbon">
-              <SplitRibbon data={data} />
-            </VizCard>
-            <VizCard tags={["Minimal"]} title="Micro Heatline">
-              <MicroHeatline data={data} />
-            </VizCard>
-            <VizCard tags={["Conic"]} title="Radial Burst">
-              <RadialBurst data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "5. Specialty Patterns",
     },
     {
+      cards: [
+        <VizCard key="stacked-bar" tags={["Gradient"]} title="Stacked Bar">
+          <StackedBar data={data} />
+        </VizCard>,
+        <VizCard key="segmented-bar" tags={["Flex"]} title="Segmented Bar">
+          <SegmentedBar data={data} />
+        </VizCard>,
+        <VizCard key="progress-pills" tags={["Rounded"]} title="Progress Pills">
+          <ProgressPills data={data} />
+        </VizCard>,
+        <VizCard key="dot-row" tags={["Discrete"]} title="Dot Row">
+          <DotRow data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description: "Classic, reliable approaches for any context",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4",
       key: "foundational",
-      node: (
-        <>
-          <SectionHeader
-            description="Classic, reliable approaches for any context"
-            title="6. Foundational Patterns"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard tags={["Gradient"]} title="Stacked Bar">
-              <StackedBar data={data} />
-            </VizCard>
-            <VizCard tags={["Flex"]} title="Segmented Bar">
-              <SegmentedBar data={data} />
-            </VizCard>
-            <VizCard tags={["Rounded"]} title="Progress Pills">
-              <ProgressPills data={data} />
-            </VizCard>
-            <VizCard tags={["Discrete"]} title="Dot Row">
-              <DotRow data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "6. Foundational Patterns",
     },
     {
+      cards: [
+        <VizCard key="skyline" tags={["Height"]} title="Skyline">
+          <SkylineBar data={data} />
+        </VizCard>,
+        <VizCard key="cascade-steps" tags={["Waterfall"]} title="Cascade Steps">
+          <CascadeSteps data={data} />
+        </VizCard>,
+        <VizCard key="ranked-lanes" tags={["Ladder"]} title="Ranked Lanes">
+          <RankedLanes data={data} />
+        </VizCard>,
+        <VizCard key="lollipop" tags={["Dots"]} title="Lollipop">
+          <LollipopSkyline data={data} />
+        </VizCard>,
+        <VizCard
+          key="variable-ribbon"
+          tags={["Thickness"]}
+          title="Variable Ribbon"
+        >
+          <VariableRibbon data={data} />
+        </VizCard>,
+        <VizCard key="faded-pyramid" tags={["Gradient"]} title="Faded Pyramid">
+          <FadedPyramid data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "Emphasize ranking and dominance structure",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
       key: "hierarchy",
-      node: (
-        <>
-          <SectionHeader
-            description="Emphasize ranking and dominance structure"
-            title="7. Hierarchy-First"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard tags={["Height"]} title="Skyline">
-              <SkylineBar data={data} />
-            </VizCard>
-            <VizCard tags={["Waterfall"]} title="Cascade Steps">
-              <CascadeSteps data={data} />
-            </VizCard>
-            <VizCard tags={["Ladder"]} title="Ranked Lanes">
-              <RankedLanes data={data} />
-            </VizCard>
-            <VizCard tags={["Dots"]} title="Lollipop">
-              <LollipopSkyline data={data} />
-            </VizCard>
-            <VizCard tags={["Thickness"]} title="Variable Ribbon">
-              <VariableRibbon data={data} />
-            </VizCard>
-            <VizCard tags={["Gradient"]} title="Faded Pyramid">
-              <FadedPyramid data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "7. Hierarchy-First",
     },
     {
+      cards: [
+        <VizCard key="pipeline" tags={["Clip-Path"]} title="Pipeline">
+          <PipelineBar data={data} />
+        </VizCard>,
+        <VizCard key="chevron" tags={["Overlap"]} title="Chevron">
+          <ChevronSegments data={data} />
+        </VizCard>,
+        <VizCard key="tapered" tags={["Clip-Path"]} title="Tapered">
+          <TaperedBar data={data} />
+        </VizCard>,
+        <VizCard key="interlocking" tags={["Clip-Path"]} title="Interlocking">
+          <InterlockingBlocks data={data} />
+        </VizCard>,
+        <VizCard key="dna-helix" tags={["Alternating"]} title="DNA Helix">
+          <DNAHelix data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "Imply workflow, progression, or dependencies",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
       key: "flow",
-      node: (
-        <>
-          <SectionHeader
-            description="Imply workflow, progression, or dependencies"
-            title="8. Flow & Direction"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard tags={["Clip-Path"]} title="Pipeline">
-              <PipelineBar data={data} />
-            </VizCard>
-            <VizCard tags={["Overlap"]} title="Chevron">
-              <ChevronSegments data={data} />
-            </VizCard>
-            <VizCard tags={["Clip-Path"]} title="Tapered">
-              <TaperedBar data={data} />
-            </VizCard>
-            <VizCard tags={["Clip-Path"]} title="Interlocking">
-              <InterlockingBlocks data={data} />
-            </VizCard>
-            <VizCard tags={["Alternating"]} title="DNA Helix">
-              <DNAHelix data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "8. Flow & Direction",
     },
     {
+      cards: [
+        <VizCard key="matryoshka" tags={["Z-Stack"]} title="Matryoshka">
+          <MatryoshkaBar data={data} />
+        </VizCard>,
+        <VizCard key="layered-waves" tags={["Overlap"]} title="Layered Waves">
+          <LayeredWaves data={data} />
+        </VizCard>,
+        <VizCard key="hand-of-cards" tags={["Shadow"]} title="Hand of Cards">
+          <HandOfCards data={data} />
+        </VizCard>,
+        <VizCard key="shadow-depth" tags={["Box-Shadow"]} title="Shadow Depth">
+          <ShadowDepth data={data} />
+        </VizCard>,
+        <VizCard key="stepped-area" tags={["Absolute"]} title="Stepped Area">
+          <SteppedArea data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 3, sm: 2 },
+      description: "Use Z-axis and stacking to manage space",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
       key: "depth",
-      node: (
-        <>
-          <SectionHeader
-            description="Use Z-axis and stacking to manage space"
-            title="9. Depth & Layering"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <VizCard tags={["Z-Stack"]} title="Matryoshka">
-              <MatryoshkaBar data={data} />
-            </VizCard>
-            <VizCard tags={["Overlap"]} title="Layered Waves">
-              <LayeredWaves data={data} />
-            </VizCard>
-            <VizCard tags={["Shadow"]} title="Hand of Cards">
-              <HandOfCards data={data} />
-            </VizCard>
-            <VizCard tags={["Box-Shadow"]} title="Shadow Depth">
-              <ShadowDepth data={data} />
-            </VizCard>
-            <VizCard tags={["Absolute"]} title="Stepped Area">
-              <SteppedArea data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "9. Depth & Layering",
     },
     {
+      cards: [
+        <VizCard key="pareto" tags={["Cumulative"]} title="Pareto">
+          <ParetoBar data={data} />
+        </VizCard>,
+        <VizCard key="bullet-gauge" tags={["Midpoint"]} title="Bullet Gauge">
+          <BulletGauge data={data} />
+        </VizCard>,
+        <VizCard key="two-tier" tags={["Redundant"]} title="Two-Tier">
+          <TwoTierBar data={data} />
+        </VizCard>,
+        <VizCard key="split-pareto" tags={["80/20"]} title="Split-Pareto">
+          <SplitPareto data={data} />
+        </VizCard>,
+      ],
+      columns: { base: 1, lg: 4, sm: 2 },
+      description: "Show cumulative impact and comparisons",
+      gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-4",
       key: "analytical",
-      node: (
-        <>
-          <SectionHeader
-            description="Show cumulative impact and comparisons"
-            title="10. Analytical Patterns"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <VizCard tags={["Cumulative"]} title="Pareto">
-              <ParetoBar data={data} />
-            </VizCard>
-            <VizCard tags={["Midpoint"]} title="Bullet Gauge">
-              <BulletGauge data={data} />
-            </VizCard>
-            <VizCard tags={["Redundant"]} title="Two-Tier">
-              <TwoTierBar data={data} />
-            </VizCard>
-            <VizCard tags={["80/20"]} title="Split-Pareto">
-              <SplitPareto data={data} />
-            </VizCard>
-          </div>
-        </>
-      ),
+      rowGapClass: "mb-4",
+      title: "10. Analytical Patterns",
     },
   ];
+
+  const sectionBlocks = buildSectionBlocks(sections, viewportWidth);
 
   return (
     <DemoContent>
