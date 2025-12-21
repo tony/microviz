@@ -9,11 +9,13 @@ type MicrovizChartProps = BaseProps & {
   autosize?: boolean;
   data?: string;
   interactive?: boolean;
+  renderer?: "html" | "svg";
   spec?: string;
 };
 
 type MicrovizModelProps = BaseProps & {
   interactive?: boolean;
+  renderer?: "html" | "svg";
 };
 
 declare module "react" {

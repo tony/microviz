@@ -5,10 +5,15 @@ import {
   isChartType,
   type RenderModel,
 } from "@microviz/core";
-import { renderSvgString } from "@microviz/renderers";
+import { renderHtmlString, renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseNumber, parseOptionalNumber } from "./parse";
-import { clearSvgFromShadowRoot, renderSvgIntoShadowRoot } from "./render";
+import {
+  clearHtmlFromShadowRoot,
+  clearSvgFromShadowRoot,
+  renderHtmlIntoShadowRoot,
+  renderSvgIntoShadowRoot,
+} from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
 
@@ -46,6 +51,7 @@ export class MicrovizChart extends HTMLElement {
     "height",
     "pad",
     "autosize",
+    "renderer",
     "interactive",
     "skeleton",
     "hit-slop",
@@ -176,9 +182,10 @@ export class MicrovizChart extends HTMLElement {
 
   #toModelPoint(client: ClientPoint): Point | null {
     if (!this.#model) return null;
-    const svg = this.#root.querySelector("svg");
-    if (!svg) return null;
-    const rect = svg.getBoundingClientRect();
+    const surface =
+      this.#root.querySelector("svg") ?? this.#root.querySelector(".mv-chart");
+    if (!surface) return null;
+    const rect = surface.getBoundingClientRect();
     if (!(rect.width > 0) || !(rect.height > 0)) return null;
 
     const x = ((client.x - rect.left) / rect.width) * this.#model.width;
@@ -300,6 +307,7 @@ export class MicrovizChart extends HTMLElement {
       this.#model = null;
       applyMicrovizA11y(this, this.#internals, null);
       clearSvgFromShadowRoot(this.#root);
+      clearHtmlFromShadowRoot(this.#root);
       if (this.#isInteractive && this.#lastHitKey !== null) {
         this.#lastHitKey = null;
         this.#lastPoint = null;
@@ -323,11 +331,21 @@ export class MicrovizChart extends HTMLElement {
     this.#model = model;
 
     applyMicrovizA11y(this, this.#internals, model);
-    const svg =
-      this.hasAttribute("skeleton") && shouldRenderSkeleton(model)
+    const wantsSkeleton =
+      this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
+    const renderer = this.getAttribute("renderer");
+    const useHtml = renderer === "html" && !wantsSkeleton;
+    if (useHtml) {
+      const html = renderHtmlString(model);
+      clearSvgFromShadowRoot(this.#root);
+      renderHtmlIntoShadowRoot(this.#root, html);
+    } else {
+      const svg = wantsSkeleton
         ? renderSkeletonSvg(size)
         : renderSvgString(model);
-    renderSvgIntoShadowRoot(this.#root, svg);
+      clearHtmlFromShadowRoot(this.#root);
+      renderSvgIntoShadowRoot(this.#root, svg);
+    }
     this.#maybeReemitHit();
   }
 }
