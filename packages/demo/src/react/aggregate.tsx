@@ -782,11 +782,21 @@ export const Equalizer: FC<{ slices: PieSlice[]; bars?: number }> = ({
         })),
     [slices, bars],
   );
+  const series = useMemo(() => segments.map((segment) => segment.pct), [
+    segments,
+  ]);
 
   const model = computeModel({
-    data: segments,
+    data: series,
     size: { height: 32, width: 32 },
-    spec: { barWidth: 4, bins: bars, gap: 1, pad: 1, type: "equalizer" },
+    spec: {
+      barWidth: 4,
+      bins: bars,
+      colors: segments.map((segment) => segment.color),
+      gap: 1,
+      pad: 1,
+      type: "equalizer",
+    },
   });
 
   return (
