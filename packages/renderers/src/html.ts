@@ -6,12 +6,33 @@ export type HtmlUnsupportedMarkEffect =
   | "filter"
   | "strokeDash";
 
-export const HTML_SUPPORTED_MARK_TYPES = new Set<Mark["type"]>([
+export const HTML_SUPPORTED_MARK_TYPES = [
   "rect",
   "circle",
   "line",
   "text",
-]);
+] as const;
+
+const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
+  HTML_SUPPORTED_MARK_TYPES,
+);
+
+/**
+ * HTML renderer policy (experimental, parity-deferred):
+ * - Supports only rect/circle/line/text marks.
+ * - Ignores path marks entirely.
+ * - Ignores all defs (gradients, patterns, masks, filters, clip paths).
+ * - Ignores mark effects: clipPath, mask, filter, strokeDash.
+ * - Use SVG/Canvas for full-fidelity output.
+ */
+export const HTML_RENDERER_POLICY = {
+  notes: ["Use SVG/Canvas for full-fidelity output."],
+  status: "experimental",
+  supportedMarkTypes: HTML_SUPPORTED_MARK_TYPES,
+  unsupportedDefs: "all",
+  unsupportedMarkEffects: ["clipPath", "mask", "filter", "strokeDash"],
+  unsupportedMarkTypes: ["path"],
+} as const;
 
 function uniqueSorted<T extends string>(values: Iterable<T>): T[] {
   return [...new Set(values)].sort();
@@ -23,7 +44,7 @@ export function getHtmlUnsupportedMarkTypes(
   return uniqueSorted(
     model.marks
       .map((mark) => mark.type)
-      .filter((type) => !HTML_SUPPORTED_MARK_TYPES.has(type)),
+      .filter((type) => !HTML_SUPPORTED_MARK_TYPE_SET.has(type)),
   );
 }
 
