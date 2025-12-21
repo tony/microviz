@@ -1,12 +1,12 @@
 import { a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
+import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
   layoutSegmentsByPct,
   normalizeSegments,
 } from "./shared";
-import { applyFillRules } from "../utils/defs";
 import type {
   BitfieldData,
   NormalizedStripeDensity,
