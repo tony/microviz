@@ -102,10 +102,24 @@ Tweak tokens via CSS variables:
 
 ```css
 :root {
+  --mv-bg: oklch(1 0 0);
   --mv-series-1: oklch(0.6 0.25 30);
   --mv-font-family: Inter, system-ui, sans-serif;
   --mv-stroke-width: 2px;
 }
+```
+
+Or use optional preset variants (Carbon-inspired `white/g10/g90/g100`):
+
+```css
+@import "@microviz/themes/base.css";
+@import "@microviz/themes/variants.css";
+```
+
+```html
+<div class="mv-theme-g90 rounded-md p-2">
+  <microviz-sparkline data="[1,2,3,4,5]"></microviz-sparkline>
+</div>
 ```
 
 Or extend via Tailwind v4 theme variables:
