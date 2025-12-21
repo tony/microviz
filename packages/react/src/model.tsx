@@ -6,6 +6,7 @@ import type {
   RenderModel,
 } from "@microviz/core";
 import {
+  getCanvasUnsupportedFilterPrimitiveTypes,
   type RenderCanvasOptions,
   renderCanvas,
   renderSvgString,
@@ -471,24 +472,73 @@ export type MicrovizCanvasProps = Omit<
 > & {
   model: RenderModel;
   options?: RenderCanvasOptions;
+  /**
+   * Canvas rendering currently ignores some SVG filter primitives.
+   * If enabled, fall back to an SVG renderer to avoid silent incorrect output.
+   */
+  fallbackSvgWhenCanvasUnsupported?: boolean;
+  /**
+   * Which SVG surface to use when falling back from Canvas.
+   */
+  fallbackRenderer?: "svg" | "svg-string";
+  svgProps?: Omit<MicrovizSvgProps, "model">;
+  svgStringProps?: Omit<MicrovizSvgStringProps, "model">;
 };
 
 export function MicrovizCanvas({
+  className,
+  fallbackRenderer = "svg",
+  fallbackSvgWhenCanvasUnsupported = true,
   model,
   options,
+  style,
+  svgProps,
+  svgStringProps,
   ...props
 }: MicrovizCanvasProps): ReactNode {
+  const shouldFallbackToSvg =
+    fallbackSvgWhenCanvasUnsupported &&
+    getCanvasUnsupportedFilterPrimitiveTypes(model).length > 0;
+
   const ref = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    if (shouldFallbackToSvg) return;
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     renderCanvas(ctx, model, options);
-  }, [model, options]);
+  }, [model, options, shouldFallbackToSvg]);
+
+  if (shouldFallbackToSvg) {
+    if (fallbackRenderer === "svg-string")
+      return (
+        <MicrovizSvgString
+          className={className}
+          model={model}
+          style={style}
+          {...svgStringProps}
+        />
+      );
+    return (
+      <MicrovizSvg
+        className={className}
+        model={model}
+        style={style}
+        {...svgProps}
+      />
+    );
+  }
 
   return (
-    <canvas height={model.height} ref={ref} width={model.width} {...props} />
+    <canvas
+      className={className}
+      height={model.height}
+      ref={ref}
+      style={style}
+      width={model.width}
+      {...props}
+    />
   );
 }

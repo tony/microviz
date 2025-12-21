@@ -14,10 +14,7 @@ import type {
   SparklineSpec,
 } from "@microviz/core";
 import { computeModel } from "@microviz/core";
-import {
-  getCanvasUnsupportedFilterPrimitiveTypes,
-  type RenderCanvasOptions,
-} from "@microviz/renderers";
+import type { RenderCanvasOptions } from "@microviz/renderers";
 import type { ReactNode } from "react";
 import {
   MicrovizCanvas,
@@ -62,19 +59,17 @@ export function MicrovizChart({
 }: MicrovizChartProps): ReactNode {
   const model = computeModel(input);
 
-  const shouldFallbackToSvg =
-    renderer === "canvas" &&
-    fallbackSvgWhenCanvasUnsupported &&
-    getCanvasUnsupportedFilterPrimitiveTypes(model).length > 0;
-
-  const effectiveRenderer = shouldFallbackToSvg ? fallbackRenderer : renderer;
-
-  if (effectiveRenderer === "svg")
-    return <MicrovizSvg model={model} {...svgProps} />;
-  if (effectiveRenderer === "svg-string")
+  if (renderer === "svg") return <MicrovizSvg model={model} {...svgProps} />;
+  if (renderer === "svg-string")
     return <MicrovizSvgString model={model} {...svgStringProps} />;
   return (
-    <MicrovizCanvas model={model} options={canvasOptions} {...canvasProps} />
+    <MicrovizCanvas
+      fallbackRenderer={fallbackRenderer}
+      fallbackSvgWhenCanvasUnsupported={fallbackSvgWhenCanvasUnsupported}
+      model={model}
+      options={canvasOptions}
+      {...canvasProps}
+    />
   );
 }
 
