@@ -2,6 +2,7 @@ import type { RenderModel } from "@microviz/core";
 import { describe, expect, it } from "vitest";
 import type { Canvas2DContext } from "./canvas";
 import {
+  canRenderCanvasNoiseDisplacement,
   getCanvasUnsupportedFilterPrimitiveTypes,
   renderCanvas,
 } from "./canvas";
@@ -852,6 +853,30 @@ describe("renderCanvas", () => {
 });
 
 describe("getCanvasUnsupportedFilterPrimitiveTypes", () => {
+  it("reports runtime support for noise displacement via canRenderCanvasNoiseDisplacement", () => {
+    class FakeOffscreenCanvas {
+      getContext(_type: "2d"): unknown {
+        return {
+          createImageData: () => ({}),
+          getImageData: () => ({}),
+          putImageData: () => {},
+        };
+      }
+    }
+
+    const prev = (globalThis as unknown as { OffscreenCanvas?: unknown })
+      .OffscreenCanvas;
+    (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas =
+      FakeOffscreenCanvas;
+
+    try {
+      expect(canRenderCanvasNoiseDisplacement()).toBe(true);
+    } finally {
+      (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas =
+        prev;
+    }
+  });
+
   it("treats noise displacement primitives as supported when OffscreenCanvas supports ImageData", () => {
     class FakeOffscreenCanvas {
       getContext(_type: "2d"): unknown {
