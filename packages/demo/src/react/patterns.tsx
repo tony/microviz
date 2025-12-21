@@ -1806,137 +1806,138 @@ export const MicroVizDemo: FC<{
         </p>
       </div>
 
-      {/* Controls - Sticky horizontal toolbar */}
-      <div className="sticky top-[8.125rem] z-20 -mx-1 sm:-mx-2 border-y border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
-        <div className="overflow-x-auto">
-          <div className="flex items-center gap-4 px-3 py-2 min-w-max">
-            {/* Max Slices */}
-            <div className="flex items-center gap-2 shrink-0">
-              <label
-                className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap"
-                htmlFor="maxSlices"
-              >
-                Slices:
-              </label>
-              <input
-                className="w-16 accent-blue-500"
-                id="maxSlices"
-                max={6}
-                min={3}
-                onChange={(e) => setMaxSlices(Number(e.target.value))}
-                title={`Slices: ${maxSlices}`}
-                type="range"
-                value={maxSlices}
-              />
-              <span className="w-4 font-mono text-xs text-slate-500 dark:text-slate-400">
-                {maxSlices}
-              </span>
-            </div>
-
-            {/* Divider */}
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-600 shrink-0" />
-
-            {/* Granularity */}
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                Granularity:
-              </span>
-              <label className="flex cursor-pointer items-center gap-1.5">
+      {/* Sticky controls + legend */}
+      <div className="sticky top-0 z-20 -mx-1 sm:-mx-2">
+        <div className="border-y border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+          <div className="overflow-x-auto">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2 sm:flex-nowrap sm:gap-4 sm:min-w-max">
+              {/* Max Slices */}
+              <div className="flex items-center gap-2 shrink-0">
+                <label
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap"
+                  htmlFor="maxSlices"
+                >
+                  Slices:
+                </label>
                 <input
-                  checked={timeGranularity === "months"}
-                  className="text-blue-500"
-                  name="granularity"
-                  onChange={(e) =>
-                    setTimeGranularity(e.target.value as "months" | "years")
-                  }
-                  title="Months"
-                  type="radio"
-                  value="months"
+                  className="w-16 accent-blue-500"
+                  id="maxSlices"
+                  max={6}
+                  min={3}
+                  onChange={(e) => setMaxSlices(Number(e.target.value))}
+                  title={`Slices: ${maxSlices}`}
+                  type="range"
+                  value={maxSlices}
                 />
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  Months
+                <span className="w-4 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  {maxSlices}
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-600 shrink-0" />
+
+              {/* Granularity */}
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                  Granularity:
+                </span>
+                <label className="flex cursor-pointer items-center gap-1.5">
+                  <input
+                    checked={timeGranularity === "months"}
+                    className="text-blue-500"
+                    name="granularity"
+                    onChange={(e) =>
+                      setTimeGranularity(e.target.value as "months" | "years")
+                    }
+                    title="Months"
+                    type="radio"
+                    value="months"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Months
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-1.5">
+                  <input
+                    checked={timeGranularity === "years"}
+                    className="text-blue-500"
+                    name="granularity"
+                    onChange={(e) =>
+                      setTimeGranularity(e.target.value as "months" | "years")
+                    }
+                    title="Years"
+                    type="radio"
+                    value="years"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Years
+                  </span>
+                </label>
+              </div>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-600 shrink-0" />
+
+              {/* Skip Empty */}
+              <label className="flex cursor-pointer items-center gap-1.5 shrink-0">
+                <input
+                  checked={skipEmpty}
+                  className="rounded text-blue-500"
+                  onChange={(e) => setSkipEmpty(e.target.checked)}
+                  title="Skip empty"
+                  type="checkbox"
+                />
+                <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                  Skip empty
                 </span>
               </label>
-              <label className="flex cursor-pointer items-center gap-1.5">
+
+              {/* Fade Light */}
+              <label className="flex cursor-pointer items-center gap-1.5 shrink-0">
                 <input
-                  checked={timeGranularity === "years"}
-                  className="text-blue-500"
-                  name="granularity"
-                  onChange={(e) =>
-                    setTimeGranularity(e.target.value as "months" | "years")
-                  }
-                  title="Years"
-                  type="radio"
-                  value="years"
+                  checked={fadeLight}
+                  className="rounded text-blue-500"
+                  onChange={(e) => setFadeLight(e.target.checked)}
+                  title="Fade light"
+                  type="checkbox"
                 />
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  Years
+                <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                  Fade light
                 </span>
               </label>
-            </div>
 
-            {/* Divider */}
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-600 shrink-0" />
-
-            {/* Skip Empty */}
-            <label className="flex cursor-pointer items-center gap-1.5 shrink-0">
-              <input
-                checked={skipEmpty}
-                className="rounded text-blue-500"
-                onChange={(e) => setSkipEmpty(e.target.checked)}
-                title="Skip empty"
-                type="checkbox"
-              />
-              <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                Skip empty
-              </span>
-            </label>
-
-            {/* Fade Light */}
-            <label className="flex cursor-pointer items-center gap-1.5 shrink-0">
-              <input
-                checked={fadeLight}
-                className="rounded text-blue-500"
-                onChange={(e) => setFadeLight(e.target.checked)}
-                title="Fade light"
-                type="checkbox"
-              />
-              <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                Fade light
-              </span>
-            </label>
-
-            {/* Threshold Slider */}
-            <div className="flex items-center gap-2 shrink-0">
-              <label
-                className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap"
-                htmlFor="threshold"
-              >
-                Threshold:
-              </label>
-              <input
-                className="w-24 accent-blue-500"
-                disabled={!fadeLight}
-                id="threshold"
-                max={50}
-                min={5}
-                onChange={(e) => setLightThreshold(Number(e.target.value))}
-                title={`Threshold: ${lightThreshold}%`}
-                type="range"
-                value={lightThreshold}
-              />
-              <span className="w-8 font-mono text-xs text-slate-500 dark:text-slate-400">
-                {lightThreshold}%
-              </span>
+              {/* Threshold Slider */}
+              <div className="flex items-center gap-2 shrink-0">
+                <label
+                  className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap"
+                  htmlFor="threshold"
+                >
+                  Threshold:
+                </label>
+                <input
+                  className="w-24 accent-blue-500"
+                  disabled={!fadeLight}
+                  id="threshold"
+                  max={50}
+                  min={5}
+                  onChange={(e) => setLightThreshold(Number(e.target.value))}
+                  title={`Threshold: ${lightThreshold}%`}
+                  type="range"
+                  value={lightThreshold}
+                />
+                <span className="w-8 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  {lightThreshold}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Legend - Sticky below controls */}
-      <div className="sticky top-[10.5rem] z-20 -mx-1 sm:-mx-2 mb-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm overflow-x-auto">
-        <div className="px-3 py-2 min-w-max">
-          <Legend data={data} />
+        <div className="mb-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+          <div className="px-3 py-2">
+            <Legend data={data} />
+          </div>
         </div>
       </div>
 
