@@ -351,3 +351,42 @@ A chart is considered “ported” when:
 - Renderers: at least SVG string output is correct; Canvas matches for geometry.
 - Elements: chart can be mounted as a Custom Element (either chart-specific element or a generic host).
 - Demo: chart is present in the Vanilla harness for quick surface switching.
+
+---
+
+## Inspirational scan (2025-12-18)
+
+This section is *not* about turning microviz into a full charting suite. It’s a list of “worth stealing” habits from mature chart systems, while staying inside the **microviz constitution** (ESM-only, Baseline 2025, deterministic core, CSS-first theming, no DOM APIs in `core`/`renderers`).
+
+### Carbon Charts + Carbon Design System (IBM)
+- **Optional legend + tooltip primitives**: Carbon’s `legend`/`tooltip` options are feature-toggled and highly configurable (formatters, truncation, ordering). For microviz, the analog should live in `@microviz/elements` (or demo helpers), not in `@microviz/core`.
+- **Theme variants**: Carbon’s “white / g10 / g90 / g100” worldview is a good reminder that *background + contrast* is the theme axis users actually care about. microviz can express this as CSS theme presets (variables + `@layer microviz`) rather than JS theme objects.
+- **Truncation as a first-class concern**: Carbon treats truncation rules as a deliberate design choice. In microviz, that likely maps to (a) text measurement + ellipsis helpers and/or (b) “no text under X px” container-query defaults.
+- **“Skeleton/empty” patterns**: Carbon popularized predictable empty/loading states. microviz already emits high-signal warnings (`EMPTY_DATA`, `BLANK_RENDER`); we can add an element-level “skeleton” mode without infecting the deterministic core.
+
+### billboard.js
+- **Modular, tree-shakeable features**: billboard’s “import only what you need” posture is compatible with microviz’s registry architecture. Long-term, we can consider per-chart entry points (or build-time registries) to keep bundles tiny without adding complexity to `computeModel`.
+- **Sparkline ergonomics**: billboard’s sparkline plugin is a reminder that micro charts benefit from *purpose-built defaults* (minimal chrome, hover affordances, tiny tooltips) rather than a generic “big chart” API shrunk down.
+- **Theme packs as CSS**: multiple theme CSS files (loaded instead of the default) map cleanly to microviz’s `@microviz/themes` approach.
+
+### plotly.js
+- **Strict separation of concerns**: Plotly’s “data vs layout vs config” is worth emulating conceptually. microviz already has `spec` + `data` + `size` (+ optional `theme` + `state`), which is the right minimal split.
+- **State persistence (“uirevision”)**: Plotly treats user-driven state as something you can preserve across rerenders. For microviz, the equivalent is element-level behavior: keep hover/selection stable across attribute changes when it’s still valid.
+- **Export as a product feature**: Plotly makes “export to PNG/SVG” a first-class capability. For microviz, this should be a small utility layer (`renderSvgString` + Canvas surface export), not a UI toolbar.
+
+### nivo
+- **Defs + “fill rules” pattern**: nivo’s two-step model (declare `defs`, then apply them via `fill` rules/matchers) is a great API pattern for patterns/gradients. microviz can adopt this idea as helpers so charts can support “group by texture” without hardcoding every variation.
+- **Layer extension hooks**: nivo’s `layers` prop is an extremely pragmatic escape hatch. microviz already has `RenderModel.layers?`; we can formalize an optional post-processing hook (model overlays) so users/demo can inject extra marks/defs without forking chart code.
+- **Responsive wrappers**: nivo’s “Responsive*” components are a good north star for `@microviz/elements` ergonomics: use `ResizeObserver` + container queries and keep `width/height` attributes as an escape hatch.
+
+### Microviz-aligned backlog ideas (post-port)
+- ☐ Add **element-level tooltip primitives** (opt-in, CSS-first), with a small formatter API (`Intl.NumberFormat` friendly) and no core coupling.
+- ☐ Add **element-level legend primitives** (opt-in), leaning on existing mark `className` + CSS tokens.
+- ☐ Add **auto-size** mode to `@microviz/elements` via `ResizeObserver` (Baseline 2025), so micro charts can be truly “drop-in responsive”.
+- ☐ Add small **export utilities** (SVG string → file, Canvas → PNG) and document them.
+- ☐ Add **defs/fill-rule helpers** (in core/shared) inspired by nivo so charts can apply textures by match rule rather than bespoke wiring.
+
+### Explicitly out of scope (by constitution)
+- Polyfills / legacy browser support, non‑ESM builds, or DOM imports in `core`/`renderers`.
+- A general-purpose “everything charting suite” surface (axes, dashboards, 3D, maps, etc.) in `@microviz/core`.
+- Heavy animation runtimes in core; keep motion optional at the integration layer.
