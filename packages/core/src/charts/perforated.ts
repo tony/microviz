@@ -1,5 +1,6 @@
 import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
+import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
@@ -117,7 +118,6 @@ export const perforatedChart = {
       const boundary = x0 + run.x + run.w;
       marks.push({
         className: `mv-perforated-sep${classSuffix}`,
-        fill: `url(#${SEPARATOR_PATTERN_ID})`,
         h: usableH,
         id: `perforated-sep-${i}`,
         type: "rect",
@@ -127,7 +127,14 @@ export const perforatedChart = {
       });
     }
 
-    return marks;
+    const fillRules = runs
+      .slice(0, Math.max(0, runs.length - 1))
+      .map((_run, i) => ({
+        id: SEPARATOR_PATTERN_ID,
+        match: { id: `perforated-sep-${i}` },
+      }));
+
+    return applyFillRules(marks, fillRules);
   },
   normalize(_spec, data) {
     const segments = normalizeSegments(data);
