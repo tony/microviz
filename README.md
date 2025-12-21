@@ -13,6 +13,7 @@ microviz is headless for flexibility, CSS-first for styling (with Tailwind v4 co
 - **Framework freedom**: Web Components for drop-in use; thin wrappers for React and others.
 - **Styling that just works**: CSS variables + Layers (`@layer`) so user styles override predictably. Tailwind v4 integration is CSS-native via `@theme` + `@import`.
 - **Headless core**: Compute a serializable `RenderModel` for custom rendering, hit-testing, or state-driven interactivity.
+- **Derivative charts are a feature**: Treat `RenderModel` like a tiny “render AST” you can compose. Build new charts by reusing a base model and adding marks/defs (separators, overlays, tracks, gloss, filters), then promote them to first-class `spec.type` entries when they prove out.
 - **A11y as a feature**: Stable IDs and an a11y representation in the model; native semantics at the element boundary.
 
 microviz is not a full charting suite; it focuses on small, composable primitives that scale to high-volume UI.
