@@ -910,8 +910,6 @@ export const MicrovizPlayground: FC<{
         size,
         spec: {
           cardHeightPct: 100,
-          cardWidthPct: 35,
-          fanAngle: 40,
           pad: 0,
           type: "hand-of-cards",
         },
