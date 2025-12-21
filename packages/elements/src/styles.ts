@@ -5,6 +5,12 @@ const stylesText = `
   font-family: var(--mv-font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
 }
 
+:host(:focus-visible) {
+  outline: var(--mv-focus-ring-width, 2px) solid
+    var(--mv-focus-ring, currentColor);
+  outline-offset: var(--mv-focus-ring-offset, 2px);
+}
+
 svg {
   display: block;
 }

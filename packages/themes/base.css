@@ -30,8 +30,15 @@
     --mv-series-8-light: color-mix(in oklch, var(--mv-series-8), white 80%);
     --mv-series-8-dark: color-mix(in oklch, var(--mv-series-8), black 30%);
 
+    --mv-focus-ring: color-mix(in oklch, var(--mv-series-1), black 20%);
+    --mv-focus-ring-width: 2px;
+    --mv-focus-ring-offset: 2px;
+
     --mv-radius: 2px;
     --mv-stroke-width: 1.5px;
+
+    --mv-motion-duration: 160ms;
+    --mv-motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 
     --mv-font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     --mv-font-size-label: 0.75rem;
@@ -181,5 +188,22 @@
 
   .mv-sparkline-bars-bar {
     fill: var(--mv-series-1);
+  }
+
+  @media (prefers-contrast: more) {
+    :root {
+      --mv-fg: oklch(0.12 0 0);
+      --mv-muted: oklch(0.32 0 0);
+      --mv-grid: oklch(0.85 0 0);
+      --mv-stroke-width: 2px;
+      --mv-focus-ring-width: 3px;
+      --mv-focus-ring: var(--mv-fg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --mv-motion-duration: 0ms;
+    }
   }
 }
