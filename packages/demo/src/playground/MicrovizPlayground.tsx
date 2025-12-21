@@ -13,8 +13,12 @@ import {
 } from "@microviz/react";
 import {
   getCanvasUnsupportedFilterPrimitiveTypes,
+  getHtmlUnsupportedDefTypes,
+  getHtmlUnsupportedMarkEffects,
+  getHtmlUnsupportedMarkTypes,
   type RenderCanvasOptions,
   renderCanvas,
+  renderHtmlString,
   renderSvgString,
 } from "@microviz/renderers";
 import "@microviz/elements";
@@ -414,16 +418,19 @@ function useModels(
 type WarningLike = { code: string; message: string };
 
 type GetCanvasUnsupportedFilters = (model: RenderModel) => readonly string[];
+type GetHtmlWarnings = (model: RenderModel) => WarningLike[];
 
 function hasDiagnosticsWarnings(
   model: RenderModel | null,
   renderer: Renderer,
   getCanvasUnsupportedFilters: GetCanvasUnsupportedFilters,
+  getHtmlWarnings: GetHtmlWarnings,
 ) {
   if (!model) return false;
   if ((model.stats?.warnings?.length ?? 0) > 0) return true;
   if (renderer === "canvas" || renderer === "offscreen-canvas")
     return getCanvasUnsupportedFilters(model).length > 0;
+  if (renderer === "html") return getHtmlWarnings(model).length > 0;
   return false;
 }
 
@@ -431,6 +438,7 @@ function getDiagnosticsWarnings(
   model: RenderModel | null,
   renderer: Renderer,
   getCanvasUnsupportedFilters: GetCanvasUnsupportedFilters,
+  getHtmlWarnings: GetHtmlWarnings,
 ): WarningLike[] {
   if (!model) return [];
 
@@ -447,6 +455,10 @@ function getDiagnosticsWarnings(
         message: `Canvas renderer ignores filter primitives: ${unsupported.join(", ")}.`,
       });
     }
+  }
+
+  if (renderer === "html") {
+    warnings.push(...getHtmlWarnings(model));
   }
 
   return warnings;
@@ -1422,6 +1434,9 @@ export const MicrovizPlayground: FC<{
   const canvasUnsupportedFiltersCacheRef = useRef(
     new WeakMap<RenderModel, readonly string[]>(),
   );
+  const htmlWarningsCacheRef = useRef(
+    new WeakMap<RenderModel, WarningLike[]>(),
+  );
 
   const getEffectiveModel = useCallback(
     (chartId: ChartId): RenderModel | null => {
@@ -1448,6 +1463,39 @@ export const MicrovizPlayground: FC<{
     },
     [],
   );
+
+  const getHtmlWarnings = useCallback((model: RenderModel): WarningLike[] => {
+    const cached = htmlWarningsCacheRef.current.get(model);
+    if (cached) return cached;
+
+    const warnings: WarningLike[] = [];
+    const unsupportedMarkTypes = getHtmlUnsupportedMarkTypes(model);
+    if (unsupportedMarkTypes.length > 0) {
+      warnings.push({
+        code: "HTML_UNSUPPORTED_MARK",
+        message: `HTML renderer ignores marks: ${unsupportedMarkTypes.join(", ")}.`,
+      });
+    }
+
+    const unsupportedDefs = getHtmlUnsupportedDefTypes(model);
+    if (unsupportedDefs.length > 0) {
+      warnings.push({
+        code: "HTML_UNSUPPORTED_DEF",
+        message: `HTML renderer ignores defs: ${unsupportedDefs.join(", ")}.`,
+      });
+    }
+
+    const unsupportedEffects = getHtmlUnsupportedMarkEffects(model);
+    if (unsupportedEffects.length > 0) {
+      warnings.push({
+        code: "HTML_UNSUPPORTED_EFFECT",
+        message: `HTML renderer ignores mark effects: ${unsupportedEffects.join(", ")}.`,
+      });
+    }
+
+    htmlWarningsCacheRef.current.set(model, warnings);
+    return warnings;
+  }, []);
 
   const fillStyle = "#2563eb";
   const strokeStyle = "#2563eb";
@@ -1514,6 +1562,11 @@ export const MicrovizPlayground: FC<{
       return <SvgStringPreview svg={svg} />;
     }
 
+    if (renderer === "html") {
+      const html = renderHtmlString(model);
+      return <HtmlPreview html={html} />;
+    }
+
     if (renderer === "svg-dom") {
       if (wrapper === "react")
         return (
@@ -1556,6 +1609,7 @@ export const MicrovizPlayground: FC<{
     selectedModel,
     renderer,
     getCanvasUnsupportedFilters,
+    getHtmlWarnings,
   );
 
   useEffect(() => {
@@ -1579,6 +1633,7 @@ export const MicrovizPlayground: FC<{
         model,
         renderer,
         getCanvasUnsupportedFilters,
+        getHtmlWarnings,
       );
       if (warnings.length > 0) rows.push({ chartId, warnings });
     }
@@ -1587,6 +1642,7 @@ export const MicrovizPlayground: FC<{
     chartIds,
     getCanvasUnsupportedFilters,
     getEffectiveModel,
+    getHtmlWarnings,
     inspectorTab,
     renderer,
   ]);
@@ -1772,6 +1828,7 @@ export const MicrovizPlayground: FC<{
                   { id: "svg-dom", label: "SVG (DOM)" },
                   { id: "canvas", label: "Canvas" },
                   { id: "offscreen-canvas", label: "OffscreenCanvas (worker)" },
+                  { id: "html", label: "HTML (experimental)" },
                 ]}
                 value={renderer}
               />
@@ -1988,6 +2045,7 @@ export const MicrovizPlayground: FC<{
                                     model,
                                     renderer,
                                     getCanvasUnsupportedFilters,
+                                    getHtmlWarnings,
                                   )}
                                   key={chart.chartId}
                                   model={model}
@@ -2019,6 +2077,7 @@ export const MicrovizPlayground: FC<{
                                     model,
                                     renderer,
                                     getCanvasUnsupportedFilters,
+                                    getHtmlWarnings,
                                   )}
                                   key={chart.chartId}
                                   model={model}
@@ -2045,6 +2104,7 @@ export const MicrovizPlayground: FC<{
                                     model,
                                     renderer,
                                     getCanvasUnsupportedFilters,
+                                    getHtmlWarnings,
                                   )}
                                   key={chart.chartId}
                                   model={model}
@@ -2276,6 +2336,28 @@ const FieldNumberWithRange: FC<{
     />
   </div>
 );
+
+const HtmlPreview: FC<{ html: string }> = ({ html }) => {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    if (!html) {
+      host.replaceChildren();
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    const el = wrapper.firstElementChild;
+    if (el) host.replaceChildren(el);
+  }, [html]);
+
+  return (
+    <div className="inline-block rounded bg-[var(--mv-bg)]" ref={hostRef} />
+  );
+};
 
 const SvgStringPreview: FC<{ svg: string }> = ({ svg }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
