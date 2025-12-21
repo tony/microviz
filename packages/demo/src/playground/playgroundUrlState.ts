@@ -21,6 +21,7 @@ export type PlaygroundState = {
   computeMode: ComputeMode;
   paletteMode: PaletteMode;
   fallbackSvgWhenCanvasUnsupported: boolean;
+  htmlSafeOnly: boolean;
   height: number;
   renderer: Renderer;
   seed: string;
@@ -41,6 +42,7 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   computeMode: "main",
   fallbackSvgWhenCanvasUnsupported: false,
   height: 32,
+  htmlSafeOnly: false,
   paletteMode: "value",
   renderer: "svg-string",
   seed: "mv-1",
@@ -67,6 +69,8 @@ type PlaygroundSerializedState = {
   pm?: PaletteMode;
   /** fallbackSvgWhenCanvasUnsupported */
   fb?: 1;
+  /** htmlSafeOnly */
+  hs?: 1;
   /** height */
   h?: number;
   /** renderer */
@@ -214,6 +218,7 @@ function serializePlaygroundState(
 
   if (state.applyNoiseOverlay) s.n = 1;
   if (state.fallbackSvgWhenCanvasUnsupported) s.fb = 1;
+  if (state.htmlSafeOnly) s.hs = 1;
   if (state.showHoverTooltip) s.ht = 1;
 
   return s;
@@ -246,6 +251,7 @@ function deserializePlaygroundState(
       typeof serialized.h === "number" && Number.isFinite(serialized.h)
         ? clamp(Math.round(serialized.h), 16, 140)
         : DEFAULT_PLAYGROUND_STATE.height,
+    htmlSafeOnly: serialized.hs === 1,
     paletteMode: isPaletteMode(serialized.pm)
       ? serialized.pm
       : DEFAULT_PLAYGROUND_STATE.paletteMode,
