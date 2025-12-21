@@ -4,17 +4,16 @@ import type { ChartDefinition } from "./chart-definition";
 import { coerceFiniteNonNegative, isFiniteNumber } from "./shared";
 import type { NormalizedStepLine, SparklineData, StepLineSpec } from "./types";
 
-/**
- * Generate step-interpolated path data for a series.
- * Uses horizontal-then-vertical (step-after) interpolation.
- */
-function stepLineSeries(
+function stepLinePoints(
   series: readonly number[],
   w: number,
   h: number,
   pad: number,
-): { d: string; last: { x: number; y: number } | null } {
-  if (series.length === 0) return { d: "", last: null };
+): {
+  last: { x: number; y: number } | null;
+  points: { x: number; y: number }[];
+} {
+  if (series.length === 0) return { last: null, points: [] };
 
   const x0 = pad;
   const x1 = w - pad;
@@ -30,20 +29,7 @@ function stepLineSeries(
     x: x0 + dx * i,
     y: y1 - ((v - min) / denom) * (y1 - y0),
   }));
-
-  // Start at the first point
-  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
-
-  // For each subsequent point, do horizontal-then-vertical (step-after)
-  for (let i = 1; i < points.length; i++) {
-    const curr = points[i];
-    // Horizontal line to the new x at the old y level
-    d += ` H ${curr.x.toFixed(2)}`;
-    // Vertical line down/up to the new y level
-    d += ` V ${curr.y.toFixed(2)}`;
-  }
-
-  return { d, last: points[points.length - 1] ?? null };
+  return { last: points[points.length - 1] ?? null, points };
 }
 
 export const stepLineChart = {
@@ -63,23 +49,41 @@ export const stepLineChart = {
   marks(spec, normalized, layout, _state, _theme, warnings) {
     if (normalized.series.length === 0) return [];
 
-    const { d, last } = stepLineSeries(
+    const { last, points } = stepLinePoints(
       normalized.series,
       layout.width,
       layout.height,
       layout.pad,
     );
 
-    const marks: Mark[] = [
-      {
-        className: `mv-line${spec.className ? ` ${spec.className}` : ""}`,
-        d,
-        id: "step-line-path",
+    const className = `mv-line${spec.className ? ` ${spec.className}` : ""}`;
+    const marks: Mark[] = [];
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      marks.push({
+        className,
+        id: `step-line-h-${i - 1}`,
         strokeLinecap: "square",
         strokeLinejoin: "miter",
-        type: "path",
-      },
-    ];
+        type: "line",
+        x1: prev.x,
+        x2: curr.x,
+        y1: prev.y,
+        y2: prev.y,
+      });
+      marks.push({
+        className,
+        id: `step-line-v-${i - 1}`,
+        strokeLinecap: "square",
+        strokeLinejoin: "miter",
+        type: "line",
+        x1: curr.x,
+        x2: curr.x,
+        y1: prev.y,
+        y2: curr.y,
+      });
+    }
 
     const showDot = spec.showDot ?? true;
     if (showDot && last) {
