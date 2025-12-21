@@ -4,6 +4,7 @@ import { bitfieldChart } from "./bitfield";
 import { bulletDeltaChart } from "./bullet-delta";
 import { bulletGaugeChart } from "./bullet-gauge";
 import { cascadeStepsChart } from "./cascade-steps";
+import type { ChartCategory, PreferredAspectRatio } from "./chart-definition";
 import { createChartRegistry } from "./chart-definition";
 import { chevronChart } from "./chevron";
 import { codeMinimapChart } from "./code-minimap";
@@ -140,15 +141,15 @@ export type ChartType = keyof ChartRegistry & string;
 export type ChartMeta = {
   type: ChartType;
   displayName: string;
-  category: "lines" | "bars" | "grids" | "dots";
-  preferredAspectRatio?: "square" | "wide" | "tall";
+  category: ChartCategory;
+  preferredAspectRatio?: PreferredAspectRatio;
 };
 
 // Helper type to access optional metadata properties
 type ChartWithMeta = {
-  category?: "lines" | "bars" | "grids" | "dots";
+  category?: ChartCategory;
   displayName?: string;
-  preferredAspectRatio?: "square" | "wide" | "tall";
+  preferredAspectRatio?: PreferredAspectRatio;
 };
 
 /**
