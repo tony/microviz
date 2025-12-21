@@ -1,3 +1,7 @@
+// Demo UI color scheme preference.
+// - Drives Tailwind `dark:` variants by toggling `<html class="dark">`.
+// - Sets `color-scheme` so native form controls (selects, scrollbars, etc.) match.
+// This is intentionally separate from Microviz chart theming (`data-mv-theme`).
 export type ColorSchemePreference = "dark" | "light" | "system";
 export type ResolvedColorScheme = "dark" | "light";
 
