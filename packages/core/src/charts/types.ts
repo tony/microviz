@@ -101,6 +101,7 @@ export type WaveformSpec = {
   bins?: number;
   gap?: number;
   barWidth?: number;
+  colors?: string[];
   className?: string;
 };
 
@@ -487,7 +488,9 @@ export type NormalizedBarcode = {
 
 export type NormalizedWaveform = {
   type: "waveform";
-  segments: Array<{ name?: string; pct: number; color: string }>;
+  series: number[];
+  min: number;
+  max: number;
 };
 
 export type NormalizedPixelGrid = {
