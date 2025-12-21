@@ -105,6 +105,12 @@ el?.addEventListener("microviz-focus", (event) => {
 });
 ```
 
+### Accessibility
+
+- Use `interactive` when you want keyboard navigation; arrow keys move across `a11y.items`.
+- Override `aria-label` on the element if you need a custom summary.
+- Prefer chart-specific `a11y.items` in core so screen readers announce meaningful labels.
+
 ## Customizing styles
 
 Tweak tokens via CSS variables:

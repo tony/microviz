@@ -87,6 +87,7 @@ site → { core, elements, renderers, themes, themes-tailwind }
 - Return `RenderModel` as serializable data, not DOM nodes
 - Use `patchRenderModel` + `createModelIdAllocator` for overlay-style model edits
 - Use `a11y.summary` + `a11y.items` in the model; elements own ARIA + keyboard focus
+- Prefer chart-specific `a11y.items` in chart definitions when labels are clear
 - Use CSS custom properties (`--mv-*`) for theming
 - Wrap library styles in `@layer microviz`
 - Use `ElementInternals` for accessibility in Web Components
