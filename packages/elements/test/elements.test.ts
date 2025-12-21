@@ -176,4 +176,21 @@ describe("@microviz/elements", () => {
     const focus2 = el.shadowRoot?.querySelector("#mv-a11y-focus");
     expect(focus2?.textContent).toContain("b");
   });
+
+  it("announces html renderer warnings", () => {
+    const el = document.createElement("microviz-model") as HTMLElement & {
+      model: RenderModel | null;
+    };
+    el.setAttribute("renderer", "html");
+    document.body.append(el);
+
+    el.model = {
+      height: 10,
+      marks: [{ d: "M 0 0 L 5 5", id: "p", type: "path" }],
+      width: 10,
+    };
+
+    const warnings = el.shadowRoot?.querySelector("#mv-a11y-warnings");
+    expect(warnings?.textContent).toContain("HTML renderer ignores marks");
+  });
 });
