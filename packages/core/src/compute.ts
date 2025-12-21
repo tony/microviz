@@ -1,3 +1,4 @@
+import { inferA11ySummary } from "./a11y";
 import type {
   ChartDefinition,
   PreferredAspectRatio,
@@ -23,7 +24,6 @@ import type {
   Mark,
   RenderModel,
 } from "./model";
-import { inferA11ySummary } from "./a11y";
 
 export type { InteractionState, Layout, ThemeTokens } from "./charts/context";
 export type {

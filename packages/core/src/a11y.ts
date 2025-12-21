@@ -1,4 +1,10 @@
-import type { A11ySummary, A11yTree, RenderModel } from "./model";
+import type {
+  A11ySegmentsSummary,
+  A11ySeriesSummary,
+  A11ySummary,
+  A11yTree,
+  RenderModel,
+} from "./model";
 
 function formatA11yNumber(value: number): string {
   if (!Number.isFinite(value)) return "0";
@@ -13,15 +19,19 @@ export function a11yLabelWithSeriesSummary(
 ): string {
   const summary = summarizeSeries(series);
   if (!summary || summary.count === 0) return `${baseLabel} (empty)`;
+  const { min, max, last } = summary;
+  if (min === undefined || max === undefined || last === undefined) {
+    return baseLabel;
+  }
   if (
-    !Number.isFinite(summary.min) ||
-    !Number.isFinite(summary.max) ||
-    !Number.isFinite(summary.last)
+    !Number.isFinite(min) ||
+    !Number.isFinite(max) ||
+    !Number.isFinite(last)
   ) {
     return baseLabel;
   }
 
-  return `${baseLabel} (min ${formatA11yNumber(summary.min)}, max ${formatA11yNumber(summary.max)}, last ${formatA11yNumber(summary.last)})`;
+  return `${baseLabel} (min ${formatA11yNumber(min)}, max ${formatA11yNumber(max)}, last ${formatA11yNumber(last)})`;
 }
 
 export function a11yLabelWithSegmentsSummary(
@@ -52,8 +62,10 @@ export function computeA11ySummary(
   };
 }
 
-function summarizeSeries(series: ReadonlyArray<number>): A11ySummary | null {
-  if (series.length === 0) return { kind: "series", count: 0 };
+function summarizeSeries(
+  series: ReadonlyArray<number>,
+): A11ySeriesSummary | null {
+  if (series.length === 0) return { count: 0, kind: "series" };
 
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
@@ -69,7 +81,7 @@ function summarizeSeries(series: ReadonlyArray<number>): A11ySummary | null {
   }
 
   if (!Number.isFinite(min) || !Number.isFinite(max)) {
-    return { kind: "series", count: series.length };
+    return { count: series.length, kind: "series" };
   }
 
   const trend =
@@ -82,8 +94,8 @@ function summarizeSeries(series: ReadonlyArray<number>): A11ySummary | null {
       : undefined;
 
   return {
-    kind: "series",
     count: series.length,
+    kind: "series",
     last,
     max,
     min,
@@ -93,8 +105,8 @@ function summarizeSeries(series: ReadonlyArray<number>): A11ySummary | null {
 
 function summarizeSegments(
   segments: ReadonlyArray<{ pct: number; name?: string }>,
-): A11ySummary | null {
-  if (segments.length === 0) return { kind: "segments", count: 0 };
+): A11ySegmentsSummary | null {
+  if (segments.length === 0) return { count: 0, kind: "segments" };
 
   let largestPct = Number.NEGATIVE_INFINITY;
   let largestName: string | undefined;
@@ -108,11 +120,11 @@ function summarizeSegments(
     }
   }
 
-  if (count === 0) return { kind: "segments", count: 0 };
+  if (count === 0) return { count: 0, kind: "segments" };
 
   return {
-    kind: "segments",
     count,
+    kind: "segments",
     largestName,
     largestPct,
   };
