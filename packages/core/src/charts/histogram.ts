@@ -1,5 +1,6 @@
 import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
 import type { Def } from "../model";
+import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteInt,
@@ -97,11 +98,18 @@ export const histogramChart = {
             "Non-finite histogram bar radius; defaulted to 0.",
           );
 
-    const fill = spec.gradient ? "url(#mv-histogram-gradient)" : undefined;
+    const fillRules = spec.gradient
+      ? [
+          {
+            id: "mv-histogram-gradient",
+            match: { id: /^histogram-bar-/ },
+          },
+        ]
+      : [];
 
     if (spec.gap === undefined) {
       const bw = (w - pad * 2) / n;
-      return sampled.map((bar, i) => {
+      const marks = sampled.map((bar, i) => {
         const x = pad + i * bw + 0.4;
         const barH = (bar.value / 100) * (h - pad * 2);
         const y = h - pad - barH;
@@ -110,7 +118,6 @@ export const histogramChart = {
           : 0.85;
         return {
           className: `mv-histogram-bar${spec.className ? ` ${spec.className}` : ""}`,
-          fill,
           fillOpacity: opacity,
           h: barH,
           id: `histogram-bar-${bar.srcIdx}`,
@@ -122,6 +129,7 @@ export const histogramChart = {
           y,
         };
       });
+      return fillRules.length > 0 ? applyFillRules(marks, fillRules) : marks;
     }
 
     const gap = coerceFiniteNonNegative(
@@ -137,7 +145,7 @@ export const histogramChart = {
 
     const x0 = pad;
     const xEnd = pad + usableW;
-    return sampled.map((bar, i) => {
+    const marks = sampled.map((bar, i) => {
       const x = x0 + i * (barW + gap);
       const barWidth = i === n - 1 ? Math.max(0, xEnd - x) : barW;
       const barH = (bar.value / 100) * (h - pad * 2);
@@ -147,7 +155,6 @@ export const histogramChart = {
         : 0.85;
       return {
         className: `mv-histogram-bar${spec.className ? ` ${spec.className}` : ""}`,
-        fill,
         fillOpacity: opacity,
         h: barH,
         id: `histogram-bar-${bar.srcIdx}`,
@@ -159,6 +166,7 @@ export const histogramChart = {
         y,
       };
     });
+    return fillRules.length > 0 ? applyFillRules(marks, fillRules) : marks;
   },
   normalize(_spec, data) {
     const series = data.series.filter(isFiniteNumber);

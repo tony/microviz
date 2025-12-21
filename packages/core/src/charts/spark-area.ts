@@ -1,4 +1,5 @@
 import { a11yItemsForSeries, a11yLabelWithSeriesSummary } from "../a11y";
+import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
   clamp,
@@ -107,11 +108,10 @@ export const sparkAreaChart = {
 
     const classSuffix = spec.className ? ` ${spec.className}` : "";
 
-    return [
+    const marks = [
       {
         className: `mv-spark-area-area${classSuffix}`,
         d: areaD,
-        fill: `url(#${gradId})`,
         id: "spark-area-area",
         stroke: "none",
         type: "path",
@@ -135,6 +135,14 @@ export const sparkAreaChart = {
         type: "circle",
       },
     ];
+    const fillRules = [
+      {
+        id: gradId,
+        match: { id: "spark-area-area" },
+      },
+    ];
+
+    return applyFillRules(marks, fillRules);
   },
   normalize(_spec, data) {
     const series = data.filter(isFiniteNumber);
