@@ -1943,15 +1943,6 @@ export const MicrovizPlayground: FC<{
         side="right"
       >
         <div className="p-4">
-          <div className="mb-3 flex items-end justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold">Inspector</div>
-              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                {selectedChart}
-              </div>
-            </div>
-          </div>
-
           <div className="mb-3">
             <div
               aria-label="Inspector tabs"
@@ -1984,6 +1975,12 @@ export const MicrovizPlayground: FC<{
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {selectedChart}
             </div>
           </div>
 
