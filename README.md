@@ -139,6 +139,7 @@ microviz follows a layered design with hard boundaries:
 - **Core (compute)**: deterministic-ish pure computation producing a serializable `RenderModel` (marks + IDs + optional a11y + stats). No DOM access.
 - **Measurement**: a pluggable text measurement strategy (e.g. OffscreenCanvas where supported).
 - **Renderers**: stateless transforms from `RenderModel` to SVG/Canvas (or other surfaces) + small export utilities.
+- **HTML renderer (experimental)**: supports `rect`/`circle`/`line`/`text` only; ignores `path` marks, defs (gradients/patterns/masks/filters/clip paths), and related effects. Use SVG/Canvas for full fidelity.
 - **Elements**: Web Components as a primary integration surface; event binding and native a11y wiring live here (not in core).
 - **Themes**: plain CSS tokens + layered defaults (`@layer microviz`). Tailwind v4 support is a separate CSS adapter via `@theme`.
 - **Adapters**: optional thin framework wrappers (future).
