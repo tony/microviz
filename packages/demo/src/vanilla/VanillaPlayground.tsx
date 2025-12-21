@@ -272,8 +272,6 @@ const demoInputBuilders = {
     size: { height: 60, width: 100 },
     spec: {
       cardHeightPct: 70,
-      cardWidthPct: 35,
-      fanAngle: 40,
       pad: 0,
       type: "hand-of-cards",
     },
