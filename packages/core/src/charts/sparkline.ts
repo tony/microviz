@@ -27,23 +27,30 @@ export const sparklineChart = {
     return normalized.series.length === 0;
   },
   marks(spec, normalized, layout, _state, _theme, warnings) {
-    const { d, last } = sparklineSeries(
+    const { last, points } = sparklineSeries(
       normalized.series,
       layout.width,
       layout.height,
       layout.pad,
     );
 
-    const marks: Mark[] = [
-      {
-        className: `mv-line${spec.className ? ` ${spec.className}` : ""}`,
-        d,
-        id: "sparkline-line",
+    const className = `mv-line${spec.className ? ` ${spec.className}` : ""}`;
+    const marks: Mark[] = [];
+
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      marks.push({
+        className,
+        id: `sparkline-line-${i - 1}`,
         strokeLinecap: "round",
-        strokeLinejoin: "round",
-        type: "path",
-      },
-    ];
+        type: "line",
+        x1: prev.x,
+        x2: curr.x,
+        y1: prev.y,
+        y2: curr.y,
+      });
+    }
 
     const showDot = spec.showDot ?? true;
     if (showDot && last) {

@@ -13,12 +13,12 @@ describe("step-line", () => {
     const b = computeModel(input);
 
     expect(a).toEqual(b);
-    // 1 path + 1 dot = 2 marks
-    expect(a.marks.length).toBe(2);
+    // 8 lines + 1 dot = 9 marks
+    expect(a.marks.length).toBe(9);
     expect(a.stats?.warnings).toBeUndefined();
   });
 
-  test("creates step-interpolated path with horizontal-then-vertical segments", () => {
+  test("creates step-interpolated segments with horizontal and vertical lines", () => {
     const input = {
       data: [10, 20, 30],
       size: { height: 32, width: 100 },
@@ -26,18 +26,15 @@ describe("step-line", () => {
     };
 
     const model = computeModel(input);
-    const path = model.marks[0];
+    const lines = model.marks.filter((mark) => mark.type === "line");
 
-    expect(path?.type).toBe("path");
-    if (path?.type === "path") {
-      // Path should contain H (horizontal) and V (vertical) commands
-      // Pattern: M x y H x V y H x V y ...
-      expect(path.d).toMatch(/^M\s/);
-      expect(path.d).toContain("H");
-      expect(path.d).toContain("V");
-      // Should NOT contain L for diagonal lines
-      expect(path.d).not.toContain("L");
-    }
+    expect(lines.length).toBe(4);
+    expect(
+      lines.every(
+        (line) =>
+          line.type === "line" && (line.x1 === line.x2 || line.y1 === line.y2),
+      ),
+    ).toBe(true);
   });
 
   test("shows dot by default at last point", () => {
@@ -90,15 +87,9 @@ describe("step-line", () => {
     };
 
     const model = computeModel(input);
-    const path = model.marks[0];
+    const lines = model.marks.filter((mark) => mark.type === "line");
 
-    expect(path?.type).toBe("path");
-    if (path?.type === "path") {
-      // Single point should just have an M command
-      expect(path.d).toMatch(/^M\s/);
-      // No H or V commands with just one point
-      expect(path.d.match(/[HV]/g)).toBeNull();
-    }
+    expect(lines.length).toBe(0);
   });
 
   test("uses mv-line class for consistent theming with sparkline", () => {
@@ -109,8 +100,8 @@ describe("step-line", () => {
     };
 
     const model = computeModel(input);
-    const path = model.marks.find((m) => m.type === "path");
+    const line = model.marks.find((m) => m.type === "line");
 
-    expect(path?.className).toContain("mv-line");
+    expect(line?.className).toContain("mv-line");
   });
 });

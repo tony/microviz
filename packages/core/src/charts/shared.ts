@@ -73,8 +73,11 @@ export function sparklineSeries(
   w: number,
   h: number,
   pad: number,
-): { d: string; last: { x: number; y: number } | null } {
-  if (series.length === 0) return { d: "", last: null };
+): {
+  points: { x: number; y: number }[];
+  last: { x: number; y: number } | null;
+} {
+  if (series.length === 0) return { last: null, points: [] };
   const x0 = pad;
   const x1 = w - pad;
   const y0 = pad;
@@ -90,10 +93,7 @@ export function sparklineSeries(
     y: y1 - ((v - min) / denom) * (y1 - y0),
   }));
 
-  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
-  for (let i = 1; i < points.length; i++)
-    d += ` L ${points[i].x.toFixed(2)} ${points[i].y.toFixed(2)}`;
-  return { d, last: points[points.length - 1] ?? null };
+  return { last: points[points.length - 1] ?? null, points };
 }
 
 export function normalizedPct(x: number): number {
