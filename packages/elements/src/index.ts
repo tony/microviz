@@ -66,6 +66,12 @@ import { MicrovizVariableRibbon } from "./variable-ribbon";
 import { MicrovizVerticalStack } from "./vertical-stack";
 import { MicrovizWaveform } from "./waveform";
 
+export type {
+  MicrovizClientPoint,
+  MicrovizHitDetail,
+  MicrovizHitEvent,
+} from "./events";
+
 export {
   MicrovizBar,
   MicrovizBulletDelta,
