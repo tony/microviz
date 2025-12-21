@@ -8,6 +8,10 @@ import {
   resolveColorScheme,
 } from "./ui/colorScheme";
 import {
+  applyMicrovizBackgroundPreference,
+  readMicrovizBackgroundPreference,
+} from "./ui/microvizBg";
+import {
   applyMicrovizTheme,
   readMicrovizThemePreference,
   resolveMicrovizTheme,
@@ -18,6 +22,7 @@ applyResolvedColorScheme(initialColorScheme);
 applyMicrovizTheme(
   resolveMicrovizTheme(readMicrovizThemePreference(), initialColorScheme),
 );
+applyMicrovizBackgroundPreference(readMicrovizBackgroundPreference());
 
 const container = document.getElementById("root");
 if (!container) {
