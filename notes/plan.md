@@ -59,7 +59,7 @@ These exist as first-class `spec.type` values in `@microviz/core` and are covere
 - ✅ `stacked-chips`
 - ✅ `segmented-bar`
 - ✅ `progress-pills`
-- ✅ `bitfield` (explicit dots; mask-based texture parity is still optional work)
+- ✅ `bitfield` (mask-backed dot grid; pattern parity works via fill rules)
 - ✅ `gradient-fade` (linearGradient defs)
 - ✅ `stripe-density` (pattern defs)
 - ✅ `perforated` (pattern/mask defs)
