@@ -315,7 +315,7 @@ Deliverables:
 - ✅ Linear gradients in model + SVG renderer (Unlock 3).
 - ✅ Patterns/masks/filters in model + SVG renderer (Unlock 3).
 - Port Texture & Creative + Pattern Tiles.
-- Decide: SVG rewrite vs HTML renderer for “Shadow Depth” / heavy CSS effects.
+- ✅ Decision: keep SVG-only for “Shadow Depth” / heavy CSS effects; defer Unlock 5 (HTML renderer) until proven necessary.
 
 ---
 
