@@ -19,6 +19,7 @@ export const histogramChart = {
       items: a11yItemsForSeries(normalized.series, {
         idPrefix: "histogram-bin",
         labelPrefix: "Bin",
+        valueText: (value) => `${Math.round(normalizedPct(value))}%`,
       }),
       label: a11yLabelWithSeriesSummary("Histogram chart", normalized.series),
       role: "img",
