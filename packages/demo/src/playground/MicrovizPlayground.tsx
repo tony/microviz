@@ -55,6 +55,7 @@ import {
   type ChartSubtype,
   type ComputeMode,
   DEFAULT_PLAYGROUND_STATE,
+  type HtmlFilter,
   type PaletteMode,
   type PlaygroundState,
   type Renderer,
@@ -736,8 +737,8 @@ export const MicrovizPlayground: FC<{
     fallbackSvgWhenCanvasUnsupported,
     setFallbackSvgWhenCanvasUnsupported,
   ] = useState(() => initialUrlState.fallbackSvgWhenCanvasUnsupported);
-  const [htmlSafeOnly, setHtmlSafeOnly] = useState(
-    () => initialUrlState.htmlSafeOnly,
+  const [htmlFilter, setHtmlFilter] = useState<HtmlFilter>(
+    () => initialUrlState.htmlFilter,
   );
   const [showHtmlSvgOverlay, setShowHtmlSvgOverlay] = useState(
     () => initialUrlState.showHtmlSvgOverlay,
@@ -804,8 +805,8 @@ export const MicrovizPlayground: FC<{
         ? prev
         : urlState.fallbackSvgWhenCanvasUnsupported,
     );
-    setHtmlSafeOnly((prev) =>
-      prev === urlState.htmlSafeOnly ? prev : urlState.htmlSafeOnly,
+    setHtmlFilter((prev) =>
+      prev === urlState.htmlFilter ? prev : urlState.htmlFilter,
     );
     setShowHtmlSvgOverlay((prev) =>
       prev === urlState.showHtmlSvgOverlay ? prev : urlState.showHtmlSvgOverlay,
@@ -855,7 +856,7 @@ export const MicrovizPlayground: FC<{
       dataPreset,
       fallbackSvgWhenCanvasUnsupported,
       height,
-      htmlSafeOnly,
+      htmlFilter,
       paletteMode,
       renderer,
       seed,
@@ -878,7 +879,7 @@ export const MicrovizPlayground: FC<{
     paletteMode,
     fallbackSvgWhenCanvasUnsupported,
     height,
-    htmlSafeOnly,
+    htmlFilter,
     showHtmlSvgOverlay,
     onUrlStateChange,
     renderer,
@@ -1451,10 +1452,11 @@ export const MicrovizPlayground: FC<{
   const chartIds = useMemo(() => Object.keys(inputs) as ChartId[], [inputs]);
   const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
 
-  const htmlSafeOnlyActive = htmlSafeOnly && renderer === "html";
+  const htmlFilterActive =
+    htmlFilter !== "all" && (renderer === "html" || renderer === "html-svg");
   const htmlSafeCacheRef = useRef(new Map<string, Set<ChartId>>());
   const htmlSafeCacheKey = useMemo(() => {
-    if (!htmlSafeOnlyActive) return null;
+    if (!htmlFilterActive) return null;
     return [
       applyNoiseOverlay ? "noise:1" : "noise:0",
       `data:${dataPreset}`,
@@ -1471,7 +1473,7 @@ export const MicrovizPlayground: FC<{
     chartIds,
     dataPreset,
     height,
-    htmlSafeOnlyActive,
+    htmlFilterActive,
     paletteMode,
     seed,
     segmentCount,
@@ -1480,7 +1482,7 @@ export const MicrovizPlayground: FC<{
     width,
   ]);
   const htmlSafeChartIdSet = useMemo(() => {
-    if (!htmlSafeOnlyActive) return null;
+    if (!htmlFilterActive) return null;
     if (htmlSafeCacheKey) {
       const cached = htmlSafeCacheRef.current.get(htmlSafeCacheKey);
       if (cached) return cached;
@@ -1505,25 +1507,27 @@ export const MicrovizPlayground: FC<{
       htmlSafeCacheRef.current.set(htmlSafeCacheKey, safeCharts);
     }
     return safeCharts;
-  }, [
-    applyNoiseOverlay,
-    chartIds,
-    htmlSafeCacheKey,
-    htmlSafeOnlyActive,
-    inputs,
-  ]);
+  }, [applyNoiseOverlay, chartIds, htmlSafeCacheKey, htmlFilterActive, inputs]);
 
-  const htmlSafeCatalog = useMemo(() => {
-    if (!htmlSafeOnlyActive || !htmlSafeChartIdSet) return chartCatalog;
-    return chartCatalog.filter((chart) =>
-      htmlSafeChartIdSet.has(chart.chartId),
-    );
-  }, [chartCatalog, htmlSafeChartIdSet, htmlSafeOnlyActive]);
+  const htmlFilteredCatalog = useMemo(() => {
+    if (!htmlFilterActive || !htmlSafeChartIdSet) return chartCatalog;
+    if (htmlFilter === "safe")
+      return chartCatalog.filter((chart) =>
+        htmlSafeChartIdSet.has(chart.chartId),
+      );
+    if (htmlFilter === "broken")
+      return chartCatalog.filter(
+        (chart) => !htmlSafeChartIdSet.has(chart.chartId),
+      );
+    return chartCatalog;
+  }, [chartCatalog, htmlFilter, htmlFilterActive, htmlSafeChartIdSet]);
 
   const visibleCharts = useMemo(() => {
-    if (chartSubtype === "all") return htmlSafeCatalog;
-    return htmlSafeCatalog.filter((chart) => chart.subtype === chartSubtype);
-  }, [chartSubtype, htmlSafeCatalog]);
+    if (chartSubtype === "all") return htmlFilteredCatalog;
+    return htmlFilteredCatalog.filter(
+      (chart) => chart.subtype === chartSubtype,
+    );
+  }, [chartSubtype, htmlFilteredCatalog]);
 
   const filteredCharts = useMemo(() => {
     const q = chartFilter.toLowerCase().trim();
@@ -2134,19 +2138,18 @@ export const MicrovizPlayground: FC<{
                 value={renderer}
               />
 
-              <label
-                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-                title="Only show HTML-safe charts"
-              >
-                <input
-                  checked={htmlSafeOnly}
-                  className="accent-blue-500"
-                  disabled={renderer !== "html"}
-                  onChange={(e) => setHtmlSafeOnly(e.target.checked)}
-                  type="checkbox"
-                />
-                <span className="text-sm">Only show HTML-safe charts</span>
-              </label>
+              <ToggleGroup<HtmlFilter>
+                columns={3}
+                disabled={renderer !== "html" && renderer !== "html-svg"}
+                label="HTML compatibility"
+                onChange={setHtmlFilter}
+                options={[
+                  { id: "all", label: "All" },
+                  { id: "safe", label: "Safe" },
+                  { id: "broken", label: "Broken" },
+                ]}
+                value={htmlFilter}
+              />
 
               <label
                 className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"

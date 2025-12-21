@@ -14,6 +14,7 @@ export type ChartId = ChartSpec["type"];
 export type ChartSubtype = "all" | "bars" | "dots" | "grids" | "lines";
 export type SidebarTab = "browse" | "debug" | "settings";
 export type PaletteMode = "value" | "random" | "chunks";
+export type HtmlFilter = "all" | "safe" | "broken";
 
 export type PlaygroundState = {
   applyNoiseOverlay: boolean;
@@ -21,9 +22,9 @@ export type PlaygroundState = {
   chartSubtype: ChartSubtype;
   computeMode: ComputeMode;
   dataPreset: DataPreset;
+  htmlFilter: HtmlFilter;
   paletteMode: PaletteMode;
   fallbackSvgWhenCanvasUnsupported: boolean;
-  htmlSafeOnly: boolean;
   height: number;
   renderer: Renderer;
   seed: string;
@@ -46,7 +47,7 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   dataPreset: "balanced",
   fallbackSvgWhenCanvasUnsupported: false,
   height: 32,
-  htmlSafeOnly: false,
+  htmlFilter: "all",
   paletteMode: "value",
   renderer: "svg-string",
   seed: "mv-1",
@@ -72,6 +73,8 @@ type PlaygroundSerializedState = {
   cm?: ComputeMode;
   /** dataPreset */
   dp?: DataPreset;
+  /** htmlFilter */
+  hf?: HtmlFilter;
   /** paletteMode */
   pm?: PaletteMode;
   /** fallbackSvgWhenCanvasUnsupported */
@@ -156,6 +159,10 @@ function isSeriesPreset(value: unknown): value is SeriesPreset {
   );
 }
 
+function isHtmlFilter(value: unknown): value is HtmlFilter {
+  return value === "all" || value === "safe" || value === "broken";
+}
+
 function isDataPreset(value: unknown): value is DataPreset {
   return (
     value === "balanced" ||
@@ -215,6 +222,8 @@ function serializePlaygroundState(
     s.cm = state.computeMode;
   if (state.dataPreset !== DEFAULT_PLAYGROUND_STATE.dataPreset)
     s.dp = state.dataPreset;
+  if (state.htmlFilter !== DEFAULT_PLAYGROUND_STATE.htmlFilter)
+    s.hf = state.htmlFilter;
   if (state.paletteMode !== DEFAULT_PLAYGROUND_STATE.paletteMode)
     s.pm = state.paletteMode;
   if (state.seriesPreset !== DEFAULT_PLAYGROUND_STATE.seriesPreset)
@@ -240,7 +249,6 @@ function serializePlaygroundState(
 
   if (state.applyNoiseOverlay) s.n = 1;
   if (state.fallbackSvgWhenCanvasUnsupported) s.fb = 1;
-  if (state.htmlSafeOnly) s.hs = 1;
   if (!state.showHtmlSvgOverlay) s.ho = 0;
   if (state.showHoverTooltip) s.ht = 1;
 
@@ -277,7 +285,11 @@ function deserializePlaygroundState(
       typeof serialized.h === "number" && Number.isFinite(serialized.h)
         ? clamp(Math.round(serialized.h), 16, 140)
         : DEFAULT_PLAYGROUND_STATE.height,
-    htmlSafeOnly: serialized.hs === 1,
+    htmlFilter: isHtmlFilter(serialized.hf)
+      ? serialized.hf
+      : serialized.hs === 1
+        ? "safe"
+        : DEFAULT_PLAYGROUND_STATE.htmlFilter,
     paletteMode: isPaletteMode(serialized.pm)
       ? serialized.pm
       : DEFAULT_PLAYGROUND_STATE.paletteMode,
