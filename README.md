@@ -146,6 +146,26 @@ microviz follows a layered design with hard boundaries:
 
 Interaction is explicit: state (hovered/selected/focused IDs) flows into computation; rendering is a pure transform of the model.
 
+## Export utilities
+
+Small helpers are available for turning render output into shareable artifacts:
+
+```ts
+import {
+  canvasToBlob,
+  renderSvgString,
+  svgStringToBlob,
+  svgStringToDataUrl,
+} from "@microviz/renderers";
+
+const svg = renderSvgString(model);
+const svgBlob = svgStringToBlob(svg);
+const svgDataUrl = svgStringToDataUrl(svg);
+
+// Works with either HTMLCanvasElement or OffscreenCanvas.
+const pngBlob = await canvasToBlob(canvas, { type: "image/png" });
+```
+
 ## Development
 
 - Install: `pnpm install`
