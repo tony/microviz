@@ -1,5 +1,5 @@
 import type { A11yTree, Def, DiagnosticWarning, Mark } from "../model";
-import type { InteractionState, Layout, ThemeTokens } from "./pipeline";
+import type { InteractionState, Layout, ThemeTokens } from "./context";
 
 /**
  * Aspect ratio hint for chart sizing and layout grouping.

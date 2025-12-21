@@ -2,7 +2,7 @@ import type {
   ChartDefinition,
   PreferredAspectRatio,
 } from "./charts/chart-definition";
-import type { InteractionState, Layout, ThemeTokens } from "./charts/pipeline";
+import type { InteractionState, Layout, ThemeTokens } from "./charts/context";
 import {
   type ChartMeta,
   chartRegistry,
@@ -23,7 +23,7 @@ import type {
   RenderModel,
 } from "./model";
 
-export type { InteractionState, Layout, ThemeTokens } from "./charts/pipeline";
+export type { InteractionState, Layout, ThemeTokens } from "./charts/context";
 export type {
   BarcodeSpec,
   BarData,
