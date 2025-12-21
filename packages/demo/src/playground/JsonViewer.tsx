@@ -75,20 +75,22 @@ type JsonViewerElement = HTMLElement & {
   expandIconType: ExpandIconType;
 };
 
-function usePrefersDark(): boolean {
+function useUiIsDark(): boolean {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false
-    );
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
   });
 
   useEffect(() => {
-    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-    if (!media) return;
-    const onChange = (event: MediaQueryListEvent) => setIsDark(event.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+
+    const observer = new MutationObserver(() => {
+      setIsDark(root.classList.contains("dark"));
+    });
+    observer.observe(root, { attributeFilter: ["class"], attributes: true });
+
+    return () => observer.disconnect();
   }, []);
 
   return isDark;
@@ -113,7 +115,7 @@ export const JsonViewer: FC<JsonViewerProps> = ({
   showSize = true,
   showToolbar = true,
 }) => {
-  const prefersDark = usePrefersDark();
+  const isDark = useUiIsDark();
   const ref = useRef<JsonViewerElement | null>(null);
 
   useEffect(() => {
@@ -127,14 +129,14 @@ export const JsonViewer: FC<JsonViewerProps> = ({
     el.showSize = showSize;
     el.showToolbar = showToolbar;
     el.expandIconType = "arrow";
-    el.theme = prefersDark
+    el.theme = isDark
       ? MICROVIZ_JSON_VIEWER_THEME_DARK
       : MICROVIZ_JSON_VIEWER_THEME_LIGHT;
   }, [
     data,
     expanded,
     indent,
-    prefersDark,
+    isDark,
     showCopy,
     showDataTypes,
     showSize,
