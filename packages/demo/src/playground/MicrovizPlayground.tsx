@@ -597,13 +597,38 @@ function formatWarningsList(warnings: WarningLike[]): ReactNode {
 
 function summarizeWarningCounts(
   warnings: WarningLike[],
-): Array<{ code: string; count: number }> {
+): Array<{ code: string; count: number; label: string }> {
+  const labelForCode = (code: string): string => {
+    switch (code) {
+      case "BLANK_RENDER":
+        return "Blank render";
+      case "EMPTY_DATA":
+        return "Empty data";
+      case "MISSING_DEF":
+        return "Missing def";
+      case "MARK_OUT_OF_BOUNDS":
+        return "Marks out of bounds";
+      case "NAN_COORDINATE":
+        return "NaN coordinates";
+      case "CANVAS_UNSUPPORTED_FILTER":
+        return "Canvas filters";
+      case "HTML_UNSUPPORTED_MARK":
+        return "HTML marks";
+      case "HTML_UNSUPPORTED_DEF":
+        return "HTML defs";
+      case "HTML_UNSUPPORTED_EFFECT":
+        return "HTML effects";
+      default:
+        return code;
+    }
+  };
+
   const counts = new Map<string, number>();
   for (const warning of warnings) {
     counts.set(warning.code, (counts.get(warning.code) ?? 0) + 1);
   }
   return [...counts.entries()]
-    .map(([code, count]) => ({ code, count }))
+    .map(([code, count]) => ({ code, count, label: labelForCode(code) }))
     .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
 }
 
@@ -2650,8 +2675,9 @@ export const MicrovizPlayground: FC<{
                       <span
                         className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
                         key={summary.code}
+                        title={summary.code}
                       >
-                        {summary.code} ×{summary.count}
+                        {summary.label} ×{summary.count}
                       </span>
                     ))}
                   </div>
@@ -2671,8 +2697,9 @@ export const MicrovizPlayground: FC<{
                       <span
                         className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
                         key={summary.code}
+                        title={summary.code}
                       >
-                        {summary.code} ×{summary.count}
+                        {summary.label} ×{summary.count}
                       </span>
                     ))}
                   </div>
