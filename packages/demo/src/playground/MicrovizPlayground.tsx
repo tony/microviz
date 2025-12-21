@@ -1856,6 +1856,7 @@ export const MicrovizPlayground: FC<{
   const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
   const diagnosticsCopyTimeoutRef = useRef<number | null>(null);
   const [exportingPng, setExportingPng] = useState(false);
+  const [copyingPng, setCopyingPng] = useState(false);
   const selectedModel = getEffectiveModel(selectedChart);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const exportNoticeTimeoutRef = useRef<number | null>(null);
@@ -1937,6 +1938,54 @@ export const MicrovizPlayground: FC<{
     selectedChart,
     selectedModel,
   ]);
+
+  const handleCopyPngDataUrl = useCallback(async () => {
+    if (!selectedModel || copyingPng) return;
+    setCopyingPng(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = selectedModel.width;
+      canvas.height = selectedModel.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      renderCanvas(ctx, selectedModel, canvasOptions);
+      const blob = await canvasToBlob(canvas, { type: "image/png" });
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === "string") resolve(reader.result);
+          else reject(new Error("PNG data URL unavailable."));
+        };
+        reader.onerror = () =>
+          reject(reader.error ?? new Error("PNG data URL failed."));
+        reader.readAsDataURL(blob);
+      });
+
+      const finish = () => flashExportNotice("PNG copied");
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(dataUrl);
+        finish();
+        return;
+      }
+
+      if (typeof document === "undefined") return;
+      const textarea = document.createElement("textarea");
+      textarea.value = dataUrl;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      textarea.style.pointerEvents = "none";
+      document.body.append(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+      finish();
+    } catch {
+      flashExportNotice("PNG copy failed");
+    } finally {
+      setCopyingPng(false);
+    }
+  }, [canvasOptions, copyingPng, flashExportNotice, selectedModel]);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -3003,6 +3052,19 @@ export const MicrovizPlayground: FC<{
                     type="button"
                   >
                     {exportingPng ? "Exporting PNG…" : "Download PNG"}
+                  </button>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    disabled={!selectedModel || copyingPng}
+                    onClick={handleCopyPngDataUrl}
+                    title="Copy PNG as data URL"
+                    type="button"
+                  >
+                    {copyingPng ? "Copying PNG…" : "Copy PNG URL"}
                   </button>
                 </div>
                 {exportNotice && (
