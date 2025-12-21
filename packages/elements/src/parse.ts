@@ -4,6 +4,14 @@ export function parseNumber(value: string | null, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+export function parseOptionalNumber(value: string | null): number | undefined {
+  if (value === null) return undefined;
+  const raw = value.trim();
+  if (raw === "") return undefined;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export function parseBoolean(value: string | null, fallback: boolean): boolean {
   if (value === null) return fallback;
   const raw = value.trim().toLowerCase();

@@ -59,6 +59,19 @@ el?.addEventListener("microviz-hit", (event) => {
 
 `detail.client` is in viewport pixels (`event.clientX/Y`); `detail.point` (when present) is in model coordinates (`0..width`, `0..height`).
 
+To tighten or loosen stroke hit targets, set `hit-slop` (in pixels):
+
+```html
+<microviz-chart
+  autosize
+  interactive
+  hit-slop="0"
+  style="width: 240px; height: 64px"
+  spec='{"type":"sparkline"}'
+  data="[6,10,7,12,9,14]"
+></microviz-chart>
+```
+
 ## Skeleton mode (empty/loading state)
 
 If `skeleton` is present, `<microviz-model>` and `<microviz-chart>` will render a small SVG skeleton when the model reports `EMPTY_DATA` or `BLANK_RENDER` warnings:
