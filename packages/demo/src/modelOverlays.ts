@@ -1,5 +1,7 @@
 import type { Def, RenderModel } from "@microviz/core";
 
+// Demo-only diagnostic overlay: apply a deterministic `turbulence → displacementMap`
+// filter to stress renderer parity (filter handling, transforms, clipping, compositing).
 function uniqueDefId(base: string, defs: readonly Def[] | undefined): string {
   const used = new Set((defs ?? []).map((d) => d.id));
   if (!used.has(base)) return base;

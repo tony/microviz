@@ -50,6 +50,7 @@ SVG filters:
 - SVG renderers support `dropShadow`, `gaussianBlur`, `turbulence`, and `displacementMap`.
 - Canvas supports `dropShadow` and `gaussianBlur`.
 - Canvas also supports `turbulence` + `displacementMap` when `OffscreenCanvas` ImageData APIs are available (otherwise those primitives are ignored).
+  - This is a targeted approximation of the common `turbulence → displacementMap` pipeline (seeded/deterministic), not a full SVG filter implementation.
 
 To detect filter primitives that Canvas will ignore:
 
