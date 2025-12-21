@@ -201,7 +201,7 @@ Initial goal: provide a fast HTML surface for CSS-first patterns, without promis
   - `text` → `<div>` with absolute positioning + anchor/baseline transforms.
 - **Defs/filters:** ignored in v1; document unsupported defs and ignore gracefully.
 - **A11y:** reuse `model.a11y` for `aria-label` on the HTML surface.
-- **Telemetry:** add a lightweight warning in the demo if a chart uses unsupported mark types/defs.
+- **Telemetry:** show loud warnings in the demo if a chart uses unsupported mark types/defs. **Do not auto-fallback** to other renderers; broken output is acceptable to expose gaps.
 
 ---
 
