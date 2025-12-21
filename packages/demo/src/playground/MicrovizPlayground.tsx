@@ -1851,6 +1851,8 @@ export const MicrovizPlayground: FC<{
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
   const [a11yCopied, setA11yCopied] = useState(false);
   const a11yCopyTimeoutRef = useRef<number | null>(null);
+  const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
+  const diagnosticsCopyTimeoutRef = useRef<number | null>(null);
 
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
@@ -1979,6 +1981,9 @@ export const MicrovizPlayground: FC<{
       if (a11yCopyTimeoutRef.current !== null) {
         window.clearTimeout(a11yCopyTimeoutRef.current);
       }
+      if (diagnosticsCopyTimeoutRef.current !== null) {
+        window.clearTimeout(diagnosticsCopyTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -2043,6 +2048,58 @@ export const MicrovizPlayground: FC<{
     textarea.remove();
     finish();
   }, [selectedModel?.a11y]);
+
+  const handleCopyDiagnostics = useCallback(() => {
+    const payload = JSON.stringify(
+      {
+        all: {
+          charts: allWarnings,
+          summary: allWarningSummary,
+        },
+        selected: {
+          chartId: selectedChart,
+          summary: selectedWarningSummary,
+          warnings: selectedWarnings,
+        },
+      },
+      null,
+      2,
+    );
+
+    const finish = () => {
+      setDiagnosticsCopied(true);
+      if (diagnosticsCopyTimeoutRef.current !== null) {
+        window.clearTimeout(diagnosticsCopyTimeoutRef.current);
+      }
+      diagnosticsCopyTimeoutRef.current = window.setTimeout(() => {
+        setDiagnosticsCopied(false);
+      }, 1200);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(payload).then(finish).catch(finish);
+      return;
+    }
+
+    if (typeof document === "undefined") return;
+    const textarea = document.createElement("textarea");
+    textarea.value = payload;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    finish();
+  }, [
+    allWarningSummary,
+    allWarnings,
+    selectedChart,
+    selectedWarningSummary,
+    selectedWarnings,
+  ]);
 
   return (
     <div className="flex h-full min-h-0 w-full">
@@ -2658,6 +2715,20 @@ export const MicrovizPlayground: FC<{
 
           {inspectorTab === "diagnostics" && (
             <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <span>Diagnostics</span>
+                <button
+                  className={tabButton({
+                    active: false,
+                    size: "xs",
+                    variant: "muted",
+                  })}
+                  onClick={handleCopyDiagnostics}
+                  type="button"
+                >
+                  {diagnosticsCopied ? "Copied" : "Copy"}
+                </button>
+              </div>
               {htmlSvgMarkCounts && (
                 <div className="text-xs text-slate-500 dark:text-slate-400">
                   HTML marks: {htmlSvgMarkCounts.html} · SVG marks:{" "}
