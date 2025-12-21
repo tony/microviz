@@ -4,6 +4,7 @@ import {
   computeModel,
   getAllChartMeta,
   getPreferredAspectRatio,
+  type Mark,
   type RenderModel,
 } from "@microviz/core";
 import {
@@ -115,6 +116,57 @@ function createRecordFromKeys<const K extends string, V>(
   value: V,
 ): Record<K, V> {
   return Object.fromEntries(keys.map((k) => [k, value])) as Record<K, V>;
+}
+
+const HTML_SAFE_MARK_TYPES = new Set<Mark["type"]>([
+  "rect",
+  "circle",
+  "line",
+  "text",
+]);
+
+function usesUrlRef(value: string | undefined): boolean {
+  return typeof value === "string" && value.includes("url(");
+}
+
+function isHtmlSafeMark(mark: Mark): boolean {
+  if (!HTML_SAFE_MARK_TYPES.has(mark.type)) return false;
+  if ("clipPath" in mark && mark.clipPath) return false;
+  if ("mask" in mark && mark.mask) return false;
+  if ("filter" in mark && mark.filter) return false;
+  if ("strokeDasharray" in mark && mark.strokeDasharray) return false;
+  if ("strokeDashoffset" in mark && mark.strokeDashoffset) return false;
+  const fill = "fill" in mark ? mark.fill : undefined;
+  const stroke = "stroke" in mark ? mark.stroke : undefined;
+  if (usesUrlRef(fill) || usesUrlRef(stroke)) return false;
+  return true;
+}
+
+function splitHtmlSvgModel(model: RenderModel): {
+  htmlModel: RenderModel;
+  svgModel: RenderModel | null;
+} {
+  const htmlMarks: Mark[] = [];
+  const svgMarks: Mark[] = [];
+
+  for (const mark of model.marks) {
+    if (isHtmlSafeMark(mark)) {
+      htmlMarks.push(mark);
+    } else {
+      svgMarks.push(mark);
+    }
+  }
+
+  const htmlModel: RenderModel = {
+    ...model,
+    defs: undefined,
+    marks: htmlMarks,
+  };
+
+  const svgModel: RenderModel | null =
+    svgMarks.length > 0 ? { ...model, marks: svgMarks } : null;
+
+  return { htmlModel, svgModel };
 }
 
 const OffscreenCanvasPreview: FC<{
@@ -1608,6 +1660,13 @@ export const MicrovizPlayground: FC<{
       return <SvgStringPreview svg={svg} />;
     }
 
+    if (renderer === "html-svg") {
+      const { htmlModel, svgModel } = splitHtmlSvgModel(model);
+      const html = renderHtmlString(htmlModel);
+      const svg = svgModel ? renderSvgString(svgModel) : "";
+      return <HtmlSvgOverlayPreview html={html} svg={svg} />;
+    }
+
     if (renderer === "html") {
       const html = renderHtmlString(model);
       return <HtmlPreview html={html} />;
@@ -1876,6 +1935,7 @@ export const MicrovizPlayground: FC<{
                   { id: "canvas", label: "Canvas" },
                   { id: "offscreen-canvas", label: "OffscreenCanvas (worker)" },
                   { id: "html", label: "HTML (experimental)" },
+                  { id: "html-svg", label: "HTML + SVG (overlay)" },
                 ]}
                 value={renderer}
               />
@@ -2436,6 +2496,53 @@ const HtmlPreview: FC<{ html: string }> = ({ html }) => {
 
   return (
     <div className="inline-block rounded bg-[var(--mv-bg)]" ref={hostRef} />
+  );
+};
+
+const HtmlSvgOverlayPreview: FC<{ html: string; svg: string }> = ({
+  html,
+  svg,
+}) => {
+  const htmlRef = useRef<HTMLDivElement | null>(null);
+  const svgRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const host = htmlRef.current;
+    if (!host) return;
+    if (!html) {
+      host.replaceChildren();
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    const el = wrapper.firstElementChild;
+    if (el) host.replaceChildren(el);
+  }, [html]);
+
+  useEffect(() => {
+    const host = svgRef.current;
+    if (!host) return;
+    if (!svg) {
+      host.replaceChildren();
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = svg;
+    const el = wrapper.firstElementChild;
+    if (el) host.replaceChildren(el);
+  }, [svg]);
+
+  return (
+    <div className="relative inline-block rounded bg-[var(--mv-bg)]">
+      <div ref={htmlRef} />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        ref={svgRef}
+      />
+    </div>
   );
 };
 
