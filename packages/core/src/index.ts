@@ -195,3 +195,9 @@ export function buildPixelSegments(
 }
 
 export * from "./index.model";
+export {
+  applyFillRules,
+  type FillRule,
+  fillUrl,
+  type MarkMatcher,
+} from "./utils/defs";
