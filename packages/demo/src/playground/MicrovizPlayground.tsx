@@ -997,7 +997,10 @@ export const MicrovizPlayground: FC = () => {
     if (renderer === "svg-string") {
       if (wrapper === "react")
         return (
-          <MicrovizReactSvgString className="inline-block" model={model} />
+          <MicrovizReactSvgString
+            className="inline-block rounded bg-[var(--mv-bg)]"
+            model={model}
+          />
         );
       const svg = renderSvgString(model);
       return <SvgStringPreview svg={svg} />;
@@ -1006,7 +1009,10 @@ export const MicrovizPlayground: FC = () => {
     if (shouldFallbackToSvg) {
       if (wrapper === "react")
         return (
-          <MicrovizReactSvgString className="inline-block" model={model} />
+          <MicrovizReactSvgString
+            className="inline-block rounded bg-[var(--mv-bg)]"
+            model={model}
+          />
         );
       const svg = renderSvgString(model);
       return <SvgStringPreview svg={svg} />;
@@ -1014,7 +1020,11 @@ export const MicrovizPlayground: FC = () => {
 
     if (renderer === "svg-dom") {
       if (wrapper === "react")
-        return <MicrovizReactSvg className="block" model={model} />;
+        return (
+          <div className="inline-block rounded bg-[var(--mv-bg)]">
+            <MicrovizReactSvg className="block" model={model} />
+          </div>
+        );
       return <SvgDomPreview model={model} />;
     }
 
@@ -1669,7 +1679,9 @@ const SvgStringPreview: FC<{ svg: string }> = ({ svg }) => {
     if (el) host.replaceChildren(el);
   }, [svg]);
 
-  return <div className="inline-block" ref={hostRef} />;
+  return (
+    <div className="inline-block rounded bg-[var(--mv-bg)]" ref={hostRef} />
+  );
 };
 
 const SvgDomPreview: FC<{ model: RenderModel }> = ({ model }) => {
@@ -1680,7 +1692,9 @@ const SvgDomPreview: FC<{ model: RenderModel }> = ({ model }) => {
     hostRef.current.replaceChildren(renderSvgElement(model));
   }, [model]);
 
-  return <div className="inline-block" ref={hostRef} />;
+  return (
+    <div className="inline-block rounded bg-[var(--mv-bg)]" ref={hostRef} />
+  );
 };
 
 const CanvasPreview: FC<{
