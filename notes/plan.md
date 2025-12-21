@@ -387,6 +387,7 @@ This section is *not* about turning microviz into a full charting suite. It’s 
 - ✅ Add **auto-size** mode to `@microviz/elements` via `ResizeObserver` (Baseline 2025): `<microviz-chart autosize ...>`.
 - ✅ Add small **export utilities** (SVG string → Blob/data URL, Canvas → Blob) and document them.
 - ✅ Add **defs/fill-rule helpers** (in core/shared) inspired by nivo so charts can apply textures by match rule rather than bespoke wiring.
+- ✅ Add optional **theme presets** in `@microviz/themes` (Carbon-inspired `white/g10/g90/g100`).
 
 ### Explicitly out of scope (by constitution)
 - Polyfills / legacy browser support, non‑ESM builds, or DOM imports in `core`/`renderers`.

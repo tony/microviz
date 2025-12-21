@@ -1,5 +1,6 @@
 @layer microviz {
   :root {
+    --mv-bg: oklch(1 0 0);
     --mv-fg: oklch(0.24 0 0);
     --mv-muted: oklch(0.55 0 0);
     --mv-grid: oklch(0.9 0 0);
