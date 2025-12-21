@@ -13,6 +13,20 @@ export const dumbbellChart = {
         ? 0
         : Math.round((normalized.target / normalized.max) * 100);
     return {
+      items: [
+        {
+          id: "dumbbell-current",
+          label: "Current",
+          value: normalized.current,
+          valueText: `${pctCurrent}%`,
+        },
+        {
+          id: "dumbbell-target",
+          label: "Target",
+          value: normalized.target,
+          valueText: `${pctTarget}%`,
+        },
+      ],
       label: `Dumbbell chart (current ${pctCurrent}%, target ${pctTarget}%)`,
       role: "img",
     };
