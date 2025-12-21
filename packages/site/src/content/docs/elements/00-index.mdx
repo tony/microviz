@@ -28,6 +28,50 @@ Then use any chart element directly:
 <microviz-sparkline data="[6,10,7,12,9,14]" width="200" height="32"></microviz-sparkline>
 ```
 
+## Generic chart element (recommended for responsive layouts)
+
+`<microviz-chart>` accepts JSON `spec` + `data` and can auto-size using `ResizeObserver`:
+
+```html
+<microviz-chart
+  autosize
+  style="width: 240px; height: 64px"
+  spec='{"type":"sparkline"}'
+  data="[6,10,7,12,9,14]"
+></microviz-chart>
+```
+
+## Interaction events (tooltip primitives)
+
+`<microviz-model>` and `<microviz-chart>` can emit high-level hit-test events when `interactive` is present:
+
+```ts
+const el = document.querySelector("microviz-chart");
+el?.addEventListener("microviz-hit", (event) => {
+  const detail = (event as CustomEvent).detail as {
+    hit: { markId: string; markType: string } | null;
+    point?: { x: number; y: number };
+  };
+
+  // `detail.hit` is null when not hovering a mark.
+  console.log(detail.hit?.markId);
+});
+```
+
+## Legend primitive
+
+`<microviz-legend>` renders a small, CSS-token-driven legend from JSON items:
+
+```html
+<microviz-legend
+  items='[
+    { "label": "Series A", "series": 1 },
+    { "label": "Series B", "series": 2 },
+    { "label": "Custom", "color": "#2563eb" }
+  ]'
+></microviz-legend>
+```
+
 If you already have a `RenderModel` (e.g. from `computeModel`), you can mount it via `.model`:
 
 ```ts

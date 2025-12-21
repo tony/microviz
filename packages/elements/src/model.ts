@@ -1,13 +1,18 @@
-import type { RenderModel } from "@microviz/core";
+import { hitTest, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { clearSvgFromShadowRoot, renderSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 
+type Point = { x: number; y: number };
+
 export class MicrovizModel extends HTMLElement {
+  static observedAttributes = ["interactive"];
+
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
   #model: RenderModel | null = null;
+  #isInteractive = false;
 
   constructor() {
     super();
@@ -20,7 +25,16 @@ export class MicrovizModel extends HTMLElement {
   }
 
   connectedCallback(): void {
+    this.#syncInteractivity();
     this.render();
+  }
+
+  disconnectedCallback(): void {
+    this.#setInteractive(false);
+  }
+
+  attributeChangedCallback(): void {
+    this.#syncInteractivity();
   }
 
   get model(): RenderModel | null {
@@ -31,6 +45,63 @@ export class MicrovizModel extends HTMLElement {
     this.#model = model;
     this.render();
   }
+
+  #syncInteractivity(): void {
+    this.#setInteractive(this.hasAttribute("interactive"));
+  }
+
+  #setInteractive(enabled: boolean): void {
+    if (enabled === this.#isInteractive) return;
+    this.#isInteractive = enabled;
+
+    if (enabled) {
+      this.addEventListener("pointermove", this.#onPointerMove);
+      this.addEventListener("pointerleave", this.#onPointerLeave);
+      return;
+    }
+
+    this.removeEventListener("pointermove", this.#onPointerMove);
+    this.removeEventListener("pointerleave", this.#onPointerLeave);
+  }
+
+  #toModelPoint(event: PointerEvent): Point | null {
+    if (!this.#model) return null;
+    const svg = this.#root.querySelector("svg");
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    if (!(rect.width > 0) || !(rect.height > 0)) return null;
+
+    const x = ((event.clientX - rect.left) / rect.width) * this.#model.width;
+    const y = ((event.clientY - rect.top) / rect.height) * this.#model.height;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+
+    return { x, y };
+  }
+
+  #onPointerMove = (event: PointerEvent): void => {
+    if (!this.#model) return;
+    const point = this.#toModelPoint(event);
+    if (!point) return;
+
+    const hit = hitTest(this.#model, point);
+    this.dispatchEvent(
+      new CustomEvent("microviz-hit", {
+        bubbles: true,
+        composed: true,
+        detail: { client: { x: event.clientX, y: event.clientY }, hit, point },
+      }),
+    );
+  };
+
+  #onPointerLeave = (event: PointerEvent): void => {
+    this.dispatchEvent(
+      new CustomEvent("microviz-hit", {
+        bubbles: true,
+        composed: true,
+        detail: { client: { x: event.clientX, y: event.clientY }, hit: null },
+      }),
+    );
+  };
 
   render(): void {
     if (!this.#model) {
