@@ -595,6 +595,18 @@ function formatWarningsList(warnings: WarningLike[]): ReactNode {
   );
 }
 
+function summarizeWarningCounts(
+  warnings: WarningLike[],
+): Array<{ code: string; count: number }> {
+  const counts = new Map<string, number>();
+  for (const warning of warnings) {
+    counts.set(warning.code, (counts.get(warning.code) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([code, count]) => ({ code, count }))
+    .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
+}
+
 function formatA11ySummary(summary?: A11ySummary): string | null {
   if (!summary) return null;
   if (summary.kind === "series") {
@@ -1920,6 +1932,10 @@ export const MicrovizPlayground: FC<{
     getHtmlWarnings,
   );
   const warningCount = selectedWarnings.length;
+  const selectedWarningSummary = useMemo(
+    () => summarizeWarningCounts(selectedWarnings),
+    [selectedWarnings],
+  );
   const htmlSvgMarkCounts = useMemo(() => {
     if (renderer !== "html-svg" || !selectedModel) return null;
     const { htmlModel, svgModel } = splitHtmlSvgModel(selectedModel);
@@ -1955,6 +1971,11 @@ export const MicrovizPlayground: FC<{
     inspectorTab,
     renderer,
   ]);
+  const allWarningSummary = useMemo(
+    () =>
+      summarizeWarningCounts(allWarnings.flatMap((row) => row.warnings ?? [])),
+    [allWarnings],
+  );
 
   return (
     <div className="flex h-full min-h-0 w-full">
@@ -2581,6 +2602,18 @@ export const MicrovizPlayground: FC<{
                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Selected warnings
                 </div>
+                {selectedWarningSummary.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    {selectedWarningSummary.map((summary) => (
+                      <span
+                        className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
+                        key={summary.code}
+                      >
+                        {summary.code} ×{summary.count}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-2">
                   {formatWarningsList(selectedWarnings)}
                 </div>
@@ -2590,6 +2623,18 @@ export const MicrovizPlayground: FC<{
                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   All warnings
                 </div>
+                {allWarningSummary.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    {allWarningSummary.map((summary) => (
+                      <span
+                        className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
+                        key={summary.code}
+                      >
+                        {summary.code} ×{summary.count}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-2">
                   {allWarnings.length === 0 ? (
                     <div className="text-sm">None</div>
