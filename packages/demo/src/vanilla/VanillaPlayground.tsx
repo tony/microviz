@@ -664,7 +664,7 @@ const OffscreenCanvasPreview: FC<{
 
   return (
     <canvas
-      className="rounded bg-white dark:bg-slate-900"
+      className="rounded bg-[var(--mv-bg)]"
       height={input.size.height}
       ref={canvasRef}
       width={input.size.width}
@@ -905,21 +905,21 @@ export const VanillaPlayground: FC = () => {
         <div className="mt-3">
           {showSvgString && (
             <div
-              className="inline-block rounded bg-white dark:bg-slate-900"
+              className="inline-block rounded bg-[var(--mv-bg)]"
               ref={svgStringHostRef}
             />
           )}
 
           {surface === "svg-dom" && (
             <div
-              className="inline-block rounded bg-white dark:bg-slate-900"
+              className="inline-block rounded bg-[var(--mv-bg)]"
               ref={svgDomHostRef}
             />
           )}
 
           {surface === "canvas" && !shouldFallbackToSvg && (
             <canvas
-              className="rounded bg-white dark:bg-slate-900"
+              className="rounded bg-[var(--mv-bg)]"
               height={CHART_SIZE.height}
               ref={canvasRef}
               width={CHART_SIZE.width}
@@ -944,7 +944,7 @@ export const VanillaPlayground: FC = () => {
         <summary className="cursor-pointer text-sm font-medium">
           RenderModel
         </summary>
-        <pre className="mt-3 overflow-auto rounded bg-slate-950 p-3 text-xs text-slate-100">
+        <pre className="mt-3 overflow-auto rounded bg-slate-900/5 p-3 text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100">
           {JSON.stringify(effectiveModel, null, 2)}
         </pre>
       </details>

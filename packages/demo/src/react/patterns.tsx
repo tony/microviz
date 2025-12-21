@@ -333,7 +333,7 @@ export const MatryoshkaBar: FC<{ data: Segment[] }> = ({ data }) => {
 
   return (
     <div
-      className={`relative ${VIZ_CLASS} overflow-hidden rounded-md bg-slate-800/20`}
+      className={`relative ${VIZ_CLASS} overflow-hidden rounded-md bg-slate-900/5 dark:bg-slate-800/20`}
     >
       <MicrovizSvg
         aria-hidden

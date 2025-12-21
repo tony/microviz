@@ -151,7 +151,7 @@ const OffscreenCanvasPreview: FC<{
 
   return (
     <canvas
-      className="rounded bg-white dark:bg-slate-900"
+      className="rounded bg-[var(--mv-bg)]"
       height={input.size.height}
       ref={canvasRef}
       width={input.size.width}
@@ -1022,7 +1022,7 @@ export const MicrovizPlayground: FC = () => {
       if (wrapper === "react")
         return (
           <MicrovizReactCanvas
-            className="rounded bg-white dark:bg-slate-900"
+            className="rounded bg-[var(--mv-bg)]"
             model={model}
             options={canvasOptions}
           />
@@ -1699,7 +1699,7 @@ const CanvasPreview: FC<{
 
   return (
     <canvas
-      className="rounded bg-white dark:bg-slate-900"
+      className="rounded bg-[var(--mv-bg)]"
       height={model.height}
       ref={ref}
       width={model.width}
