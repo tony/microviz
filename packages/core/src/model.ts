@@ -242,6 +242,7 @@ export type A11yTree = {
 export type DiagnosticWarningCode =
   | "BLANK_RENDER"
   | "EMPTY_DATA"
+  | "MISSING_DEF"
   | "MARK_OUT_OF_BOUNDS"
   | "NAN_COORDINATE";
 
