@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import { normalizeSegments } from "./shared";
@@ -42,6 +42,9 @@ function wedgePath(
 export const radialBurstChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.segments, {
+        idPrefix: "radial-burst-seg",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Radial burst chart",
         normalized.segments,

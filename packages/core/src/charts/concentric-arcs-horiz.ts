@@ -1,4 +1,4 @@
-import { a11yLabelWithSegmentsSummary } from "../a11y";
+import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Mark } from "../model";
 import type { ChartDefinition } from "./chart-definition";
 import {
@@ -20,6 +20,9 @@ function fmt(x: number): string {
 export const concentricArcsHorizChart = {
   a11y(_spec, normalized, _layout) {
     return {
+      items: a11yItemsForSegments(normalized.arcs, {
+        idPrefix: "concentric-arcs-horiz-arc",
+      }),
       label: a11yLabelWithSegmentsSummary(
         "Concentric arcs (horizontal) chart",
         normalized.arcs,
