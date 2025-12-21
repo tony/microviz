@@ -58,6 +58,20 @@ el?.addEventListener("microviz-hit", (event) => {
 });
 ```
 
+## Skeleton mode (empty/loading state)
+
+If `skeleton` is present, `<microviz-model>` and `<microviz-chart>` will render a small SVG skeleton when the model reports `EMPTY_DATA` or `BLANK_RENDER` warnings:
+
+```html
+<microviz-chart
+  autosize
+  skeleton
+  style="width: 240px; height: 64px"
+  spec='{"type":"sparkline"}'
+  data="[]"
+></microviz-chart>
+```
+
 ## Legend primitive
 
 `<microviz-legend>` renders a small, CSS-token-driven legend from JSON items:
