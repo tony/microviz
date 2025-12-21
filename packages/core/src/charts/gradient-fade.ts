@@ -1,5 +1,6 @@
 import { a11yItemsForSegments, a11yLabelWithSegmentsSummary } from "../a11y";
 import type { Def, Mark } from "../model";
+import { applyFillRules } from "../utils/defs";
 import type { ChartDefinition } from "./chart-definition";
 import {
   coerceFiniteNonNegative,
@@ -83,7 +84,6 @@ export const gradientFadeChart = {
       if (!run) continue;
       marks.push({
         className: `mv-gradient-fade-seg${classSuffix}`,
-        fill: `url(#mv-gradient-fade-${i})`,
         h: usableH,
         id: `gradient-fade-seg-${i}`,
         type: "rect",
@@ -93,7 +93,12 @@ export const gradientFadeChart = {
       });
     }
 
-    return marks;
+    const fillRules = runs.map((_run, i) => ({
+      id: `mv-gradient-fade-${i}`,
+      match: { id: `gradient-fade-seg-${i}` },
+    }));
+
+    return applyFillRules(marks, fillRules);
   },
   normalize(_spec, data) {
     const segments = normalizeSegments(data);
