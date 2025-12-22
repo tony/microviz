@@ -8,6 +8,7 @@ type Props = {
   children: ReactNode;
   className?: string;
   collapsible?: boolean;
+  contentClassName?: string;
   defaultSize: number;
   forceExpanded?: boolean;
   minSize?: number;
@@ -104,6 +105,7 @@ export const ResizablePane: FC<Props> = ({
   children,
   className,
   collapsible = false,
+  contentClassName,
   defaultSize,
   forceExpanded = false,
   minSize = 180,
@@ -232,7 +234,12 @@ export const ResizablePane: FC<Props> = ({
       }}
     >
       <div className="relative h-full w-full">
-        <div className="h-full w-full overflow-auto [scrollbar-gutter:stable]">
+        <div
+          className={
+            contentClassName ??
+            "h-full w-full overflow-auto [scrollbar-gutter:stable]"
+          }
+        >
           {children}
         </div>
 
