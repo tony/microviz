@@ -1,22 +1,30 @@
 # microviz
 
-**Headless, performant micro-charts harnessing the 2025+ web platform.**
+**Tiny charts for fast thinking. Drop-in visuals for AI prototypes, dashboards, and live canvases.**
 
-Looking for a sleek, lightweight library to embed sparklines, bars, lines, or compact UI graphics? microviz is built for fast, embeddable visualizations that feel right at home in modern apps—dashboards, reports, and inline data pops. It leans on modern platform features (Workers, Shadow DOM, CSS Layers, container queries) to stay small and fast.
+microviz is a micro-chart engine for people building *ideas*, not reporting pipelines.
 
-microviz is headless for flexibility, CSS-first for styling (with Tailwind v4 compatibility), and designed to be accessible out of the box. If you're tired of heavy charting suites, this is the minimalist alternative that punches above its weight.
+If you're prototyping AI workflows, experimenting in canvases like Statsig, building internal tools, or shipping "good enough now" dashboards, you don't want a charting framework — you want a **visual primitive**.
+
+microviz gives you sparklines, bars, and compact charts that load instantly, style cleanly, don't fight your CSS, and stay out of your way.
+
+Paste a tag. Pass some data. Move on.
+
+No config forests. No chart grammar dissertations.
 
 ## Why microviz?
 
-- **Performance tuned for micro-scale**: Offload layout/mark generation to Workers when it helps; use typed arrays for dense data; keep rendering surfaces simple.
-- **Web platform features (no polyfills)**: OffscreenCanvas for measurement, CSS Layers for override-friendly defaults, container queries for responsiveness, and modern Custom Elements APIs where applicable.
-- **Framework freedom**: Web Components for drop-in use; thin wrappers for React and others.
-- **Styling that just works**: CSS variables + Layers (`@layer`) so user styles override predictably. Tailwind v4 integration is CSS-native via `@theme` + `@import`.
-- **Headless core**: Compute a serializable `RenderModel` for custom rendering, hit-testing, or state-driven interactivity.
-- **Derivative charts are a feature**: Treat `RenderModel` like a tiny “render AST” you can compose. Build new charts by reusing a base model and adding marks/defs (separators, overlays, tracks, gloss, filters), then promote them to first-class `spec.type` entries when they prove out.
-- **A11y as a feature**: Stable IDs plus model summaries, with element-level ARIA wiring and optional keyboard focus for interactive charts.
+microviz is optimized for *iteration velocity*.
 
-microviz is not a full charting suite; it focuses on small, composable primitives that scale to high-volume UI.
+- **Charts as UI atoms**: Sparklines, bars, tracks, overlays. Small visuals you can drop anywhere without redesigning your app.
+- **Headless by default**: The core produces a tiny render model (a serializable visual AST). Render it, remix it, or ignore the renderer entirely and do something strange.
+- **Plays well with AI tooling**: Serializable models, deterministic output, easy to snapshot, diff, or generate from LLM-produced data.
+- **Canvas-friendly**: Works cleanly inside constrained surfaces—experiment panels, flags dashboards, feature gates, notebooks, and embeds.
+- **CSS-first, Tailwind-friendly**: No theme APIs to learn. Style it like the rest of your app. Optional Tailwind v4 adapter included.
+- **Fast enough to forget about**: Workers when helpful, typed arrays where it matters, minimal DOM. You stop thinking about charts and keep thinking about the product.
+- **A11y built in**: Stable IDs, model summaries, ARIA wiring, and keyboard focus for interactive charts.
+
+microviz is not a full charting suite. It's small, composable primitives that scale to high-volume UI.
 
 ## Quick start
 
@@ -132,6 +140,21 @@ el?.addEventListener("microviz-focus", (event) => {
 - Override `aria-label` on the element if you need a custom summary.
 - Prefer chart-specific `a11y.items` in core so screen readers announce meaningful labels.
 
+### AI prototype example
+
+Model-generated metrics, visualized immediately:
+
+```ts
+// LLM produces structured metrics
+const metrics = await runModel(prompt);
+
+// Normalize and visualize
+const chart = document.querySelector("microviz-sparkline");
+chart.data = metrics.confidenceOverTime;
+```
+
+microviz doesn't care where the data came from—a model, a worker, a feature flag, or a CSV pasted five minutes ago.
+
 ## Customizing styles
 
 Tweak tokens via CSS variables:
@@ -169,19 +192,35 @@ Or extend via Tailwind v4 theme variables:
 }
 ```
 
-## How it works (layered architecture)
+## How it works
 
-microviz follows a layered design with hard boundaries:
+### Headless core = remixable output
 
-- **Core (compute)**: deterministic-ish pure computation producing a serializable `RenderModel` (marks + IDs + optional a11y + stats). No DOM access.
-- **Measurement**: a pluggable text measurement strategy (e.g. OffscreenCanvas where supported).
-- **Renderers**: stateless transforms from `RenderModel` to SVG/Canvas (or other surfaces) + small export utilities.
-- **HTML renderer (experimental)**: supports `rect`/`circle`/`line`/`text` only; ignores `path` marks. Supports `linearGradient`, `pattern`, `mask`, `clipRect`, and `filter` defs (dropShadow/gaussianBlur only); other defs/effects are ignored. Use SVG/Canvas for full fidelity.
-- **Elements**: Web Components as a primary integration surface; event binding and native a11y wiring live here (not in core).
-- **Themes**: plain CSS tokens + layered defaults (`@layer microviz`). Tailwind v4 support is a separate CSS adapter via `@theme`.
-- **Adapters**: optional thin framework wrappers (future).
+Every chart computes a serializable `RenderModel`—think of it as a tiny visual AST:
 
-Interaction is explicit: state (hovered/selected/focused IDs) flows into computation; rendering is a pure transform of the model.
+- marks (the shapes)
+- IDs (for hit-testing and interaction)
+- optional a11y metadata
+- optional stats
+
+You can:
+
+- snapshot it in tests
+- diff it across experiments
+- generate it from LLM output
+- layer on overlays without forking a chart
+- promote successful hacks into real chart types
+
+Charts don't have to be "final" to be useful.
+
+### Layers
+
+- **Core**: deterministic pure computation → `RenderModel`. No DOM access.
+- **Renderers**: stateless transforms to SVG/Canvas/HTML.
+- **Elements**: Web Components with event binding and a11y wiring.
+- **Themes**: CSS tokens + `@layer microviz`. Tailwind v4 via `@theme`.
+
+Interaction flows in (hovered/selected/focused IDs); rendering is a pure transform out.
 
 ## Model overlays (optional)
 
