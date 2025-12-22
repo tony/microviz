@@ -17,7 +17,8 @@ describe("gradient-fade", () => {
 
     expect(a).toEqual(b);
     expect(a.marks.length).toBe(2);
-    expect(a.defs?.length).toBe(2);
+    expect(a.defs?.length).toBe(3);
+    expect(a.defs?.some((def) => def.type === "clipRect")).toBe(true);
     expect(a.stats?.warnings).toBeUndefined();
   });
 

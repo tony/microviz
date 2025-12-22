@@ -30,9 +30,13 @@ export const gradientFadeChart = {
   },
   category: "bars" as const,
   defaultPad: 0,
-  defs(spec, normalized, _layout, warnings): Def[] {
+  defs(spec, normalized, layout, warnings): Def[] {
     const segments = normalized.segments;
     if (segments.length === 0) return [];
+
+    const usableW = Math.max(0, layout.width - layout.pad * 2);
+    const usableH = Math.max(0, layout.height - layout.pad * 2);
+    if (usableW <= 0 || usableH <= 0) return [];
 
     const midOpacity = coerceFiniteNonNegative(
       spec.midOpacity ?? 0.7,
@@ -46,8 +50,15 @@ export const gradientFadeChart = {
       warnings,
       "Non-finite gradient-fade endOpacity; defaulted to 0.35.",
     );
+    const cornerRadiusDefault = Math.min(usableH / 2, 6);
+    const cornerRadius = coerceFiniteNonNegative(
+      spec.cornerRadius ?? cornerRadiusDefault,
+      cornerRadiusDefault,
+      warnings,
+      "Non-finite gradient-fade cornerRadius; defaulted to half the chart height.",
+    );
 
-    return segments.map((seg, i) => ({
+    const defs: Def[] = segments.map((seg, i) => ({
       id: `mv-gradient-fade-${i}`,
       stops: [
         { color: seg.color, offset: 0, opacity: 1 },
@@ -60,23 +71,47 @@ export const gradientFadeChart = {
       y1: 0,
       y2: 0,
     }));
+
+    if (cornerRadius > 0) {
+      defs.push({
+        h: usableH,
+        id: "gradient-fade-clip",
+        rx: cornerRadius,
+        ry: cornerRadius,
+        type: "clipRect",
+        w: usableW,
+        x: layout.pad,
+        y: layout.pad,
+      });
+    }
+
+    return defs;
   },
   displayName: "Gradient fade",
   emptyDataWarningMessage: "No segments data.",
   isEmpty(normalized) {
     return normalized.segments.length === 0;
   },
-  marks(spec, normalized, layout, _state, _theme, _warnings) {
+  marks(spec, normalized, layout, _state, _theme, warnings) {
     const segments = normalized.segments;
     if (segments.length === 0) return [];
 
     const usableW = Math.max(0, layout.width - layout.pad * 2);
     const usableH = Math.max(0, layout.height - layout.pad * 2);
+    if (usableW <= 0 || usableH <= 0) return [];
     const x0 = layout.pad;
     const y0 = layout.pad;
 
     const runs = layoutSegmentsByPct(segments, usableW, 0);
     const classSuffix = spec.className ? ` ${spec.className}` : "";
+    const cornerRadiusDefault = Math.min(usableH / 2, 6);
+    const cornerRadius = coerceFiniteNonNegative(
+      spec.cornerRadius ?? cornerRadiusDefault,
+      cornerRadiusDefault,
+      warnings,
+      "Non-finite gradient-fade cornerRadius; defaulted to half the chart height.",
+    );
+    const clipPath = cornerRadius > 0 ? "gradient-fade-clip" : undefined;
 
     const marks: Mark[] = [];
     for (let i = 0; i < runs.length; i++) {
@@ -84,6 +119,7 @@ export const gradientFadeChart = {
       if (!run) continue;
       marks.push({
         className: `mv-gradient-fade-seg${classSuffix}`,
+        clipPath,
         h: usableH,
         id: `gradient-fade-seg-${i}`,
         type: "rect",
