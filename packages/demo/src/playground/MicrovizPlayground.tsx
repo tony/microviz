@@ -2330,30 +2330,6 @@ export const MicrovizPlayground: FC<{
           type="button"
         />
       )}
-      {useDrawerLayout && !mobileDrawerOpen && (
-        <div className="pointer-events-none fixed inset-y-0 left-0 right-0 z-20 flex items-center justify-between px-1">
-          <button
-            aria-expanded={mobileSidebarOpen}
-            aria-label="Open controls panel"
-            className="pointer-events-auto flex h-20 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:bg-slate-950 dark:hover:text-slate-100"
-            onClick={toggleMobileSidebar}
-            style={{ textOrientation: "mixed", writingMode: "vertical-rl" }}
-            type="button"
-          >
-            Controls
-          </button>
-          <button
-            aria-expanded={mobileInspectorOpen}
-            aria-label="Open inspector panel"
-            className="pointer-events-auto flex h-20 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:bg-slate-950 dark:hover:text-slate-100"
-            onClick={toggleMobileInspector}
-            style={{ textOrientation: "mixed", writingMode: "vertical-rl" }}
-            type="button"
-          >
-            Inspector
-          </button>
-        </div>
-      )}
       <ResizablePane
         className={`h-full border-r border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 left-0 z-40 shadow-xl transition-transform duration-200 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}` : "static shadow-none"}`}
         contentClassName="h-full w-full overflow-hidden"
@@ -2738,15 +2714,58 @@ export const MicrovizPlayground: FC<{
       </ResizablePane>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="px-4 pt-3">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <h2 className="text-base font-semibold">Playground</h2>
-              <p className="hidden whitespace-nowrap text-xs text-slate-600 dark:text-slate-300 xl:block">
-                Compare wrappers, renderers, and compute modes.
-              </p>
+        {useDrawerLayout && (
+          <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+            <div className="relative flex h-9 items-center justify-center">
+              <button
+                aria-expanded={mobileSidebarOpen}
+                className={tabButton({
+                  active: mobileSidebarOpen,
+                  className: "absolute left-0 whitespace-nowrap",
+                  size: "xs",
+                  variant: "filled",
+                })}
+                onClick={toggleMobileSidebar}
+                type="button"
+              >
+                Controls
+              </button>
+              <label className="flex max-w-[70%] items-center gap-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <span>Filter</span>
+                <select
+                  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
+                  onChange={(event) =>
+                    setChartSubtype(event.target.value as ChartSubtype)
+                  }
+                  title="Filter charts"
+                  value={chartSubtype}
+                >
+                  {chartSubtypeOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                aria-expanded={mobileInspectorOpen}
+                className={tabButton({
+                  active: mobileInspectorOpen,
+                  className: "absolute right-0 whitespace-nowrap",
+                  size: "xs",
+                  variant: "filled",
+                })}
+                onClick={toggleMobileInspector}
+                type="button"
+              >
+                Inspector
+              </button>
             </div>
-            <div className="flex min-w-0 items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
+          </div>
+        )}
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
+            {!useDrawerLayout && (
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <div
                   aria-label="Chart subtype filter"
@@ -2774,23 +2793,24 @@ export const MicrovizPlayground: FC<{
                     );
                   })}
                 </div>
-                <div
-                  className="text-xs text-slate-500 dark:text-slate-400"
+              </div>
+            )}
+            <div className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              {!useDrawerLayout && (
+                <span
                   title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
                 >
-                  {visibleCharts.length} charts
-                </div>
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                {wrapper} · {renderer}
-                {warningCount > 0 && (
-                  <span className="font-semibold text-amber-600 dark:text-amber-300">
-                    {" "}
-                    · {warningCount} warning{warningCount === 1 ? "" : "s"}
-                  </span>
-                )}{" "}
-                · {computeModeEffective}
-              </div>
+                  {visibleCharts.length} charts ·{" "}
+                </span>
+              )}
+              {wrapper} · {renderer}
+              {warningCount > 0 && (
+                <span className="font-semibold text-amber-600 dark:text-amber-300">
+                  {" "}
+                  · {warningCount} warning{warningCount === 1 ? "" : "s"}
+                </span>
+              )}{" "}
+              · {computeModeEffective}
             </div>
           </div>
         </div>
@@ -3012,15 +3032,18 @@ export const MicrovizPlayground: FC<{
                   );
                 })}
               </div>
-              <div className="max-w-[45%] truncate text-[11px] text-slate-500 dark:text-slate-400">
-                {selectedChart}
-              </div>
             </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
+            <div
+              className="mb-2 truncate text-[11px] text-slate-500 dark:text-slate-400"
+              title={selectedChart}
+            >
+              {selectedChart}
+            </div>
             {inspectorTab === "diagnostics" && (
-            <div className="space-y-4">
+              <div className="space-y-4">
               <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span>Diagnostics</span>
                 <button
@@ -3107,8 +3130,8 @@ export const MicrovizPlayground: FC<{
                   )}
                 </div>
               </div>
-            </div>
-          )}
+              </div>
+            )}
 
           {inspectorTab === "a11y" && (
             <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
