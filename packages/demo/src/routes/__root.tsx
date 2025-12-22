@@ -178,24 +178,23 @@ function RootComponent() {
             </button>
           </div>
 
-          <label className="flex shrink-0 items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-            <select
-              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-              onChange={(event) =>
-                setMicrovizThemePreference(
-                  event.target.value as MicrovizThemePreference,
-                )
-              }
-              title="Microviz preset (Auto follows UI)"
-              value={microvizThemePreference}
-            >
-              <option value="auto">Auto</option>
-              <option value="white">White</option>
-              <option value="g10">G10</option>
-              <option value="g90">G90</option>
-              <option value="g100">G100</option>
-            </select>
-          </label>
+          <select
+            aria-label="Microviz preset"
+            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
+            onChange={(event) =>
+              setMicrovizThemePreference(
+                event.target.value as MicrovizThemePreference,
+              )
+            }
+            title="Microviz preset (Auto follows UI)"
+            value={microvizThemePreference}
+          >
+            <option value="auto">Auto</option>
+            <option value="white">White</option>
+            <option value="g10">G10</option>
+            <option value="g90">G90</option>
+            <option value="g100">G100</option>
+          </select>
 
           <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
             <button
