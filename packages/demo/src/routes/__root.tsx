@@ -179,9 +179,6 @@ function RootComponent() {
           </div>
 
           <label className="flex shrink-0 items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-            <span className="hidden whitespace-nowrap text-slate-600 dark:text-slate-300 md:inline">
-              Microviz
-            </span>
             <select
               className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
               onChange={(event) =>
