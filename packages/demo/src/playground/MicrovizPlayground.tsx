@@ -51,6 +51,7 @@ import {
   statusLed,
   tabButton,
 } from "../ui/styles";
+import { TabToggle } from "../ui/TabToggle";
 import { ToggleGroup } from "../ui/ToggleGroup";
 import { renderSvgElement } from "../vanilla/svgDom";
 import { JsonViewer } from "./JsonViewer";
@@ -2405,44 +2406,17 @@ export const MicrovizPlayground: FC<{
               )}
             </div>
             <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
-              <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
-                <button
-                  className={tabButton({
-                    active: sidebarTab === "browse",
-                    className: "whitespace-nowrap",
-                    size: "xs",
-                  })}
-                  onClick={() => setSidebarTab("browse")}
-                  title="Charts"
-                  type="button"
-                >
-                  Browse
-                </button>
-                <button
-                  className={tabButton({
-                    active: sidebarTab === "settings",
-                    className: "whitespace-nowrap",
-                    size: "xs",
-                  })}
-                  onClick={() => setSidebarTab("settings")}
-                  title="Settings"
-                  type="button"
-                >
-                  Settings
-                </button>
-                <button
-                  className={tabButton({
-                    active: sidebarTab === "debug",
-                    className: "whitespace-nowrap",
-                    size: "xs",
-                  })}
-                  onClick={() => setSidebarTab("debug")}
-                  title="Debug"
-                  type="button"
-                >
-                  Debug
-                </button>
-              </div>
+              <TabToggle
+                label="Sidebar navigation"
+                onChange={setSidebarTab}
+                options={[
+                  { id: "browse", label: "Browse", title: "Charts" },
+                  { id: "settings", label: "Settings" },
+                  { id: "debug", label: "Debug" },
+                ]}
+                size="xs"
+                value={sidebarTab}
+              />
             </div>
           </div>
 
@@ -2838,32 +2812,18 @@ export const MicrovizPlayground: FC<{
           <div className="flex items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
             {!useDrawerLayout && (
               <div className="flex items-center gap-2 whitespace-nowrap">
-                <div
-                  aria-label="Chart subtype filter"
-                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
-                  role="tablist"
-                >
-                  {chartSubtypeOptions.map((option) => {
-                    const selected = chartSubtype === option.id;
-                    return (
-                      <button
-                        aria-selected={selected}
-                        className={tabButton({
-                          active: selected,
-                          size: "xs",
-                          variant: "muted",
-                        })}
-                        key={option.id}
-                        onClick={() => setChartSubtype(option.id)}
-                        role="tab"
-                        title={`Filter: ${option.label}`}
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <TabToggle
+                  container="bordered"
+                  label="Chart subtype filter"
+                  onChange={setChartSubtype}
+                  options={chartSubtypeOptions.map((o) => ({
+                    ...o,
+                    title: `Filter: ${o.label}`,
+                  }))}
+                  size="xs"
+                  value={chartSubtype}
+                  variant="muted"
+                />
               </div>
             )}
             {!useDrawerLayout && (
@@ -3077,34 +3037,21 @@ export const MicrovizPlayground: FC<{
               )}
             </div>
             <div className="flex min-w-0 items-center gap-2">
-              <div
-                aria-label="Inspector tabs"
-                className="min-w-0 flex-1"
-                role="tablist"
-              >
+              <div className="min-w-0 flex-1">
                 <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
-                  <div className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
-                    {inspectorTabOptions.map((tab) => {
-                      const selected = inspectorTab === tab;
-                      return (
-                        <button
-                          aria-selected={selected}
-                          className={tabButton({
-                            active: selected,
-                            size: "xs",
-                            variant: "muted",
-                          })}
-                          key={tab}
-                          onClick={() => setInspectorTab(tab)}
-                          role="tab"
-                          title={inspectorTabTitles[tab]}
-                          type="button"
-                        >
-                          {inspectorTabLabels[tab]}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <TabToggle
+                    container="bordered"
+                    label="Inspector tabs"
+                    onChange={setInspectorTab}
+                    options={inspectorTabOptions.map((tab) => ({
+                      id: tab,
+                      label: inspectorTabLabels[tab],
+                      title: inspectorTabTitles[tab],
+                    }))}
+                    size="xs"
+                    value={inspectorTab}
+                    variant="muted"
+                  />
                 </div>
               </div>
             </div>

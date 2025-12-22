@@ -10,11 +10,20 @@
 
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as GalleryRouteImport } from "./routes/gallery";
+import { Route as DemoRouteImport } from "./routes/demo";
 import { Route as IndexRouteImport } from "./routes/index";
+import { Route as DemoIndexRouteImport } from "./routes/demo/index";
+import { Route as DemoUxIndexRouteImport } from "./routes/demo/ux/index";
+import { Route as DemoUxTabToggleRouteImport } from "./routes/demo/ux/tab-toggle";
 
 const GalleryRoute = GalleryRouteImport.update({
   id: "/gallery",
   path: "/gallery",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const DemoRoute = DemoRouteImport.update({
+  id: "/demo",
+  path: "/demo",
   getParentRoute: () => rootRouteImport,
 } as any);
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +31,70 @@ const IndexRoute = IndexRouteImport.update({
   path: "/",
   getParentRoute: () => rootRouteImport,
 } as any);
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => DemoRoute,
+} as any);
+const DemoUxIndexRoute = DemoUxIndexRouteImport.update({
+  id: "/ux/",
+  path: "/ux/",
+  getParentRoute: () => DemoRoute,
+} as any);
+const DemoUxTabToggleRoute = DemoUxTabToggleRouteImport.update({
+  id: "/ux/tab-toggle",
+  path: "/ux/tab-toggle",
+  getParentRoute: () => DemoRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
+  "/demo": typeof DemoRouteWithChildren;
   "/gallery": typeof GalleryRoute;
+  "/demo/": typeof DemoIndexRoute;
+  "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
+  "/demo/ux": typeof DemoUxIndexRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/gallery": typeof GalleryRoute;
+  "/demo": typeof DemoIndexRoute;
+  "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
+  "/demo/ux": typeof DemoUxIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
+  "/demo": typeof DemoRouteWithChildren;
   "/gallery": typeof GalleryRoute;
+  "/demo/": typeof DemoIndexRoute;
+  "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
+  "/demo/ux/": typeof DemoUxIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/gallery";
+  fullPaths:
+    | "/"
+    | "/demo"
+    | "/gallery"
+    | "/demo/"
+    | "/demo/ux/tab-toggle"
+    | "/demo/ux";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/gallery";
-  id: "__root__" | "/" | "/gallery";
+  to: "/" | "/gallery" | "/demo" | "/demo/ux/tab-toggle" | "/demo/ux";
+  id:
+    | "__root__"
+    | "/"
+    | "/demo"
+    | "/gallery"
+    | "/demo/"
+    | "/demo/ux/tab-toggle"
+    | "/demo/ux/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  DemoRoute: typeof DemoRouteWithChildren;
   GalleryRoute: typeof GalleryRoute;
 }
 
@@ -58,6 +107,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof GalleryRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/demo": {
+      id: "/demo";
+      path: "/demo";
+      fullPath: "/demo";
+      preLoaderRoute: typeof DemoRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/": {
       id: "/";
       path: "/";
@@ -65,11 +121,47 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/demo/": {
+      id: "/demo/";
+      path: "/";
+      fullPath: "/demo/";
+      preLoaderRoute: typeof DemoIndexRouteImport;
+      parentRoute: typeof DemoRoute;
+    };
+    "/demo/ux/": {
+      id: "/demo/ux/";
+      path: "/ux";
+      fullPath: "/demo/ux";
+      preLoaderRoute: typeof DemoUxIndexRouteImport;
+      parentRoute: typeof DemoRoute;
+    };
+    "/demo/ux/tab-toggle": {
+      id: "/demo/ux/tab-toggle";
+      path: "/ux/tab-toggle";
+      fullPath: "/demo/ux/tab-toggle";
+      preLoaderRoute: typeof DemoUxTabToggleRouteImport;
+      parentRoute: typeof DemoRoute;
+    };
   }
 }
 
+interface DemoRouteChildren {
+  DemoIndexRoute: typeof DemoIndexRoute;
+  DemoUxTabToggleRoute: typeof DemoUxTabToggleRoute;
+  DemoUxIndexRoute: typeof DemoUxIndexRoute;
+}
+
+const DemoRouteChildren: DemoRouteChildren = {
+  DemoIndexRoute: DemoIndexRoute,
+  DemoUxTabToggleRoute: DemoUxTabToggleRoute,
+  DemoUxIndexRoute: DemoUxIndexRoute,
+};
+
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DemoRoute: DemoRouteWithChildren,
   GalleryRoute: GalleryRoute,
 };
 export const routeTree = rootRouteImport
