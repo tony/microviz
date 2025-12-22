@@ -23,17 +23,43 @@ export function parseBoolean(value: string | null, fallback: boolean): boolean {
   return fallback;
 }
 
+/**
+ * Parse a data attribute into a number array.
+ *
+ * Supports multiple formats for vibe-coding / sandbox friendliness:
+ * - JSON array: `[1, 2, 3]`
+ * - Comma-separated: `1,2,3` or `1, 2, 3`
+ * - Space-separated: `1 2 3`
+ * - Mixed delimiters: `1, 2 3` (comma + space)
+ */
 export function parseNumberArray(value: string | null): number[] {
   if (!value) return [];
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (v): v is number => typeof v === "number" && Number.isFinite(v),
-    );
-  } catch {
-    return [];
+
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  // Try JSON first (handles arrays with brackets)
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (v): v is number => typeof v === "number" && Number.isFinite(v),
+      );
+    } catch {
+      // Fall through to delimiter parsing
+    }
   }
+
+  // Try comma/space-separated (lenient parsing for vibe coding)
+  // Matches: "1,2,3" or "1 2 3" or "1, 2, 3" or "-1.5, 2.5, 3"
+  const numbers = trimmed
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map(Number)
+    .filter(Number.isFinite);
+
+  return numbers;
 }
 
 export type BitfieldSegmentInput = {
