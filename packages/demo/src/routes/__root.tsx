@@ -26,7 +26,7 @@ import {
   resolveMicrovizTheme,
   writeMicrovizThemePreference,
 } from "../ui/microvizTheme";
-import { tabButton } from "../ui/styles";
+import { TabToggle } from "../ui/TabToggle";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -110,73 +110,32 @@ function RootComponent() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
-            <button
-              className={tabButton({
-                active: !showGallery,
-                className: "active:scale-[0.98]",
-                size: "sm",
-              })}
-              onClick={() => navigate({ to: "/" })}
-              title="Playground"
-              type="button"
-            >
-              Playground
-            </button>
-            <button
-              className={tabButton({
-                active: showGallery,
-                className: "active:scale-[0.98]",
-                size: "sm",
-              })}
-              onClick={() => navigate({ to: "/gallery" })}
-              title="Gallery"
-              type="button"
-            >
-              Gallery
-            </button>
-          </div>
+          <TabToggle
+            label="Navigation"
+            onChange={(v) =>
+              navigate({ to: v === "gallery" ? "/gallery" : "/" })
+            }
+            options={[
+              { id: "playground", label: "Playground" },
+              { id: "gallery", label: "Gallery" },
+            ]}
+            size="sm"
+            value={showGallery ? "gallery" : "playground"}
+          />
         </div>
 
         <div className="flex min-w-0 w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-1 sm:flex-nowrap sm:justify-end sm:overflow-x-auto [scrollbar-gutter:stable]">
-          <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
-            <button
-              className={tabButton({
-                active: colorSchemePreference === "system",
-                className: "active:scale-[0.98]",
-                size: "xs",
-              })}
-              onClick={() => setColorSchemePreference("system")}
-              title="UI scheme: system"
-              type="button"
-            >
-              System
-            </button>
-            <button
-              className={tabButton({
-                active: colorSchemePreference === "light",
-                className: "active:scale-[0.98]",
-                size: "xs",
-              })}
-              onClick={() => setColorSchemePreference("light")}
-              title="UI scheme: light"
-              type="button"
-            >
-              Light
-            </button>
-            <button
-              className={tabButton({
-                active: colorSchemePreference === "dark",
-                className: "active:scale-[0.98]",
-                size: "xs",
-              })}
-              onClick={() => setColorSchemePreference("dark")}
-              title="UI scheme: dark"
-              type="button"
-            >
-              Dark
-            </button>
-          </div>
+          <TabToggle
+            label="UI color scheme"
+            onChange={setColorSchemePreference}
+            options={[
+              { id: "system", label: "System", title: "UI scheme: system" },
+              { id: "light", label: "Light", title: "UI scheme: light" },
+              { id: "dark", label: "Dark", title: "UI scheme: dark" },
+            ]}
+            size="xs"
+            value={colorSchemePreference}
+          />
 
           <select
             aria-label="Microviz preset"
@@ -196,32 +155,20 @@ function RootComponent() {
             <option value="g100">G100</option>
           </select>
 
-          <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/50">
-            <button
-              className={tabButton({
-                active: microvizBackgroundPreference === "transparent",
-                className: "active:scale-[0.98]",
-                size: "xs",
-              })}
-              onClick={() => setMicrovizBackgroundPreference("transparent")}
-              title="Microviz bg: transparent"
-              type="button"
-            >
-              Transparent
-            </button>
-            <button
-              className={tabButton({
-                active: microvizBackgroundPreference === "solid",
-                className: "active:scale-[0.98]",
-                size: "xs",
-              })}
-              onClick={() => setMicrovizBackgroundPreference("solid")}
-              title="Microviz bg: preset"
-              type="button"
-            >
-              Solid
-            </button>
-          </div>
+          <TabToggle
+            label="Microviz background"
+            onChange={setMicrovizBackgroundPreference}
+            options={[
+              {
+                id: "transparent",
+                label: "Transparent",
+                title: "Microviz bg: transparent",
+              },
+              { id: "solid", label: "Solid", title: "Microviz bg: preset" },
+            ]}
+            size="xs"
+            value={microvizBackgroundPreference}
+          />
         </div>
       </header>
 
