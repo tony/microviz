@@ -2620,15 +2620,6 @@ export const MicrovizPlayground: FC<{
                     value={computeModeEffective}
                   />
 
-                  <div className="rounded-lg border border-slate-200 bg-white/70 p-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300">
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      Tip
-                    </div>
-                    <div className="mt-1">
-                      Export SVG/PNG from the Inspector → Model tab.
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-2 gap-2">
                     <FieldNumberWithRange
                       label="Width"
