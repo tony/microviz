@@ -147,6 +147,47 @@ const HTML_SUPPORTED_FILTER_PRIMITIVES = new Set([
   "gaussianBlur",
 ]);
 
+const ControlsIcon: FC<{ className?: string }> = ({ className }) => (
+  <svg
+    aria-hidden="true"
+    className={className}
+    fill="none"
+    height="16"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="1.5"
+    viewBox="0 0 24 24"
+    width="16"
+  >
+    <path d="M4 6h10" />
+    <path d="M4 12h16" />
+    <path d="M4 18h7" />
+    <circle cx="18" cy="6" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="11" cy="18" r="2" />
+  </svg>
+);
+
+const InspectorIcon: FC<{ className?: string }> = ({ className }) => (
+  <svg
+    aria-hidden="true"
+    className={className}
+    fill="none"
+    height="16"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="1.5"
+    viewBox="0 0 24 24"
+    width="16"
+  >
+    <rect height="15" rx="2" width="16" x="4" y="4.5" />
+    <path d="M8 9h8" />
+    <path d="M8 13h5" />
+  </svg>
+);
+
 function extractUrlRefId(value: string | undefined): string | null {
   if (!value) return null;
   const match = /url\((['"]?)#?([^'")]+)\1\)/.exec(value);
@@ -2722,20 +2763,23 @@ export const MicrovizPlayground: FC<{
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {useDrawerLayout && (
-          <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
-            <div className="flex h-9 flex-nowrap items-center gap-2 overflow-x-auto [scrollbar-gutter:stable]">
+          <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-2 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+            <div className="flex h-9 items-center gap-2">
               <button
                 aria-expanded={mobileSidebarOpen}
+                aria-label="Controls"
                 className={tabButton({
                   active: mobileSidebarOpen,
-                  className: "shrink-0 whitespace-nowrap",
+                  className: "shrink-0",
                   size: "xs",
                   variant: "filled",
                 })}
                 onClick={toggleMobileSidebar}
+                title="Controls"
                 type="button"
               >
-                Controls
+                <ControlsIcon className="h-4 w-4" />
+                <span className="sr-only">Controls</span>
               </button>
               <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
                 <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -2771,16 +2815,19 @@ export const MicrovizPlayground: FC<{
               </div>
               <button
                 aria-expanded={mobileInspectorOpen}
+                aria-label="Inspector"
                 className={tabButton({
                   active: mobileInspectorOpen,
-                  className: "shrink-0 whitespace-nowrap",
+                  className: "shrink-0",
                   size: "xs",
                   variant: "filled",
                 })}
                 onClick={toggleMobileInspector}
+                title="Inspector"
                 type="button"
               >
-                Inspector
+                <InspectorIcon className="h-4 w-4" />
+                <span className="sr-only">Inspector</span>
               </button>
             </div>
           </div>
