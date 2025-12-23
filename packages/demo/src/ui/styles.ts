@@ -1,6 +1,30 @@
 import { cva } from "class-variance-authority";
 
 /**
+ * Container for tab toggle groups.
+ * Used in: Header navigation, Sidebar tabs, Inspector tabs, Chart filter
+ *
+ * Variants:
+ * - filled: Slate background, no border (header, sidebar)
+ * - bordered: White background with border (inspector, filter)
+ */
+export const tabContainer = cva(
+  "inline-flex items-center gap-1 rounded-lg p-1",
+  {
+    defaultVariants: {
+      container: "filled",
+    },
+    variants: {
+      container: {
+        bordered:
+          "border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
+        filled: "bg-slate-100 dark:bg-slate-800/50",
+      },
+    },
+  },
+);
+
+/**
  * Tab/toggle button used in navigation and filters.
  * Used in: App.tsx, MicrovizPlayground.tsx (sidebar tabs, chart filter, inspector tabs)
  *
