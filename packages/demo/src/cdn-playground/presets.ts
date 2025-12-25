@@ -138,7 +138,7 @@ export const PRESETS: Preset[] = [
   <h1>Donut Chart</h1>
   <microviz-chart
     spec='{"type":"donut"}'
-    data="[62, 28, 10]"
+    data='[{"pct":62,"color":"#6366f1","name":"Desktop"},{"pct":28,"color":"#22c55e","name":"Mobile"},{"pct":10,"color":"#f59e0b","name":"Tablet"}]'
     width="160"
     height="160">
   </microviz-chart>
@@ -227,7 +227,7 @@ export const PRESETS: Preset[] = [
     </div>
     <div class="card">
       <h2>Traffic Sources</h2>
-      <microviz-chart spec='{"type":"donut"}' data="[45, 30, 25]" width="100" height="100"></microviz-chart>
+      <microviz-chart spec='{"type":"donut"}' data='[{"pct":45,"color":"#6366f1"},{"pct":30,"color":"#22c55e"},{"pct":25,"color":"#f59e0b"}]' width="100" height="100"></microviz-chart>
     </div>
   </div>
 </body>
