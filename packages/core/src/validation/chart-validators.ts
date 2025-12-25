@@ -19,13 +19,11 @@ import {
   type ValidationResult,
 } from "./types";
 
-// Chart types that use number arrays
+// Chart types that use simple number arrays
 const NUMBER_ARRAY_CHART_TYPES = new Set([
   "sparkline",
   "spark-area",
   "sparkline-bars",
-  "histogram",
-  "heatgrid",
 ]);
 
 // Chart types that use segment data
@@ -230,16 +228,9 @@ export function validateChartData(
   const chartType = spec.type;
   const dataType = getChartDataType(chartType);
 
-  // Unknown chart type
+  // Unknown chart type - skip validation (chart registry handles this)
   if (dataType === "unknown") {
-    return fail({
-      code: "UNKNOWN_CHART_TYPE",
-      expected: "one of: sparkline, bar, donut, bitfield, ...",
-      hint: "Check available chart types in the documentation",
-      message: `Unknown chart type: ${chartType}`,
-      path: ["spec", "type"],
-      received: stringify(chartType),
-    });
+    return success(data);
   }
 
   // Missing data

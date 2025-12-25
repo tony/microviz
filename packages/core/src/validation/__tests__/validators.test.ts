@@ -378,26 +378,9 @@ describe("chart-specific validators", () => {
       }
     });
 
-    it("reports unknown chart type", () => {
+    it("passes through unknown chart type (chart registry handles validation)", () => {
       const result = validateChartData({ type: "unknown-chart" }, [1, 2, 3]);
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.errors).toMatchInlineSnapshot(`
-					[
-					  {
-					    "code": "UNKNOWN_CHART_TYPE",
-					    "expected": "one of: sparkline, bar, donut, bitfield, ...",
-					    "hint": "Check available chart types in the documentation",
-					    "message": "Unknown chart type: unknown-chart",
-					    "path": [
-					      "spec",
-					      "type",
-					    ],
-					    "received": ""unknown-chart"",
-					  },
-					]
-				`);
-      }
+      expect(result.success).toBe(true);
     });
   });
 });
