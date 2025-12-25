@@ -18,6 +18,7 @@ export type CdnPlaygroundState = {
   cdnSource: CdnSource;
   cspMode: CspMode;
   presetId: string | null;
+  seed: string;
 };
 
 export const DEFAULT_CDN_PLAYGROUND_STATE: CdnPlaygroundState = {
@@ -25,6 +26,7 @@ export const DEFAULT_CDN_PLAYGROUND_STATE: CdnPlaygroundState = {
   code: DEFAULT_PRESET.code,
   cspMode: "off",
   presetId: DEFAULT_PRESET.id,
+  seed: "mv-1",
 };
 
 // Compact keys for URL serialization
@@ -33,6 +35,7 @@ type SerializedState = {
   cdn?: string; // cdnSource
   csp?: CspMode; // cspMode
   p?: string; // presetId
+  s?: string; // seed
 };
 
 function utf8ToBase64(str: string): string {
@@ -87,6 +90,11 @@ export function encodeCdnPlaygroundState(
     hasChanges = true;
   }
 
+  if (state.seed !== "mv-1") {
+    serialized.s = state.seed;
+    hasChanges = true;
+  }
+
   if (!hasChanges) {
     return null;
   }
@@ -117,6 +125,7 @@ export function decodeCdnPlaygroundState(
         : (preset?.code ?? DEFAULT_PRESET.code),
       cspMode: serialized.csp ?? "off",
       presetId,
+      seed: serialized.s ?? "mv-1",
     };
   } catch {
     return null;
