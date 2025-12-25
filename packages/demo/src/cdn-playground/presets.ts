@@ -54,11 +54,12 @@ export const PRESETS: Preset[] = [
 </head>
 <body>
   <h1>Bar Chart</h1>
-  <microviz-bar
-    data='[{"label":"Jan","value":65},{"label":"Feb","value":59},{"label":"Mar","value":80},{"label":"Apr","value":81},{"label":"May","value":56}]'
-    width="300"
-    height="200">
-  </microviz-bar>
+  <microviz-chart
+    spec='{"type":"sparkline-bars"}'
+    data="[65, 59, 80, 81, 56, 72, 68]"
+    width="280"
+    height="120">
+  </microviz-chart>
 </body>
 </html>`,
     description: "Vertical bar chart with labels",
@@ -135,11 +136,12 @@ export const PRESETS: Preset[] = [
 </head>
 <body>
   <h1>Donut Chart</h1>
-  <microviz-donut
-    data='[{"label":"Desktop","value":62},{"label":"Mobile","value":28},{"label":"Tablet","value":10}]'
-    width="200"
-    height="200">
-  </microviz-donut>
+  <microviz-chart
+    spec='{"type":"donut"}'
+    data="[62, 28, 10]"
+    width="160"
+    height="160">
+  </microviz-chart>
 </body>
 </html>`,
     description: "Donut/pie chart with segments",
@@ -221,11 +223,11 @@ export const PRESETS: Preset[] = [
     </div>
     <div class="card">
       <h2>Sales by Region</h2>
-      <microviz-bar data="[65, 45, 78, 52]" width="180" height="80"></microviz-bar>
+      <microviz-chart spec='{"type":"sparkline-bars"}' data="[65, 45, 78, 52]" width="180" height="80"></microviz-chart>
     </div>
     <div class="card">
       <h2>Traffic Sources</h2>
-      <microviz-donut data="[45, 30, 25]" width="100" height="100"></microviz-donut>
+      <microviz-chart spec='{"type":"donut"}' data="[45, 30, 25]" width="100" height="100"></microviz-chart>
     </div>
   </div>
 </body>
