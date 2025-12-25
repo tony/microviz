@@ -41,6 +41,7 @@ export function CodeEditor({
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   const isInternalChange = useRef(false);
+  const isExternalSync = useRef(false);
 
   // Keep onChange ref updated
   onChangeRef.current = onChange;
@@ -61,7 +62,8 @@ export function CodeEditor({
       keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
       language === "html" ? html() : javascript(),
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
+        // Only fire onChange for user edits, not external syncs (e.g., preset selection)
+        if (update.docChanged && !isExternalSync.current) {
           isInternalChange.current = true;
           onChangeRef.current(update.state.doc.toString());
         }
@@ -120,9 +122,12 @@ export function CodeEditor({
 
     const currentDoc = view.state.doc.toString();
     if (currentDoc !== value) {
+      // Mark as external sync so updateListener doesn't fire onChange
+      isExternalSync.current = true;
       view.dispatch({
         changes: { from: 0, insert: value, to: currentDoc.length },
       });
+      isExternalSync.current = false;
     }
   }, [value]);
 
