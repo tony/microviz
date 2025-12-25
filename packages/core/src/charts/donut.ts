@@ -20,7 +20,10 @@ export const donutChart = {
   category: "lines" as const,
   defaultPad: 2,
   displayName: "Donut",
+  emptyDataHint: "Provide an array of segment objects with pct and color",
   emptyDataWarningMessage: "No segments data.",
+  exampleHtml:
+    '<microviz-donut data=\'[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]\'></microviz-donut>',
   isEmpty(normalized) {
     return normalized.segments.length === 0;
   },

@@ -29,7 +29,12 @@ export function coerceFinite(
   message: string,
 ): number {
   if (isFiniteNumber(value)) return value;
-  if (warnings) pushWarning(warnings, { code: "NAN_COORDINATE", message });
+  if (warnings)
+    pushWarning(warnings, {
+      code: "NAN_COORDINATE",
+      message,
+      phase: "compute",
+    });
   return fallback;
 }
 

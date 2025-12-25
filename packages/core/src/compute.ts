@@ -244,7 +244,9 @@ export type Normalized = NormalizedByType[ChartType];
 
 type ErasedChartDefinition = {
   defaultPad: number;
+  emptyDataHint?: string;
   emptyDataWarningMessage?: string;
+  exampleHtml?: string;
   normalize: (spec: ChartSpec, data: unknown) => Normalized;
   isEmpty: (normalized: Normalized) => boolean;
   marks: (
@@ -493,6 +495,7 @@ function validateMarks(
         code: "NAN_COORDINATE",
         markId: mark.id,
         message: `Non-finite numeric value in mark (${mark.type}).`,
+        phase: "compute",
       });
       continue;
     }
@@ -515,6 +518,7 @@ function validateMarks(
       code: "MARK_OUT_OF_BOUNDS",
       markId: mark.id,
       message: `Mark is outside the viewport (${mark.type}).`,
+      phase: "compute",
     });
   }
 }
@@ -531,10 +535,12 @@ export function computeModel<S extends ChartSpec>(
       for (const error of validationResult.errors) {
         pushWarning(warnings, {
           code: error.code,
+          example: error.example,
           expected: error.expected,
           hint: error.hint,
           message: error.message,
           path: error.path,
+          phase: "input",
           received: error.received,
         });
       }
@@ -545,7 +551,13 @@ export function computeModel<S extends ChartSpec>(
 
   const def = getChartDefinition(input.spec.type);
   if (def.emptyDataWarningMessage && def.isEmpty(normalized)) {
-    warnings.push({ code: "EMPTY_DATA", message: def.emptyDataWarningMessage });
+    warnings.push({
+      code: "EMPTY_DATA",
+      example: def.exampleHtml,
+      hint: def.emptyDataHint,
+      message: def.emptyDataWarningMessage,
+      phase: "normalized",
+    });
   }
 
   const layout = computeLayout(input.spec, input.size, warnings);
@@ -558,11 +570,19 @@ export function computeModel<S extends ChartSpec>(
     warnings,
   );
   const defs = computeDefs(input.spec, normalized, layout, warnings);
-  if (marks.length === 0)
+  if (marks.length === 0) {
+    // Determine the cause of blank render from upstream warnings
+    const cause = warnings.find(
+      (w) => w.code === "EMPTY_DATA" || w.code === "NAN_COORDINATE",
+    )?.code;
     pushWarning(warnings, {
+      cause,
       code: "BLANK_RENDER",
+      hint: cause ? "Fix upstream data issues first" : undefined,
       message: "No marks produced.",
+      phase: "render",
     });
+  }
   validateMarks(marks, layout.width, layout.height, warnings);
   validateDefReferences(marks, defs, warnings);
 

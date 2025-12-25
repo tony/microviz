@@ -195,6 +195,7 @@ describe("chart-specific validators", () => {
 					[
 					  {
 					    "code": "INVALID_TYPE",
+					    "example": "<microviz-sparkline data="[10, 25, 15, 30, 20]"></microviz-sparkline>",
 					    "expected": "array of numbers",
 					    "hint": "Try: data="[10, 20, 30]" or data="10, 20, 30"",
 					    "message": "Sparkline requires an array of numbers",
@@ -345,6 +346,7 @@ describe("chart-specific validators", () => {
 					[
 					  {
 					    "code": "MISSING_DATA",
+					    "example": "<microviz-donut data='[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]'></microviz-donut>",
 					    "expected": "array of segments [{pct, color, name?}]",
 					    "hint": "Try: data='[{"pct":50,"color":"#6366f1"}]'",
 					    "message": "Donut chart requires data",
@@ -367,6 +369,7 @@ describe("chart-specific validators", () => {
 					[
 					  {
 					    "code": "INVALID_DATA_SHAPE",
+					    "example": "<microviz-donut data='[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]'></microviz-donut>",
 					    "expected": "array of segments [{pct, color, name?}]",
 					    "hint": "Donut needs segment objects, not plain numbers. Try: [{pct: 50, color: "#6366f1"}]",
 					    "message": "Donut chart expects segment objects, got number array",

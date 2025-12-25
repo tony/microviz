@@ -28,7 +28,12 @@ export type ChartDefinition<
   category?: ChartCategory;
   /** Hint for ideal aspect ratio; undefined means chart adapts to any size */
   preferredAspectRatio?: PreferredAspectRatio;
+  /** Warning message when data is empty/invalid */
   emptyDataWarningMessage?: string;
+  /** Hint for fixing empty data warning */
+  emptyDataHint?: string;
+  /** Copy-pasteable HTML example showing correct usage */
+  exampleHtml?: string;
   normalize(spec: Spec, data: Data): Normalized;
   isEmpty(normalized: Normalized): boolean;
   marks(
