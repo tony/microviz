@@ -24,7 +24,7 @@ import type {
   Mark,
   RenderModel,
 } from "./model";
-import { validateChartData } from "./validation";
+import { type ValidationMode, validateChartData } from "./validation";
 
 export type { InteractionState, Layout, ThemeTokens } from "./charts/context";
 export type {
@@ -230,6 +230,13 @@ export type ComputeModelInput<S extends ChartSpec = ChartSpec> = {
    */
   theme?: ThemeTokens;
   state?: InteractionState;
+  /**
+   * Validation mode:
+   * - "normal" (default): Validate after parsing
+   * - "strict": Warn about dropped/coerced values
+   * - "skip": No validation (performance, trusted data)
+   */
+  validation?: ValidationMode;
 };
 
 type NormalizedByType = { [K in ChartType]: NormalizedOf<ChartRegistry[K]> };
@@ -517,18 +524,20 @@ export function computeModel<S extends ChartSpec>(
 ): RenderModel {
   const warnings: DiagnosticWarning[] = [];
 
-  // Validate chart data and add any errors as warnings
-  const validationResult = validateChartData(input.spec, input.data);
-  if (!validationResult.success) {
-    for (const error of validationResult.errors) {
-      pushWarning(warnings, {
-        code: error.code,
-        expected: error.expected,
-        hint: error.hint,
-        message: error.message,
-        path: error.path,
-        received: error.received,
-      });
+  // Validate chart data (unless skipped)
+  if (input.validation !== "skip") {
+    const validationResult = validateChartData(input.spec, input.data);
+    if (!validationResult.success) {
+      for (const error of validationResult.errors) {
+        pushWarning(warnings, {
+          code: error.code,
+          expected: error.expected,
+          hint: error.hint,
+          message: error.message,
+          path: error.path,
+          received: error.received,
+        });
+      }
     }
   }
 

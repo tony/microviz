@@ -54,7 +54,7 @@ export class MicrovizStepLine extends HTMLElement {
   }
 
   #computeFromAttributes(): RenderModel {
-    const data = parseNumberArray(this.getAttribute("data"));
+    const { data } = parseNumberArray(this.getAttribute("data"));
     const width = parseNumber(this.getAttribute("width"), 200);
     const height = parseNumber(this.getAttribute("height"), 32);
     const pad = this.hasAttribute("pad")

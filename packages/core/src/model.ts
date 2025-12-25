@@ -282,7 +282,8 @@ export type DiagnosticWarningCode =
   | "MISSING_FIELD"
   | "MISSING_DATA"
   | "OUT_OF_RANGE"
-  | "UNKNOWN_CHART_TYPE";
+  | "UNKNOWN_CHART_TYPE"
+  | "DROPPED_VALUES"; // Values were dropped during parsing (strict mode)
 
 export type DiagnosticWarning = {
   code: DiagnosticWarningCode;

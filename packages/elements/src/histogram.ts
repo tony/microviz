@@ -55,9 +55,9 @@ export class MicrovizHistogram extends HTMLElement {
   }
 
   #computeFromAttributes(): RenderModel {
-    const series = parseNumberArray(this.getAttribute("data"));
+    const { data: series } = parseNumberArray(this.getAttribute("data"));
     const opacities = this.hasAttribute("opacities")
-      ? parseNumberArray(this.getAttribute("opacities"))
+      ? parseNumberArray(this.getAttribute("opacities")).data
       : undefined;
 
     const width = parseNumber(this.getAttribute("width"), 200);

@@ -45,6 +45,7 @@ export {
 export type {
   ValidationError,
   ValidationErrorCode,
+  ValidationMode,
   ValidationResult,
   Validator,
 } from "./types";
