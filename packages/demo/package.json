@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "copy-cdn": "cp ../elements/dist/cdn/microviz.js public/cdn/",
     "preview": "vite preview",
     "generate-routes": "tsr generate",
     "check": "tsc --noEmit",
