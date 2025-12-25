@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { CspMode } from "./cdnPlaygroundState";
 
 export type ConsoleEntry = {
@@ -134,13 +134,12 @@ export function PreviewPane({
   className = "",
 }: PreviewPaneProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [srcdoc, setSrcdoc] = useState("");
 
-  // Generate srcdoc when inputs change
-  useEffect(() => {
-    const newSrcdoc = generateSrcdoc(code, cdnUrl, cspMode);
-    setSrcdoc(newSrcdoc);
-  }, [code, cdnUrl, cspMode]);
+  // Generate srcdoc from inputs (useMemo ensures it's ready on first render)
+  const srcdoc = useMemo(
+    () => generateSrcdoc(code, cdnUrl, cspMode),
+    [code, cdnUrl, cspMode],
+  );
 
   // Listen for postMessage from iframe
   const handleMessage = useCallback(
