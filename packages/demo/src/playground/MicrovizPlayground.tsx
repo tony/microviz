@@ -1788,7 +1788,7 @@ export const MicrovizPlayground: FC<{
   );
 
   const wideCols = useMemo(() => {
-    const minCardWidth = 280;
+    const minCardWidth = 224; // 20% narrower
     if (chartListContentWidthPx <= 0) return 1;
     return Math.max(
       1,
@@ -2932,7 +2932,7 @@ export const MicrovizPlayground: FC<{
                           <div
                             className="grid gap-3"
                             style={{
-                              gridTemplateColumns: `repeat(${wideCols}, minmax(280px, 1fr))`,
+                              gridTemplateColumns: `repeat(${wideCols}, minmax(224px, 1fr))`,
                             }}
                           >
                             {block.charts.map((chart) => {
