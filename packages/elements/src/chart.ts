@@ -2,6 +2,7 @@ import {
   type A11yItem,
   type ChartSpec,
   computeModel,
+  type DiagnosticWarning,
   hitTest,
   isChartType,
   type RenderModel,
@@ -22,12 +23,19 @@ type Size = { width: number; height: number };
 type Point = { x: number; y: number };
 type ClientPoint = { x: number; y: number };
 
-function parseJson(value: string | null): unknown | null {
-  if (!value) return null;
+type ParseJsonResult =
+  | { ok: true; value: unknown }
+  | { ok: false; error: string };
+
+function parseJsonWithError(value: string | null): ParseJsonResult {
+  if (!value) return { ok: true, value: null };
   try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return null;
+    return { ok: true, value: JSON.parse(value) };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Invalid JSON",
+      ok: false,
+    };
   }
 }
 
@@ -400,10 +408,7 @@ export class MicrovizChart extends HTMLElement {
     return coerceSize({ height, width });
   }
 
-  #resolveSpec(): ChartSpec | null {
-    const spec = parseJson(this.getAttribute("spec"));
-    if (isChartSpec(spec)) return spec;
-
+  #resolveSpecFromType(): ChartSpec | null {
     const type = this.getAttribute("type");
     if (!type || !isChartType(type)) return null;
 
@@ -413,14 +418,81 @@ export class MicrovizChart extends HTMLElement {
     return { pad, type } as ChartSpec;
   }
 
+  #resolveSpecWithError(): { spec: ChartSpec | null; error: string | null } {
+    const specAttr = this.getAttribute("spec");
+    if (specAttr) {
+      const result = parseJsonWithError(specAttr);
+      if (!result.ok) {
+        // JSON parse failed, try fallback to type attribute
+        return { error: result.error, spec: this.#resolveSpecFromType() };
+      }
+      if (isChartSpec(result.value)) {
+        return { error: null, spec: result.value };
+      }
+    }
+    return { error: null, spec: this.#resolveSpecFromType() };
+  }
+
   get model(): RenderModel | null {
     return this.#model;
   }
 
   render(): void {
-    const spec = this.#resolveSpec();
-    const data = parseJson(this.getAttribute("data"));
+    const parseWarnings: DiagnosticWarning[] = [];
+
+    // Parse spec with error tracking
+    const { spec, error: specError } = this.#resolveSpecWithError();
+    if (specError) {
+      parseWarnings.push({
+        code: "INVALID_JSON",
+        example:
+          '<microviz-chart spec=\'{"type":"sparkline"}\' data="[1,2,3]"></microviz-chart>',
+        hint: "Ensure valid JSON syntax for spec",
+        message: `Failed to parse spec attribute: ${specError}`,
+        phase: "input",
+      });
+    }
+
+    // Parse data with error tracking
+    const dataAttr = this.getAttribute("data");
+    const dataResult = parseJsonWithError(dataAttr);
+    const data = dataResult.ok ? dataResult.value : null;
+    if (!dataResult.ok) {
+      parseWarnings.push({
+        code: "INVALID_JSON",
+        example:
+          '<microviz-chart spec=\'{"type":"sparkline"}\' data="[10, 20, 30]"></microviz-chart>',
+        hint: "Ensure valid JSON syntax for data",
+        message: `Failed to parse data attribute: ${dataResult.error}`,
+        phase: "input",
+      });
+    }
+
+    // Emit parse error warnings before early return
+    if (parseWarnings.length > 0) {
+      const warningKey = parseWarnings
+        .map((w) => `${w.code}:${w.message}`)
+        .join(",");
+      if (warningKey !== this.#lastWarningKey) {
+        this.#lastWarningKey = warningKey;
+        this.dispatchEvent(
+          new CustomEvent("microviz-warning", {
+            bubbles: true,
+            composed: true,
+            detail: {
+              element: this.tagName.toLowerCase(),
+              warnings: parseWarnings,
+            },
+          }),
+        );
+      }
+    }
+
     if (!spec || data === null) {
+      // Clear warning key if no parse errors (e.g., missing data attribute)
+      if (parseWarnings.length === 0) {
+        this.#lastWarningKey = null;
+      }
       this.#model = null;
       this.#setFocusedMarkId(null);
       applyMicrovizA11y(this, this.#internals, null);
