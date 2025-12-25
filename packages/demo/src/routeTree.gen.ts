@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from "./routes/index";
 import { Route as DemoIndexRouteImport } from "./routes/demo/index";
 import { Route as DemoUxIndexRouteImport } from "./routes/demo/ux/index";
 import { Route as DemoUxTabToggleRouteImport } from "./routes/demo/ux/tab-toggle";
+import { Route as DemoUxButtonRouteImport } from "./routes/demo/ux/button";
 
 const GalleryRoute = GalleryRouteImport.update({
   id: "/gallery",
@@ -46,12 +47,18 @@ const DemoUxTabToggleRoute = DemoUxTabToggleRouteImport.update({
   path: "/ux/tab-toggle",
   getParentRoute: () => DemoRoute,
 } as any);
+const DemoUxButtonRoute = DemoUxButtonRouteImport.update({
+  id: "/ux/button",
+  path: "/ux/button",
+  getParentRoute: () => DemoRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/demo": typeof DemoRouteWithChildren;
   "/gallery": typeof GalleryRoute;
   "/demo/": typeof DemoIndexRoute;
+  "/demo/ux/button": typeof DemoUxButtonRoute;
   "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
   "/demo/ux": typeof DemoUxIndexRoute;
 }
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/gallery": typeof GalleryRoute;
   "/demo": typeof DemoIndexRoute;
+  "/demo/ux/button": typeof DemoUxButtonRoute;
   "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
   "/demo/ux": typeof DemoUxIndexRoute;
 }
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   "/demo": typeof DemoRouteWithChildren;
   "/gallery": typeof GalleryRoute;
   "/demo/": typeof DemoIndexRoute;
+  "/demo/ux/button": typeof DemoUxButtonRoute;
   "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
   "/demo/ux/": typeof DemoUxIndexRoute;
 }
@@ -78,16 +87,24 @@ export interface FileRouteTypes {
     | "/demo"
     | "/gallery"
     | "/demo/"
+    | "/demo/ux/button"
     | "/demo/ux/tab-toggle"
     | "/demo/ux";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/gallery" | "/demo" | "/demo/ux/tab-toggle" | "/demo/ux";
+  to:
+    | "/"
+    | "/gallery"
+    | "/demo"
+    | "/demo/ux/button"
+    | "/demo/ux/tab-toggle"
+    | "/demo/ux";
   id:
     | "__root__"
     | "/"
     | "/demo"
     | "/gallery"
     | "/demo/"
+    | "/demo/ux/button"
     | "/demo/ux/tab-toggle"
     | "/demo/ux/";
   fileRoutesById: FileRoutesById;
@@ -142,17 +159,26 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof DemoUxTabToggleRouteImport;
       parentRoute: typeof DemoRoute;
     };
+    "/demo/ux/button": {
+      id: "/demo/ux/button";
+      path: "/ux/button";
+      fullPath: "/demo/ux/button";
+      preLoaderRoute: typeof DemoUxButtonRouteImport;
+      parentRoute: typeof DemoRoute;
+    };
   }
 }
 
 interface DemoRouteChildren {
   DemoIndexRoute: typeof DemoIndexRoute;
+  DemoUxButtonRoute: typeof DemoUxButtonRoute;
   DemoUxTabToggleRoute: typeof DemoUxTabToggleRoute;
   DemoUxIndexRoute: typeof DemoUxIndexRoute;
 }
 
 const DemoRouteChildren: DemoRouteChildren = {
   DemoIndexRoute: DemoIndexRoute,
+  DemoUxButtonRoute: DemoUxButtonRoute,
   DemoUxTabToggleRoute: DemoUxTabToggleRoute,
   DemoUxIndexRoute: DemoUxIndexRoute,
 };
