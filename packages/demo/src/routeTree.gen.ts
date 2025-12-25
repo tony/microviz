@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root";
+import { Route as PlaygroundRouteImport } from "./routes/playground";
 import { Route as GalleryRouteImport } from "./routes/gallery";
 import { Route as DemoRouteImport } from "./routes/demo";
 import { Route as IndexRouteImport } from "./routes/index";
@@ -17,6 +18,11 @@ import { Route as DemoUxIndexRouteImport } from "./routes/demo/ux/index";
 import { Route as DemoUxTabToggleRouteImport } from "./routes/demo/ux/tab-toggle";
 import { Route as DemoUxButtonRouteImport } from "./routes/demo/ux/button";
 
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: "/playground",
+  path: "/playground",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const GalleryRoute = GalleryRouteImport.update({
   id: "/gallery",
   path: "/gallery",
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/demo": typeof DemoRouteWithChildren;
   "/gallery": typeof GalleryRoute;
+  "/playground": typeof PlaygroundRoute;
   "/demo/": typeof DemoIndexRoute;
   "/demo/ux/button": typeof DemoUxButtonRoute;
   "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/gallery": typeof GalleryRoute;
+  "/playground": typeof PlaygroundRoute;
   "/demo": typeof DemoIndexRoute;
   "/demo/ux/button": typeof DemoUxButtonRoute;
   "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   "/": typeof IndexRoute;
   "/demo": typeof DemoRouteWithChildren;
   "/gallery": typeof GalleryRoute;
+  "/playground": typeof PlaygroundRoute;
   "/demo/": typeof DemoIndexRoute;
   "/demo/ux/button": typeof DemoUxButtonRoute;
   "/demo/ux/tab-toggle": typeof DemoUxTabToggleRoute;
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
     | "/"
     | "/demo"
     | "/gallery"
+    | "/playground"
     | "/demo/"
     | "/demo/ux/button"
     | "/demo/ux/tab-toggle"
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/gallery"
+    | "/playground"
     | "/demo"
     | "/demo/ux/button"
     | "/demo/ux/tab-toggle"
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | "/"
     | "/demo"
     | "/gallery"
+    | "/playground"
     | "/demo/"
     | "/demo/ux/button"
     | "/demo/ux/tab-toggle"
@@ -113,10 +125,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   DemoRoute: typeof DemoRouteWithChildren;
   GalleryRoute: typeof GalleryRoute;
+  PlaygroundRoute: typeof PlaygroundRoute;
 }
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
+    "/playground": {
+      id: "/playground";
+      path: "/playground";
+      fullPath: "/playground";
+      preLoaderRoute: typeof PlaygroundRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/gallery": {
       id: "/gallery";
       path: "/gallery";
@@ -189,6 +209,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DemoRoute: DemoRouteWithChildren,
   GalleryRoute: GalleryRoute,
+  PlaygroundRoute: PlaygroundRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
