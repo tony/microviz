@@ -1,6 +1,6 @@
 /**
- * URL state serialization for the CDN playground.
- * Follows the pattern from playground/playgroundUrlState.ts
+ * URL state serialization for the playground.
+ * Follows the pattern from browse/browseUrlState.ts
  */
 
 import {
