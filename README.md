@@ -153,6 +153,8 @@ Telemetry levels:
 - `telemetry` / `telemetry="basic"`: render + DOM patch summaries (compute timing for chart/model), plus warnings when present
 - `telemetry="verbose"`: includes per-frame animation events
 
+Telemetry payloads include a stable `modelHash` plus model stats (marks/defs/layers/a11y counts) to correlate compute/render/DOM events.
+
 You can also enable telemetry globally:
 
 ```ts
@@ -161,7 +163,8 @@ window.__MICROVIZ_TELEMETRY__ = true; // or "verbose"
 ```
 
 In the demo app, the Browse inspector includes a Telemetry tab (Elements wrapper)
-for a live event log.
+with filters and copy/export for the live event log. Diagnostics also surfaces
+HTML renderer omissions even when another renderer is active.
 
 ### Motion (animations)
 
