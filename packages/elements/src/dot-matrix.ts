@@ -13,6 +13,7 @@ import {
 
 export class MicrovizDotMatrix extends HTMLElement {
   static observedAttributes = [
+    "animate",
     "data",
     "opacities",
     "width",
@@ -25,7 +26,7 @@ export class MicrovizDotMatrix extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {

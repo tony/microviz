@@ -160,6 +160,17 @@ You can also enable telemetry globally:
 window.__MICROVIZ_TELEMETRY__ = true; // or "verbose"
 ```
 
+### Motion (animations)
+
+microviz animates between updates by default. To disable motion per element:
+
+```html
+<microviz-sparkline animate="false" data="[1,2,3]"></microviz-sparkline>
+```
+
+Accepted falsey values: `false`, `0`, `no`, `off`. Motion also respects
+`prefers-reduced-motion` and `--mv-motion-duration: 0ms`.
+
 ### Accessibility
 
 - Use `interactive` when you want keyboard navigation; arrow keys move across `a11y.items`.

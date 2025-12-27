@@ -12,11 +12,18 @@ import {
 } from "./transition";
 
 export class MicrovizSegmentedBar extends HTMLElement {
-  static observedAttributes = ["data", "width", "height", "pad", "gap"];
+  static observedAttributes = [
+    "animate",
+    "data",
+    "width",
+    "height",
+    "pad",
+    "gap",
+  ];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {

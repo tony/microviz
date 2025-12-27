@@ -12,11 +12,19 @@ import {
 } from "./transition";
 
 export class MicrovizBarcode extends HTMLElement {
-  static observedAttributes = ["data", "width", "height", "pad", "bins", "gap"];
+  static observedAttributes = [
+    "animate",
+    "data",
+    "width",
+    "height",
+    "pad",
+    "bins",
+    "gap",
+  ];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {

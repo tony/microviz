@@ -8,10 +8,22 @@ import { applyMicrovizA11y } from "./a11y";
 import { parseNumber, parseNumberArray } from "./parse";
 import { patchSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
-import { animate, shouldReduceMotion } from "./transition";
+import {
+  animate,
+  getMotionConfig,
+  isAnimationEnabled,
+  shouldReduceMotion,
+} from "./transition";
 
 export class MicrovizSparkline extends HTMLElement {
-  static observedAttributes = ["data", "width", "height", "pad", "validate"];
+  static observedAttributes = [
+    "animate",
+    "data",
+    "width",
+    "height",
+    "pad",
+    "validate",
+  ];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
@@ -131,8 +143,16 @@ export class MicrovizSparkline extends HTMLElement {
     this.#cancelAnimation?.();
     this.#cancelAnimation = null;
 
+    const motionConfig = getMotionConfig(this);
+    const durationDisabled =
+      typeof motionConfig.duration === "number" && motionConfig.duration <= 0;
+    const canAnimate =
+      this.#previousModel &&
+      isAnimationEnabled(this) &&
+      !shouldReduceMotion() &&
+      !durationDisabled;
     // Animate if we have a previous model and motion is not reduced
-    if (this.#previousModel && !shouldReduceMotion()) {
+    if (canAnimate && this.#previousModel) {
       this.#cancelAnimation = animate(
         this.#previousModel,
         model,
@@ -141,6 +161,7 @@ export class MicrovizSparkline extends HTMLElement {
           this.#previousModel = model;
           this.#cancelAnimation = null;
         },
+        motionConfig,
       );
     } else {
       this.#renderFrame(model);

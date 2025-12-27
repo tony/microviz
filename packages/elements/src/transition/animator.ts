@@ -4,12 +4,13 @@ import {
   interpolateModel,
   type RenderModel,
 } from "@microviz/core";
+import { parseBoolean } from "../parse";
 
 /**
  * Configuration for model animation.
  */
 export type AnimationConfig = {
-  /** Duration in milliseconds (default: 160, from --mv-motion-duration) */
+  /** Duration in milliseconds (default: 300, overridden by --mv-motion-duration) */
   duration: number;
   /** Easing function name */
   easing: EasingName;
@@ -19,6 +20,41 @@ const DEFAULT_CONFIG: AnimationConfig = {
   duration: 300,
   easing: "easeOut",
 };
+
+const TIME_RE = /^(-?\d*\.?\d+)(ms|s)?$/i;
+
+function parseCssTime(value: string): number | null {
+  const raw = value.trim();
+  if (!raw) return null;
+  const match = raw.match(TIME_RE);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  const unit = (match[2] ?? "ms").toLowerCase();
+  return unit === "s" ? amount * 1000 : amount;
+}
+
+export function isAnimationEnabled(
+  host?: { getAttribute?: (name: string) => string | null } | null,
+): boolean {
+  if (!host || typeof host.getAttribute !== "function") return true;
+  return parseBoolean(host.getAttribute("animate"), true);
+}
+
+export function getMotionConfig(
+  host?: HTMLElement | null,
+): Partial<AnimationConfig> {
+  if (!host || typeof getComputedStyle !== "function") return {};
+  const inlineDuration = host.style
+    .getPropertyValue("--mv-motion-duration")
+    .trim();
+  const computedDuration = getComputedStyle(host)
+    .getPropertyValue("--mv-motion-duration")
+    .trim();
+  const duration =
+    parseCssTime(inlineDuration) ?? parseCssTime(computedDuration);
+  return duration === null ? {} : { duration };
+}
 
 /**
  * Animate between two RenderModels using requestAnimationFrame.

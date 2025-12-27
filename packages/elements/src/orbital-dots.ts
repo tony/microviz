@@ -13,6 +13,7 @@ import {
 
 export class MicrovizOrbitalDots extends HTMLElement {
   static observedAttributes = [
+    "animate",
     "data",
     "width",
     "height",
@@ -25,7 +26,7 @@ export class MicrovizOrbitalDots extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {

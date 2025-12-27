@@ -12,11 +12,18 @@ import {
 } from "./transition";
 
 export class MicrovizBar extends HTMLElement {
-  static observedAttributes = ["value", "max", "width", "height", "pad"];
+  static observedAttributes = [
+    "animate",
+    "value",
+    "max",
+    "width",
+    "height",
+    "pad",
+  ];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {
