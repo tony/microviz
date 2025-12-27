@@ -156,7 +156,7 @@ export function interpolateMark(from: Mark, to: Mark, t: number): Mark {
 /**
  * Interpolate a RenderModel between two states.
  * Matches marks by ID and interpolates matching pairs.
- * New marks appear immediately; removed marks disappear at t=1.
+ * New marks appear immediately; removed marks disappear immediately.
  */
 export function interpolateModel(
   from: RenderModel,
