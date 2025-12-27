@@ -2,8 +2,14 @@ import { computeModel, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseNumber } from "./parse";
-import { renderSvgIntoShadowRoot } from "./render";
+import { patchSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
+import {
+  type AnimationState,
+  animateTransition,
+  cleanupAnimation,
+  createAnimationState,
+} from "./transition";
 
 export class MicrovizBulletDelta extends HTMLElement {
   static observedAttributes = [
@@ -17,6 +23,7 @@ export class MicrovizBulletDelta extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
+  readonly #animState: AnimationState = createAnimationState();
   #modelOverride: RenderModel | null = null;
 
   constructor() {
@@ -33,6 +40,10 @@ export class MicrovizBulletDelta extends HTMLElement {
     this.render();
   }
 
+  disconnectedCallback(): void {
+    cleanupAnimation(this.#animState);
+  }
+
   attributeChangedCallback(): void {
     this.render();
   }
@@ -47,13 +58,17 @@ export class MicrovizBulletDelta extends HTMLElement {
   }
 
   render(): void {
-    if (this.#modelOverride) {
-      applyMicrovizA11y(this, this.#internals, this.#modelOverride);
-      const svg = renderSvgString(this.#modelOverride);
-      renderSvgIntoShadowRoot(this.#root, svg);
-      return;
-    }
+    const model = this.#modelOverride ?? this.#computeFromAttributes();
+    applyMicrovizA11y(this, this.#internals, model);
+    animateTransition(this.#animState, model, (m) => this.#renderFrame(m));
+  }
 
+  #renderFrame(model: RenderModel): void {
+    const svg = renderSvgString(model);
+    patchSvgIntoShadowRoot(this.#root, svg);
+  }
+
+  #computeFromAttributes(): RenderModel {
     const width = parseNumber(this.getAttribute("width"), 200);
     const height = parseNumber(this.getAttribute("height"), 32);
     const current = parseNumber(this.getAttribute("current"), 0);
@@ -65,14 +80,10 @@ export class MicrovizBulletDelta extends HTMLElement {
       ? parseNumber(this.getAttribute("pad"), 4)
       : undefined;
 
-    const model = computeModel({
+    return computeModel({
       data: { current, max, previous },
       size: { height, width },
       spec: { pad, type: "bullet-delta" },
     });
-    applyMicrovizA11y(this, this.#internals, model);
-
-    const svg = renderSvgString(model);
-    renderSvgIntoShadowRoot(this.#root, svg);
   }
 }
