@@ -8,6 +8,7 @@ import { applyMicrovizA11y } from "./a11y";
 import { parseNumber, parseNumberArray } from "./parse";
 import { patchSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
+import { animate, shouldReduceMotion } from "./transition";
 
 export class MicrovizSparkline extends HTMLElement {
   static observedAttributes = ["data", "width", "height", "pad", "validate"];
@@ -15,6 +16,8 @@ export class MicrovizSparkline extends HTMLElement {
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
   #modelOverride: RenderModel | null = null;
+  #previousModel: RenderModel | null = null;
+  #cancelAnimation: (() => void) | null = null;
   #lastWarningKey: string | null = null;
 
   constructor() {
@@ -29,6 +32,11 @@ export class MicrovizSparkline extends HTMLElement {
 
   connectedCallback(): void {
     this.render();
+  }
+
+  disconnectedCallback(): void {
+    this.#cancelAnimation?.();
+    this.#cancelAnimation = null;
   }
 
   attributeChangedCallback(): void {
@@ -47,8 +55,7 @@ export class MicrovizSparkline extends HTMLElement {
   render(): void {
     if (this.#modelOverride) {
       applyMicrovizA11y(this, this.#internals, this.#modelOverride);
-      const svg = renderSvgString(this.#modelOverride);
-      patchSvgIntoShadowRoot(this.#root, svg);
+      this.#animateToModel(this.#modelOverride);
       return;
     }
 
@@ -116,7 +123,32 @@ export class MicrovizSparkline extends HTMLElement {
     }
 
     applyMicrovizA11y(this, this.#internals, model);
+    this.#animateToModel(model);
+  }
 
+  #animateToModel(model: RenderModel): void {
+    // Cancel any in-flight animation
+    this.#cancelAnimation?.();
+    this.#cancelAnimation = null;
+
+    // Animate if we have a previous model and motion is not reduced
+    if (this.#previousModel && !shouldReduceMotion()) {
+      this.#cancelAnimation = animate(
+        this.#previousModel,
+        model,
+        (interpolated) => this.#renderFrame(interpolated),
+        () => {
+          this.#previousModel = model;
+          this.#cancelAnimation = null;
+        },
+      );
+    } else {
+      this.#renderFrame(model);
+      this.#previousModel = model;
+    }
+  }
+
+  #renderFrame(model: RenderModel): void {
     const svg = renderSvgString(model);
     patchSvgIntoShadowRoot(this.#root, svg);
   }
