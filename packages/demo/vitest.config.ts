@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
     environment: "happy-dom",
-    include: ["tests/unit/**/*.test.tsx"],
+    include: ["tests/unit/**/*.test.{ts,tsx}"],
     setupFiles: ["tests/unit/setup.ts"],
     watch: false,
   },

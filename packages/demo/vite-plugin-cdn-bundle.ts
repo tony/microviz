@@ -11,6 +11,7 @@
  * - In-memory caching (no disk I/O)
  * - Deduplicates concurrent build requests
  */
+import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build, type Plugin } from "vite";
 
@@ -135,6 +136,28 @@ export function cdnBundlePlugin(): Plugin {
         }
       });
     },
+
     name: "cdn-bundle",
+
+    async writeBundle(options) {
+      // Build CDN bundle for production
+      const outDir = options.dir ?? "dist";
+      const cdnDir = resolve(outDir, "cdn");
+
+      // Ensure cdn directory exists
+      await mkdir(cdnDir, { recursive: true });
+
+      // Build the bundle
+      const logger = {
+        error: (msg: string) => console.error(msg),
+        info: (msg: string) => console.log(msg),
+      };
+      await buildBundle(logger);
+
+      if (cache) {
+        await writeFile(resolve(cdnDir, "microviz.js"), cache.code);
+        await writeFile(resolve(cdnDir, "microviz.js.map"), cache.map);
+      }
+    },
   };
 }
