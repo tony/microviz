@@ -2810,6 +2810,20 @@ export const MicrovizPlayground: FC<{
                     ))}
                   </select>
                 </label>
+                <button
+                  className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm transition-all hover:from-indigo-600 hover:to-purple-600 active:scale-95 dark:from-indigo-400 dark:to-purple-400 animate-[bounce-pop_0.3s_ease-out]"
+                  key={rerollKey}
+                  onClick={() => {
+                    randomizeSeed();
+                    setRerollKey((k) => k + 1);
+                  }}
+                  title="Randomize seed"
+                  type="button"
+                >
+                  <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
+                    🎲
+                  </span>
+                </button>
                 <div
                   className="min-w-0 max-w-[45vw] truncate text-[10px] text-slate-500 dark:text-slate-400"
                   title={`${wrapper} · ${renderer} · ${computeModeEffective}`}
