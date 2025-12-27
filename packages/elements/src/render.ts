@@ -19,8 +19,18 @@ function parseHtmlRoot(html: string): Element | null {
   return template.content.firstElementChild;
 }
 
-export function renderSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
-  const telemetry = createTelemetry(root);
+export type RenderDomOptions = {
+  telemetry?: TelemetryHandle;
+  specType?: string;
+  reason?: string;
+};
+
+export function renderSvgIntoShadowRoot(
+  root: ShadowRoot,
+  svg: string,
+  options: RenderDomOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
   const start = telemetry.enabled ? performance.now() : 0;
   const next = parseSvgRoot(svg);
   if (!next) {
@@ -28,6 +38,7 @@ export function renderSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
       phase: "error",
       reason: "parse-svg",
       renderer: "svg",
+      specType: options.specType,
     });
     return;
   }
@@ -42,7 +53,9 @@ export function renderSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
         nodeCount: next.querySelectorAll("*").length,
         operation: "replace",
         phase: "dom",
+        reason: options.reason,
         renderer: "svg",
+        specType: options.specType,
       });
     }
     return;
@@ -56,7 +69,9 @@ export function renderSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
       nodeCount: next.querySelectorAll("*").length,
       operation: "append",
       phase: "dom",
+      reason: options.reason,
       renderer: "svg",
+      specType: options.specType,
     });
   }
 }
@@ -126,8 +141,12 @@ function patchChildren(target: Element, source: Element): void {
  * Patch SVG into shadow root without replacing the entire element.
  * This preserves DOM nodes and enables smooth CSS transitions.
  */
-export function patchSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
-  const telemetry = createTelemetry(root);
+export function patchSvgIntoShadowRoot(
+  root: ShadowRoot,
+  svg: string,
+  options: RenderDomOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
   const start = telemetry.enabled ? performance.now() : 0;
   const next = parseSvgRoot(svg);
   if (!next) {
@@ -135,6 +154,7 @@ export function patchSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
       phase: "error",
       reason: "parse-svg",
       renderer: "svg",
+      specType: options.specType,
     });
     return;
   }
@@ -150,7 +170,9 @@ export function patchSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
         nodeCount: next.querySelectorAll("*").length,
         operation: "append",
         phase: "dom",
+        reason: options.reason,
         renderer: "svg",
+        specType: options.specType,
       });
     }
     return;
@@ -275,13 +297,18 @@ export function patchSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
       nodeCount: next.querySelectorAll("*").length,
       operation: "patch",
       phase: "dom",
+      reason: options.reason,
       renderer: "svg",
+      specType: options.specType,
     });
   }
 }
 
-export function clearSvgFromShadowRoot(root: ShadowRoot): void {
-  const telemetry = createTelemetry(root);
+export function clearSvgFromShadowRoot(
+  root: ShadowRoot,
+  options: RenderDomOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
   const existing = root.querySelector("svg");
   if (!existing) return;
   const start = telemetry.enabled ? performance.now() : 0;
@@ -291,7 +318,9 @@ export function clearSvgFromShadowRoot(root: ShadowRoot): void {
       durationMs: performance.now() - start,
       operation: "clear",
       phase: "dom",
+      reason: options.reason,
       renderer: "svg",
+      specType: options.specType,
     });
   }
 }
@@ -356,9 +385,17 @@ export function renderSvgModelIntoShadowRoot(
 
   const usePatch = options.patch ?? true;
   if (usePatch) {
-    patchSvgIntoShadowRoot(root, svg);
+    patchSvgIntoShadowRoot(root, svg, {
+      reason: options.reason,
+      specType: options.specType,
+      telemetry,
+    });
   } else {
-    renderSvgIntoShadowRoot(root, svg);
+    renderSvgIntoShadowRoot(root, svg, {
+      reason: options.reason,
+      specType: options.specType,
+      telemetry,
+    });
   }
 }
 
@@ -366,8 +403,12 @@ export function renderSvgModelIntoShadowRoot(
  * Patch HTML into shadow root without replacing the entire element.
  * Uses data-mark-id markers to keep DOM nodes stable for transitions.
  */
-export function patchHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
-  const telemetry = createTelemetry(root);
+export function patchHtmlIntoShadowRoot(
+  root: ShadowRoot,
+  html: string,
+  options: RenderDomOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
   const start = telemetry.enabled ? performance.now() : 0;
   const next = parseHtmlRoot(html);
   if (!next) {
@@ -375,6 +416,7 @@ export function patchHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
       phase: "error",
       reason: "parse-html",
       renderer: "html",
+      specType: options.specType,
     });
     return;
   }
@@ -389,7 +431,9 @@ export function patchHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
         nodeCount: next.querySelectorAll("*").length,
         operation: "append",
         phase: "dom",
+        reason: options.reason,
         renderer: "html",
+        specType: options.specType,
       });
     }
     return;
@@ -471,13 +515,19 @@ export function patchHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
       nodeCount: next.querySelectorAll("*").length,
       operation: "patch",
       phase: "dom",
+      reason: options.reason,
       renderer: "html",
+      specType: options.specType,
     });
   }
 }
 
-export function renderHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
-  const telemetry = createTelemetry(root);
+export function renderHtmlIntoShadowRoot(
+  root: ShadowRoot,
+  html: string,
+  options: RenderDomOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
   const start = telemetry.enabled ? performance.now() : 0;
   const next = parseHtmlRoot(html);
   if (!next) {
@@ -485,6 +535,7 @@ export function renderHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
       phase: "error",
       reason: "parse-html",
       renderer: "html",
+      specType: options.specType,
     });
     return;
   }
@@ -499,7 +550,9 @@ export function renderHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
         nodeCount: next.querySelectorAll("*").length,
         operation: "replace",
         phase: "dom",
+        reason: options.reason,
         renderer: "html",
+        specType: options.specType,
       });
     }
     return;
@@ -513,13 +566,18 @@ export function renderHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
       nodeCount: next.querySelectorAll("*").length,
       operation: "append",
       phase: "dom",
+      reason: options.reason,
       renderer: "html",
+      specType: options.specType,
     });
   }
 }
 
-export function clearHtmlFromShadowRoot(root: ShadowRoot): void {
-  const telemetry = createTelemetry(root);
+export function clearHtmlFromShadowRoot(
+  root: ShadowRoot,
+  options: RenderDomOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
   const existing = root.querySelector(".mv-chart");
   if (!existing) return;
   const start = telemetry.enabled ? performance.now() : 0;
@@ -529,7 +587,9 @@ export function clearHtmlFromShadowRoot(root: ShadowRoot): void {
       durationMs: performance.now() - start,
       operation: "clear",
       phase: "dom",
+      reason: options.reason,
       renderer: "html",
+      specType: options.specType,
     });
   }
 }
