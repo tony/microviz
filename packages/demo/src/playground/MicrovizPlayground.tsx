@@ -91,8 +91,6 @@ const chartSubtypeOptions = [
 const PRIMITIVE_CHART_IDS = new Set<ChartId>([
   "bar",
   "bullet-delta",
-  "concentric-arcs",
-  "concentric-arcs-horiz",
   "dumbbell",
 ]);
 
