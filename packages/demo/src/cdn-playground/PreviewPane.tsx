@@ -88,12 +88,40 @@ function getConsoleCaptureScript(): string {
   // Listen for microviz-warning events and forward to console
   document.addEventListener('microviz-warning', (event) => {
     const detail = event.detail;
-    if (!detail || !detail.warnings) return;
-    for (const warning of detail.warnings) {
+    if (!detail) return;
+    if (detail.warnings) {
+      for (const warning of detail.warnings) {
+        parent.postMessage({
+          type: 'console',
+          method: 'warn',
+          args: [\`⚠ [\${warning.code}] \${warning.message}\${warning.hint ? ' — ' + warning.hint : ''}\`],
+          timestamp: Date.now(),
+        }, '*');
+      }
+    }
+
+    const rendererWarnings = detail.rendererWarnings;
+    if (rendererWarnings?.unsupportedMarkTypes?.length) {
       parent.postMessage({
         type: 'console',
         method: 'warn',
-        args: [\`⚠ [\${warning.code}] \${warning.message}\${warning.hint ? ' — ' + warning.hint : ''}\`],
+        args: [\`⚠ HTML renderer ignores marks: \${rendererWarnings.unsupportedMarkTypes.join(', ')}\`],
+        timestamp: Date.now(),
+      }, '*');
+    }
+    if (rendererWarnings?.unsupportedDefs?.length) {
+      parent.postMessage({
+        type: 'console',
+        method: 'warn',
+        args: [\`⚠ HTML renderer ignores defs: \${rendererWarnings.unsupportedDefs.join(', ')}\`],
+        timestamp: Date.now(),
+      }, '*');
+    }
+    if (rendererWarnings?.unsupportedMarkEffects?.length) {
+      parent.postMessage({
+        type: 'console',
+        method: 'warn',
+        args: [\`⚠ HTML renderer ignores mark effects: \${rendererWarnings.unsupportedMarkEffects.join(', ')}\`],
         timestamp: Date.now(),
       }, '*');
     }

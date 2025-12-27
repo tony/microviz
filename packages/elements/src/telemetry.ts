@@ -1,4 +1,5 @@
-import type { DiagnosticWarning, RenderModel } from "@microviz/core";
+import type { Def, DiagnosticWarning, Mark, RenderModel } from "@microviz/core";
+import type { HtmlUnsupportedMarkEffect } from "@microviz/renderers";
 
 export type TelemetryLevel = "off" | "basic" | "verbose";
 
@@ -42,6 +43,9 @@ export type TelemetryPayload = {
   focus?: { index: number; id: string; label?: string };
   bytes?: number;
   nodeCount?: number;
+  unsupportedMarkTypes?: Mark["type"][];
+  unsupportedDefs?: Def["type"][];
+  unsupportedMarkEffects?: HtmlUnsupportedMarkEffect[];
   error?: { name: string; message: string; stack?: string };
 };
 

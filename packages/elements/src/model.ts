@@ -1,6 +1,11 @@
 import { type A11yItem, hitTest, type RenderModel } from "@microviz/core";
 import { renderHtmlString } from "@microviz/renderers";
-import { applyMicrovizA11y, getA11yItems, updateA11yFocus } from "./a11y";
+import {
+  applyMicrovizA11y,
+  getA11yItems,
+  getHtmlRendererWarnings,
+  updateA11yFocus,
+} from "./a11y";
 import { parseOptionalNumber } from "./parse";
 import {
   clearHtmlFromShadowRoot,
@@ -386,9 +391,24 @@ export class MicrovizModel extends HTMLElement {
 
     // Emit warning event if model has diagnostics (deduplicated)
     const warnings = model.stats?.warnings;
-    const warningKey = warnings?.length
-      ? warnings.map((w) => w.code).join(",")
-      : null;
+    const warningCodes = warnings?.map((warning) => warning.code) ?? [];
+    const rendererWarnings = useHtml ? getHtmlRendererWarnings(model) : null;
+    const warningKeyParts: string[] = [];
+    if (warningCodes.length > 0) {
+      warningKeyParts.push(warningCodes.join(","));
+    }
+    if (rendererWarnings) {
+      const rendererKey = [
+        rendererWarnings.unsupportedMarkTypes.join(","),
+        rendererWarnings.unsupportedDefs.join(","),
+        rendererWarnings.unsupportedMarkEffects.join(","),
+      ]
+        .filter((value) => value.length > 0)
+        .join("|");
+      if (rendererKey) warningKeyParts.push(`html:${rendererKey}`);
+    }
+    const warningKey =
+      warningKeyParts.length > 0 ? warningKeyParts.join("|") : null;
     if (warningKey && warningKey !== this.#lastWarningKey) {
       this.#lastWarningKey = warningKey;
       this.dispatchEvent(
@@ -397,17 +417,31 @@ export class MicrovizModel extends HTMLElement {
           composed: true,
           detail: {
             element: this.tagName.toLowerCase(),
+            rendererWarnings: rendererWarnings ?? undefined,
             warnings,
           },
         }),
       );
-      if (warnings && telemetry.enabled && useHtml) {
-        telemetry.emit({
-          phase: "warning",
-          renderer: renderMode,
-          warningCodes: warnings.map((warning) => warning.code),
-          warnings,
-        });
+      if (telemetry.enabled && useHtml) {
+        if (warnings && warnings.length > 0) {
+          telemetry.emit({
+            phase: "warning",
+            renderer: renderMode,
+            warningCodes,
+            warnings,
+          });
+        }
+        if (rendererWarnings) {
+          telemetry.emit({
+            phase: "warning",
+            reason: "renderer-unsupported",
+            renderer: renderMode,
+            stats: modelTelemetryStats(model) ?? undefined,
+            unsupportedDefs: rendererWarnings.unsupportedDefs,
+            unsupportedMarkEffects: rendererWarnings.unsupportedMarkEffects,
+            unsupportedMarkTypes: rendererWarnings.unsupportedMarkTypes,
+          });
+        }
       }
     } else if (!warningKey) {
       this.#lastWarningKey = null;

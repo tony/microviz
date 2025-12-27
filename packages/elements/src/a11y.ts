@@ -12,6 +12,28 @@ const SUMMARY_ID = "mv-a11y-summary";
 const MAX_A11Y_ITEMS = 60;
 const SR_ONLY_CLASS = "mv-sr-only";
 
+export type HtmlRendererWarnings = {
+  unsupportedMarkTypes: ReturnType<typeof getHtmlUnsupportedMarkTypes>;
+  unsupportedDefs: ReturnType<typeof getHtmlUnsupportedDefTypes>;
+  unsupportedMarkEffects: ReturnType<typeof getHtmlUnsupportedMarkEffects>;
+};
+
+export function getHtmlRendererWarnings(
+  model: RenderModel,
+): HtmlRendererWarnings | null {
+  const unsupportedMarkTypes = getHtmlUnsupportedMarkTypes(model);
+  const unsupportedDefs = getHtmlUnsupportedDefTypes(model);
+  const unsupportedMarkEffects = getHtmlUnsupportedMarkEffects(model);
+  if (
+    unsupportedMarkTypes.length === 0 &&
+    unsupportedDefs.length === 0 &&
+    unsupportedMarkEffects.length === 0
+  ) {
+    return null;
+  }
+  return { unsupportedDefs, unsupportedMarkEffects, unsupportedMarkTypes };
+}
+
 function ensureSrOnlyElement(
   root: ShadowRoot,
   id: string,
@@ -109,24 +131,22 @@ function syncWarnings(
   }
 
   if (renderer === "html" && model) {
-    const unsupportedMarkTypes = getHtmlUnsupportedMarkTypes(model);
-    if (unsupportedMarkTypes.length > 0) {
+    const rendererWarnings = getHtmlRendererWarnings(model);
+    if (rendererWarnings?.unsupportedMarkTypes.length) {
       messages.push(
-        `HTML renderer ignores marks: ${unsupportedMarkTypes.join(", ")}.`,
+        `HTML renderer ignores marks: ${rendererWarnings.unsupportedMarkTypes.join(", ")}.`,
       );
     }
 
-    const unsupportedDefs = getHtmlUnsupportedDefTypes(model);
-    if (unsupportedDefs.length > 0) {
+    if (rendererWarnings?.unsupportedDefs.length) {
       messages.push(
-        `HTML renderer ignores defs: ${unsupportedDefs.join(", ")}.`,
+        `HTML renderer ignores defs: ${rendererWarnings.unsupportedDefs.join(", ")}.`,
       );
     }
 
-    const unsupportedEffects = getHtmlUnsupportedMarkEffects(model);
-    if (unsupportedEffects.length > 0) {
+    if (rendererWarnings?.unsupportedMarkEffects.length) {
       messages.push(
-        `HTML renderer ignores mark effects: ${unsupportedEffects.join(", ")}.`,
+        `HTML renderer ignores mark effects: ${rendererWarnings.unsupportedMarkEffects.join(", ")}.`,
       );
     }
   }
