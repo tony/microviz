@@ -26,6 +26,9 @@ const stylesText = `
   --mv-focus-ring: var(--mv-focus-ring, #3b82f6);
   --mv-focus-ring-width: var(--mv-focus-ring-width, 2px);
   --mv-focus-ring-offset: var(--mv-focus-ring-offset, 2px);
+  /* Motion tokens for transitions */
+  --mv-motion-duration: var(--mv-motion-duration, 160ms);
+  --mv-motion-easing: var(--mv-motion-easing, cubic-bezier(0.2, 0.7, 0.3, 1));
 }
 
 :host(:focus-visible) {
@@ -67,10 +70,24 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :host {
+    --mv-motion-duration: 0ms;
+  }
   .mv-skeleton {
     animation: none;
     opacity: 0.14;
   }
+}
+
+/* HTML renderer mark transitions */
+.mv-html-mark {
+  transition:
+    left var(--mv-motion-duration) var(--mv-motion-easing),
+    top var(--mv-motion-duration) var(--mv-motion-easing),
+    width var(--mv-motion-duration) var(--mv-motion-easing),
+    height var(--mv-motion-duration) var(--mv-motion-easing),
+    opacity var(--mv-motion-duration) var(--mv-motion-easing),
+    background var(--mv-motion-duration) var(--mv-motion-easing);
 }
 
 .mv-line {
