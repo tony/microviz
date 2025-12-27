@@ -13,8 +13,8 @@ import { parseNumber, parseOptionalNumber } from "./parse";
 import {
   clearHtmlFromShadowRoot,
   clearSvgFromShadowRoot,
+  patchSvgIntoShadowRoot,
   renderHtmlIntoShadowRoot,
-  renderSvgIntoShadowRoot,
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
@@ -561,7 +561,7 @@ export class MicrovizChart extends HTMLElement {
         ? renderSkeletonSvg(size)
         : renderSvgString(model);
       clearHtmlFromShadowRoot(this.#root);
-      renderSvgIntoShadowRoot(this.#root, svg);
+      patchSvgIntoShadowRoot(this.#root, svg);
     }
     this.#maybeReemitHit();
   }
