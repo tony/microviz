@@ -3,10 +3,9 @@ import {
   type RenderModel,
   type ValidationMode,
 } from "@microviz/core";
-import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseNumber, parseNumberArray } from "./parse";
-import { patchSvgIntoShadowRoot } from "./render";
+import { renderSvgModelIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 import {
   animate,
@@ -170,7 +169,6 @@ export class MicrovizSparkline extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    const svg = renderSvgString(model);
-    patchSvgIntoShadowRoot(this.#root, svg);
+    renderSvgModelIntoShadowRoot(this.#root, model);
   }
 }
