@@ -3548,8 +3548,21 @@ export const MicrovizBrowse: FC<{
                   value={telemetryMode}
                 />
                 {wrapper !== "elements" ? (
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Telemetry events are available for the Elements wrapper.
+                  <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    <span>
+                      Telemetry events are available for the Elements wrapper.
+                    </span>
+                    <button
+                      className={tabButton({
+                        active: false,
+                        size: "xs",
+                        variant: "muted",
+                      })}
+                      onClick={() => setWrapper("elements")}
+                      type="button"
+                    >
+                      Switch to Elements
+                    </button>
                   </div>
                 ) : (
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">
