@@ -1860,8 +1860,8 @@ export const MicrovizBrowse: FC<{
 
   const htmlFilterActive =
     htmlFilter !== "all" && (renderer === "html" || renderer === "html-svg");
-  const htmlSafeCacheRef = useRef(new Map<string, Set<ChartId>>());
-  const htmlSafeCacheKey = useMemo(() => {
+  const htmlSafetyCacheRef = useRef(new Map<string, Map<ChartId, boolean>>());
+  const htmlSafetyCacheKey = useMemo(() => {
     if (!htmlFilterActive) return null;
     return [
       applyNoiseOverlay ? "noise:1" : "noise:0",
@@ -1872,11 +1872,9 @@ export const MicrovizBrowse: FC<{
       `segments:${segmentCount}`,
       `preset:${seriesPreset}`,
       `size:${width}x${height}`,
-      `charts:${chartIds.join(",")}`,
     ].join("|");
   }, [
     applyNoiseOverlay,
-    chartIds,
     dataPreset,
     height,
     htmlFilterActive,
@@ -1887,53 +1885,51 @@ export const MicrovizBrowse: FC<{
     seriesPreset,
     width,
   ]);
-  const htmlSafeChartIdSet = useMemo(() => {
-    if (!htmlFilterActive) return null;
-    if (htmlSafeCacheKey) {
-      const cached = htmlSafeCacheRef.current.get(htmlSafeCacheKey);
-      if (cached) return cached;
-    }
+  const htmlSafetyMap = useMemo(() => {
+    if (!htmlFilterActive || !htmlSafetyCacheKey) return null;
+    const cached = htmlSafetyCacheRef.current.get(htmlSafetyCacheKey);
+    if (cached) return cached;
+    const next = new Map<ChartId, boolean>();
+    htmlSafetyCacheRef.current.set(htmlSafetyCacheKey, next);
+    return next;
+  }, [htmlFilterActive, htmlSafetyCacheKey]);
 
-    const safeCharts = new Set<ChartId>();
-    for (const chartId of chartIds) {
-      let model = computeModel(inputs[chartId]);
-      if (applyNoiseOverlay) {
-        model = applyNoiseDisplacementOverlay(model);
-      }
-      const hasHtmlUnsupported =
-        getHtmlUnsupportedMarkTypes(model).length > 0 ||
-        getHtmlUnsupportedDefTypes(model).length > 0 ||
-        getHtmlUnsupportedMarkEffects(model).length > 0;
-      if (!hasHtmlUnsupported) {
-        safeCharts.add(chartId);
-      }
-    }
-
-    if (htmlSafeCacheKey) {
-      htmlSafeCacheRef.current.set(htmlSafeCacheKey, safeCharts);
-    }
-    return safeCharts;
-  }, [applyNoiseOverlay, chartIds, htmlSafeCacheKey, htmlFilterActive, inputs]);
+  const subtypeCharts = useMemo(() => {
+    if (chartSubtype === "all") return chartCatalog;
+    return chartCatalog.filter((chart) => chart.subtype === chartSubtype);
+  }, [chartCatalog, chartSubtype]);
 
   const htmlFilteredCatalog = useMemo(() => {
-    if (!htmlFilterActive || !htmlSafeChartIdSet) return chartCatalog;
-    if (htmlFilter === "safe")
-      return chartCatalog.filter((chart) =>
-        htmlSafeChartIdSet.has(chart.chartId),
-      );
-    if (htmlFilter === "broken")
-      return chartCatalog.filter(
-        (chart) => !htmlSafeChartIdSet.has(chart.chartId),
-      );
-    return chartCatalog;
-  }, [chartCatalog, htmlFilter, htmlFilterActive, htmlSafeChartIdSet]);
+    if (!htmlFilterActive || !htmlSafetyMap) return subtypeCharts;
+    return subtypeCharts.filter((chart) => {
+      let cached = htmlSafetyMap.get(chart.chartId);
+      if (cached === undefined) {
+        let model = computeModel(inputs[chart.chartId]);
+        if (applyNoiseOverlay) {
+          model = applyNoiseDisplacementOverlay(model);
+        }
+        const hasHtmlUnsupported =
+          getHtmlUnsupportedMarkTypes(model).length > 0 ||
+          getHtmlUnsupportedDefTypes(model).length > 0 ||
+          getHtmlUnsupportedMarkEffects(model).length > 0;
+        cached = !hasHtmlUnsupported;
+        htmlSafetyMap.set(chart.chartId, cached);
+      }
+      return htmlFilter === "safe" ? cached : !cached;
+    });
+  }, [
+    applyNoiseOverlay,
+    htmlFilter,
+    htmlFilterActive,
+    htmlSafetyMap,
+    inputs,
+    subtypeCharts,
+  ]);
 
-  const visibleCharts = useMemo(() => {
-    if (chartSubtype === "all") return htmlFilteredCatalog;
-    return htmlFilteredCatalog.filter(
-      (chart) => chart.subtype === chartSubtype,
-    );
-  }, [chartSubtype, htmlFilteredCatalog]);
+  const visibleCharts = useMemo(
+    () => htmlFilteredCatalog,
+    [htmlFilteredCatalog],
+  );
 
   const filteredCharts = useMemo(() => {
     const q = chartFilter.toLowerCase().trim();
