@@ -13,6 +13,11 @@ import {
   type RenderModel,
 } from "@microviz/core";
 import {
+  applyMicrovizStyles,
+  clearHtmlFromShadowRoot,
+  patchHtmlIntoShadowRoot,
+} from "@microviz/elements";
+import {
   MicrovizCanvas as MicrovizReactCanvas,
   MicrovizSvg as MicrovizReactSvg,
   MicrovizSvgString as MicrovizReactSvgString,
@@ -29,7 +34,6 @@ import {
   renderSvgString,
   svgStringToBlob,
 } from "@microviz/renderers";
-import "@microviz/elements";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   type FC,
@@ -3726,21 +3730,30 @@ const FieldNumberWithRange: FC<{
   </div>
 );
 
+const styledHtmlRoots = new WeakSet<ShadowRoot>();
+
+function ensureHtmlShadowRoot(host: HTMLDivElement): ShadowRoot {
+  const root = host.shadowRoot ?? host.attachShadow({ mode: "open" });
+  if (!styledHtmlRoots.has(root)) {
+    applyMicrovizStyles(root);
+    styledHtmlRoots.add(root);
+  }
+  return root;
+}
+
 const HtmlPreview: FC<{ html: string }> = ({ html }) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffectSafe(() => {
     const host = hostRef.current;
     if (!host) return;
+    const root = ensureHtmlShadowRoot(host);
     if (!html) {
-      host.replaceChildren();
+      clearHtmlFromShadowRoot(root);
       return;
     }
 
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    const el = wrapper.firstElementChild;
-    if (el) host.replaceChildren(el);
+    patchHtmlIntoShadowRoot(root, html);
   }, [html]);
 
   return (
@@ -3758,15 +3771,13 @@ const HtmlSvgOverlayPreview: FC<{ html: string; svg: string }> = ({
   useLayoutEffectSafe(() => {
     const host = htmlRef.current;
     if (!host) return;
+    const root = ensureHtmlShadowRoot(host);
     if (!html) {
-      host.replaceChildren();
+      clearHtmlFromShadowRoot(root);
       return;
     }
 
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    const el = wrapper.firstElementChild;
-    if (el) host.replaceChildren(el);
+    patchHtmlIntoShadowRoot(root, html);
   }, [html]);
 
   useLayoutEffectSafe(() => {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { clearSvgFromShadowRoot, renderSvgIntoShadowRoot } from "../src/render";
+import {
+  clearHtmlFromShadowRoot,
+  clearSvgFromShadowRoot,
+  patchHtmlIntoShadowRoot,
+  renderSvgIntoShadowRoot,
+} from "../src/render";
 
 function createShadowRoot(): ShadowRoot {
   const host = document.createElement("div");
@@ -46,6 +51,63 @@ describe("renderSvgIntoShadowRoot", () => {
 
     clearSvgFromShadowRoot(root);
     expect(root.querySelector("svg")).toBeNull();
+    expect(root.querySelector("style")).toBe(style);
+  });
+});
+
+describe("patchHtmlIntoShadowRoot", () => {
+  it("preserves non-chart nodes and patches marks in place", () => {
+    const root = createShadowRoot();
+    const style = document.createElement("style");
+    root.append(style);
+
+    const html1 =
+      '<div class="mv-chart"><div data-mark-id="a" class="mv-html-mark" style="left:0px"></div></div>';
+    patchHtmlIntoShadowRoot(root, html1);
+
+    const firstMark = root.querySelector('[data-mark-id="a"]');
+    expect(firstMark).not.toBeNull();
+    expect(root.querySelector("style")).toBe(style);
+
+    const html2 =
+      '<div class="mv-chart"><div data-mark-id="a" class="mv-html-mark" style="left:10px"></div></div>';
+    patchHtmlIntoShadowRoot(root, html2);
+
+    const nextMark = root.querySelector('[data-mark-id="a"]');
+    expect(nextMark).toBe(firstMark);
+    expect(nextMark?.getAttribute("style")).toContain("left:10px");
+  });
+
+  it("patches nested html marks (clip wrappers)", () => {
+    const root = createShadowRoot();
+
+    const html1 =
+      '<div class="mv-chart"><div data-mark-id="a" class="mv-html-mark" style="overflow:hidden"><div class="mv-html-mark" style="left:0px"></div></div></div>';
+    patchHtmlIntoShadowRoot(root, html1);
+
+    const inner = root.querySelector('[data-mark-id="a"] > div');
+    expect(inner).not.toBeNull();
+
+    const html2 =
+      '<div class="mv-chart"><div data-mark-id="a" class="mv-html-mark" style="overflow:hidden"><div class="mv-html-mark" style="left:6px"></div></div></div>';
+    patchHtmlIntoShadowRoot(root, html2);
+
+    const updatedInner = root.querySelector('[data-mark-id="a"] > div');
+    expect(updatedInner).toBe(inner);
+    expect(updatedInner?.getAttribute("style")).toContain("left:6px");
+  });
+
+  it("clears only the html chart node", () => {
+    const root = createShadowRoot();
+    const style = document.createElement("style");
+    root.append(style);
+
+    const html = '<div class="mv-chart"><div data-mark-id="a"></div></div>';
+    patchHtmlIntoShadowRoot(root, html);
+    expect(root.querySelector(".mv-chart")).not.toBeNull();
+
+    clearHtmlFromShadowRoot(root);
+    expect(root.querySelector(".mv-chart")).toBeNull();
     expect(root.querySelector("style")).toBe(style);
   });
 });

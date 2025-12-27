@@ -33,6 +33,13 @@ const HTML_SUPPORTED_MARK_TYPE_SET = new Set<Mark["type"]>(
   HTML_SUPPORTED_MARK_TYPES,
 );
 
+function joinClass(
+  ...parts: Array<string | undefined | null | false>
+): string | undefined {
+  const value = parts.filter(Boolean).join(" ");
+  return value.length > 0 ? value : undefined;
+}
+
 /**
  * HTML renderer policy (experimental, parity-deferred):
  * - Supports only rect/circle/line/text marks.
@@ -484,12 +491,17 @@ function renderRect(
     ...filterStyles(mark, defsById),
   ].join("");
 
-  const rect = `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", rectStyles)}></div>`;
+  const markClass = joinClass("mv-html-mark", mark.className);
+  const rect = `<div${attr(
+    "data-mark-id",
+    clipRect ? undefined : mark.id,
+  )}${attr("class", markClass)}${attr("style", rectStyles)}></div>`;
 
   if (!clipRect) return rect;
 
   const clipRx = clipRect.rx ?? 0;
   const clipRy = clipRect.ry ?? clipRx;
+  const wrapperClass = joinClass("mv-html-mark");
   const clipStyles = [
     stylePair("position", "absolute"),
     stylePair("left", px(clipRect.x)),
@@ -503,7 +515,10 @@ function renderRect(
     ),
   ].join("");
 
-  return `<div${attr("style", clipStyles)}>${rect}</div>`;
+  return `<div${attr("data-mark-id", mark.id)}${attr(
+    "class",
+    wrapperClass,
+  )}${attr("style", clipStyles)}>${rect}</div>`;
 }
 
 function renderCircle(
@@ -564,7 +579,11 @@ function renderCircle(
     ...filterStyles(mark, defsById),
   ].join("");
 
-  return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}></div>`;
+  const className = joinClass("mv-html-mark", mark.className);
+  return `<div${attr("data-mark-id", mark.id)}${attr(
+    "class",
+    className,
+  )}${attr("style", styles)}></div>`;
 }
 
 function renderLine(
@@ -598,7 +617,11 @@ function renderLine(
     ...filterStyles(mark, defsById),
   ].join("");
 
-  return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}></div>`;
+  const className = joinClass("mv-html-mark", mark.className);
+  return `<div${attr("data-mark-id", mark.id)}${attr(
+    "class",
+    className,
+  )}${attr("style", styles)}></div>`;
 }
 
 function renderText(
@@ -637,7 +660,11 @@ function renderText(
     ...filterStyles(mark, defsById),
   ].join("");
 
-  return `<div${attr("data-mark-id", mark.id)}${attr("class", mark.className)}${attr("style", styles)}>${escapeHtmlText(mark.text)}</div>`;
+  const className = joinClass("mv-html-mark", mark.className);
+  return `<div${attr("data-mark-id", mark.id)}${attr(
+    "class",
+    className,
+  )}${attr("style", styles)}>${escapeHtmlText(mark.text)}</div>`;
 }
 
 function renderMark(mark: Mark, defsById: Map<string, Def>): string {

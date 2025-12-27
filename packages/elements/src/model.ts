@@ -5,8 +5,8 @@ import { parseOptionalNumber } from "./parse";
 import {
   clearHtmlFromShadowRoot,
   clearSvgFromShadowRoot,
+  patchHtmlIntoShadowRoot,
   patchSvgIntoShadowRoot,
-  renderHtmlIntoShadowRoot,
   renderSvgIntoShadowRoot,
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
@@ -513,7 +513,7 @@ export class MicrovizModel extends HTMLElement {
         html = renderHtmlString(model);
       }
       clearSvgFromShadowRoot(this.#root);
-      renderHtmlIntoShadowRoot(this.#root, html);
+      patchHtmlIntoShadowRoot(this.#root, html);
     } else {
       let svg: string;
       if (wantsSkeleton) {

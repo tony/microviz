@@ -45,6 +45,14 @@ import { MicrovizRadialBars } from "./radial-bars";
 import { MicrovizRadialBurst } from "./radial-burst";
 import { MicrovizRangeBand } from "./range-band";
 import { MicrovizRankedLanes } from "./ranked-lanes";
+import {
+  clearHtmlFromShadowRoot,
+  clearSvgFromShadowRoot,
+  patchHtmlIntoShadowRoot,
+  patchSvgIntoShadowRoot,
+  renderHtmlIntoShadowRoot,
+  renderSvgIntoShadowRoot,
+} from "./render";
 import { MicrovizSegmentedBar } from "./segmented-bar";
 import { MicrovizSegmentedPill } from "./segmented-pill";
 import { MicrovizSegmentedRing } from "./segmented-ring";
@@ -61,6 +69,7 @@ import { MicrovizStackedChips } from "./stacked-chips";
 import { MicrovizStepLine } from "./step-line";
 import { MicrovizSteppedArea } from "./stepped-area";
 import { MicrovizStripeDensity } from "./stripe-density";
+import { applyMicrovizStyles } from "./styles";
 import { MicrovizTapered } from "./tapered";
 import { MicrovizTwoTier } from "./two-tier";
 import { MicrovizVariableRibbon } from "./variable-ribbon";
@@ -422,5 +431,15 @@ export function registerMicrovizElements(): void {
     customElements.define("microviz-vertical-stack", MicrovizVerticalStack);
   }
 }
+
+export {
+  applyMicrovizStyles,
+  clearHtmlFromShadowRoot,
+  clearSvgFromShadowRoot,
+  patchHtmlIntoShadowRoot,
+  patchSvgIntoShadowRoot,
+  renderHtmlIntoShadowRoot,
+  renderSvgIntoShadowRoot,
+};
 
 registerMicrovizElements();

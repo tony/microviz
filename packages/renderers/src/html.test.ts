@@ -41,6 +41,7 @@ describe("renderHtmlString", () => {
     expect(html).toContain("width:20px");
     expect(html).toContain("height:8px");
     expect(html).toContain('data-mark-id="r-1"');
+    expect(html).toContain('class="mv-html-mark');
   });
 
   it("maps linearGradient fills to CSS gradients", () => {
