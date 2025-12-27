@@ -25,6 +25,7 @@ export class MicrovizModel extends HTMLElement {
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
   #model: RenderModel | null = null;
+  #lastWarningKey: string | null = null;
   #isInteractive = false;
   #strokeSlopPxOverride: number | undefined = undefined;
   #lastPointerClient: ClientPoint | null = null;
@@ -309,6 +310,28 @@ export class MicrovizModel extends HTMLElement {
     }
 
     const model = this.#model;
+
+    // Emit warning event if model has diagnostics (deduplicated)
+    const warnings = model.stats?.warnings;
+    const warningKey = warnings?.length
+      ? warnings.map((w) => w.code).join(",")
+      : null;
+    if (warningKey && warningKey !== this.#lastWarningKey) {
+      this.#lastWarningKey = warningKey;
+      this.dispatchEvent(
+        new CustomEvent("microviz-warning", {
+          bubbles: true,
+          composed: true,
+          detail: {
+            element: this.tagName.toLowerCase(),
+            warnings,
+          },
+        }),
+      );
+    } else if (!warningKey) {
+      this.#lastWarningKey = null;
+    }
+
     applyMicrovizA11y(this, this.#internals, model);
     this.#setA11yItems(getA11yItems(model));
 

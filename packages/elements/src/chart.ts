@@ -65,6 +65,7 @@ export class MicrovizChart extends HTMLElement {
   #measuredSize: Size | null = null;
   #isInteractive = false;
   #model: RenderModel | null = null;
+  #lastWarningKey: string | null = null;
   #strokeSlopPxOverride: number | undefined = undefined;
   #lastPointerClient: ClientPoint | null = null;
   #lastHitKey: string | null = null;
@@ -451,6 +452,27 @@ export class MicrovizChart extends HTMLElement {
       state,
     });
     this.#model = model;
+
+    // Emit warning event if model has diagnostics (deduplicated)
+    const warnings = model.stats?.warnings;
+    const warningKey = warnings?.length
+      ? warnings.map((w) => w.code).join(",")
+      : null;
+    if (warningKey && warningKey !== this.#lastWarningKey) {
+      this.#lastWarningKey = warningKey;
+      this.dispatchEvent(
+        new CustomEvent("microviz-warning", {
+          bubbles: true,
+          composed: true,
+          detail: {
+            element: this.tagName.toLowerCase(),
+            warnings,
+          },
+        }),
+      );
+    } else if (!warningKey) {
+      this.#lastWarningKey = null;
+    }
 
     applyMicrovizA11y(this, this.#internals, model);
     this.#setA11yItems(getA11yItems(model));
