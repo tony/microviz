@@ -59,7 +59,7 @@ export const DEFAULT_BROWSE_STATE: BrowseState = {
   showHtmlSvgOverlay: true,
   sidebarTab: "settings",
   width: 200,
-  wrapper: "vanilla",
+  wrapper: "elements",
 };
 
 type BrowseSerializedState = {

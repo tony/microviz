@@ -254,8 +254,8 @@ describe("animateTransition", () => {
     // Animation is in progress
     expect(state.cancelAnimation).not.toBeNull();
 
-    // Advance to complete
-    vi.advanceTimersByTime(200);
+    // Advance to complete (default duration is 300ms)
+    vi.advanceTimersByTime(350);
     vi.advanceTimersToNextFrame();
 
     expect(frames.length).toBeGreaterThan(2);
@@ -295,8 +295,8 @@ describe("animateTransition", () => {
       frames.push((m.marks[0] as RectMark).h),
     );
 
-    // Complete
-    vi.advanceTimersByTime(200);
+    // Complete (default duration is 300ms)
+    vi.advanceTimersByTime(350);
     vi.advanceTimersToNextFrame();
 
     // Final value should be 50 (model3), not 100 (model2)
