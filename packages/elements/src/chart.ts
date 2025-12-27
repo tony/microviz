@@ -74,6 +74,7 @@ export class MicrovizChart extends HTMLElement {
   #measuredSize: Size | null = null;
   #isInteractive = false;
   #model: RenderModel | null = null;
+  #renderModel: RenderModel | null = null;
   #previousModel: RenderModel | null = null;
   #cancelAnimation: (() => void) | null = null;
   #lastWarningKey: string | null = null;
@@ -302,24 +303,26 @@ export class MicrovizChart extends HTMLElement {
   }
 
   #hitTestAt(point: Point): ReturnType<typeof hitTest> {
-    if (!this.#model) return null;
+    const model = this.#renderModel ?? this.#model;
+    if (!model) return null;
     return this.#strokeSlopPxOverride === undefined
-      ? hitTest(this.#model, point)
-      : hitTest(this.#model, point, {
+      ? hitTest(model, point)
+      : hitTest(model, point, {
           strokeSlopPx: this.#strokeSlopPxOverride,
         });
   }
 
   #toModelPoint(client: ClientPoint): Point | null {
-    if (!this.#model) return null;
+    const model = this.#renderModel ?? this.#model;
+    if (!model) return null;
     const surface =
       this.#root.querySelector("svg") ?? this.#root.querySelector(".mv-chart");
     if (!surface) return null;
     const rect = surface.getBoundingClientRect();
     if (!(rect.width > 0) || !(rect.height > 0)) return null;
 
-    const x = ((client.x - rect.left) / rect.width) * this.#model.width;
-    const y = ((client.y - rect.top) / rect.height) * this.#model.height;
+    const x = ((client.x - rect.left) / rect.width) * model.width;
+    const y = ((client.y - rect.top) / rect.height) * model.height;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
 
     return { x, y };
@@ -364,7 +367,8 @@ export class MicrovizChart extends HTMLElement {
   }
 
   #onPointerMove = (event: PointerEvent): void => {
-    if (!this.#model) return;
+    const model = this.#renderModel ?? this.#model;
+    if (!model) return;
     const client = { x: event.clientX, y: event.clientY };
     this.#lastPointerClient = client;
 
@@ -499,6 +503,7 @@ export class MicrovizChart extends HTMLElement {
         this.#lastWarningKey = null;
       }
       this.#model = null;
+      this.#renderModel = null;
       this.#setFocusedMarkId(null);
       applyMicrovizA11y(this, this.#internals, null);
       this.#setA11yItems([]);
@@ -573,8 +578,10 @@ export class MicrovizChart extends HTMLElement {
       this.#cancelAnimation = animate(
         this.#previousModel,
         model,
-        (interpolated) =>
-          this.#renderFrame(interpolated, useHtml, wantsSkeleton, size),
+        (interpolated) => {
+          this.#renderFrame(interpolated, useHtml, wantsSkeleton, size);
+          this.#maybeReemitHit();
+        },
         () => {
           this.#previousModel = model;
           this.#cancelAnimation = null;
@@ -583,9 +590,8 @@ export class MicrovizChart extends HTMLElement {
     } else {
       this.#renderFrame(model, useHtml, wantsSkeleton, size);
       this.#previousModel = model;
+      this.#maybeReemitHit();
     }
-
-    this.#maybeReemitHit();
   }
 
   #renderFrame(
@@ -594,6 +600,7 @@ export class MicrovizChart extends HTMLElement {
     wantsSkeleton: boolean,
     size: Size,
   ): void {
+    this.#renderModel = wantsSkeleton ? null : model;
     if (useHtml) {
       const html = renderHtmlString(model);
       clearSvgFromShadowRoot(this.#root);
