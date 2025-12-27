@@ -199,7 +199,12 @@ describe("@microviz/elements", () => {
 
   it("emits telemetry events when telemetry is enabled", () => {
     const el = document.createElement("microviz-chart");
-    const events: Array<{ phase?: string }> = [];
+    const events: Array<{
+      element?: string;
+      phase?: string;
+      renderer?: string;
+      specType?: string;
+    }> = [];
     el.addEventListener("microviz-telemetry", (event) => {
       events.push((event as CustomEvent).detail);
     });
@@ -214,6 +219,12 @@ describe("@microviz/elements", () => {
     const phases = new Set(events.map((detail) => detail.phase));
     expect(phases.has("compute")).toBe(true);
     expect(phases.has("dom")).toBe(true);
+
+    const renderEvents = events.filter((detail) => detail.phase === "render");
+    const svgRender = renderEvents.find((detail) => detail.renderer === "svg");
+    expect(svgRender?.element).toBe("microviz-chart");
+    expect(svgRender?.renderer).toBe("svg");
+    expect(svgRender?.specType).toBe("sparkline");
   });
 
   it("applies a11y summary descriptions", () => {
