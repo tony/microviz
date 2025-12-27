@@ -2,9 +2,12 @@ import {
   type A11yItem,
   type ChartSpec,
   computeModel,
+  type DiagnosticWarning,
   hitTest,
   isChartType,
   type RenderModel,
+  type ValidationError,
+  validateChartData,
 } from "@microviz/core";
 import { renderHtmlString, renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y, getA11yItems, updateA11yFocus } from "./a11y";
@@ -41,6 +44,20 @@ function coerceSize(raw: Size): Size {
   const width = Number.isFinite(raw.width) ? Math.max(0, raw.width) : 0;
   const height = Number.isFinite(raw.height) ? Math.max(0, raw.height) : 0;
   return { height, width };
+}
+
+/**
+ * Convert validation errors to diagnostic warnings.
+ */
+function toWarnings(errors: ValidationError[]): DiagnosticWarning[] {
+  return errors.map((e) => ({
+    code: e.code,
+    expected: e.expected,
+    hint: e.hint,
+    message: e.message,
+    path: e.path,
+    received: e.received,
+  }));
 }
 
 export class MicrovizChart extends HTMLElement {
@@ -440,6 +457,12 @@ export class MicrovizChart extends HTMLElement {
       return;
     }
 
+    // Validate chart data and collect warnings
+    const validationResult = validateChartData(spec, data);
+    const validationWarnings = validationResult.success
+      ? []
+      : toWarnings(validationResult.errors);
+
     const size = this.#resolveSize({ height: 32, width: 200 });
     const state = this.#focusedMarkId
       ? { focusedMarkId: this.#focusedMarkId }
@@ -450,6 +473,20 @@ export class MicrovizChart extends HTMLElement {
       spec,
       state,
     });
+
+    // Merge validation warnings with model warnings
+    if (validationWarnings.length > 0) {
+      const existingWarnings = model.stats?.warnings ?? [];
+      const mergedWarnings = [...validationWarnings, ...existingWarnings];
+      (model as { stats: typeof model.stats }).stats = {
+        ...model.stats,
+        hasDefs: model.stats?.hasDefs ?? false,
+        markCount: model.stats?.markCount ?? 0,
+        textCount: model.stats?.textCount ?? 0,
+        warnings: mergedWarnings,
+      };
+    }
+
     this.#model = model;
 
     applyMicrovizA11y(this, this.#internals, model);
