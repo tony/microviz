@@ -19,8 +19,9 @@ import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
 import {
   createTelemetry,
-  modelTelemetryStats,
+  modelTelemetryMeta,
   type TelemetryHandle,
+  type TelemetryModelMeta,
   toTelemetryError,
 } from "./telemetry";
 import {
@@ -47,6 +48,7 @@ export class MicrovizModel extends HTMLElement {
   readonly #animState: AnimationState = createAnimationState(this);
   #model: RenderModel | null = null;
   #renderModel: RenderModel | null = null;
+  #telemetryModelMeta: TelemetryModelMeta | null = null;
   #wasSkeletonRender = false;
   #lastWarningKey: string | null = null;
   #isInteractive = false;
@@ -164,10 +166,14 @@ export class MicrovizModel extends HTMLElement {
         detail: { index: this.#focusIndex, item },
       }),
     );
+    const meta = this.#telemetryModelMeta;
     createTelemetry(this).emit({
       action: "focus",
       focus: { id: item.id, index: this.#focusIndex, label: item.label },
+      modelHash: meta?.hash,
       phase: "interaction",
+      size: meta?.size,
+      stats: meta?.stats,
     });
   }
 
@@ -285,13 +291,17 @@ export class MicrovizModel extends HTMLElement {
         },
       }),
     );
+    const meta = this.#telemetryModelMeta;
     createTelemetry(this).emit({
       action: "hit",
       client: this.#lastPointerClient,
       hit: hit ? { markId: hit.markId, markType: hit.markType } : undefined,
+      modelHash: meta?.hash,
       phase: "interaction",
       point,
       reason: hit ? undefined : "miss",
+      size: meta?.size,
+      stats: meta?.stats,
     });
   }
 
@@ -314,13 +324,17 @@ export class MicrovizModel extends HTMLElement {
         detail: { client, hit, point },
       }),
     );
+    const meta = this.#telemetryModelMeta;
     createTelemetry(this).emit({
       action: "hit",
       client,
       hit: hit ? { markId: hit.markId, markType: hit.markType } : undefined,
+      modelHash: meta?.hash,
       phase: "interaction",
       point,
       reason: hit ? undefined : "miss",
+      size: meta?.size,
+      stats: meta?.stats,
     });
   };
 
@@ -335,11 +349,15 @@ export class MicrovizModel extends HTMLElement {
         detail: { client: { x: event.clientX, y: event.clientY }, hit: null },
       }),
     );
+    const meta = this.#telemetryModelMeta;
     createTelemetry(this).emit({
       action: "leave",
       client: { x: event.clientX, y: event.clientY },
+      modelHash: meta?.hash,
       phase: "interaction",
       reason: "pointer-leave",
+      size: meta?.size,
+      stats: meta?.stats,
     });
   };
 
@@ -383,6 +401,7 @@ export class MicrovizModel extends HTMLElement {
     }
 
     const model = this.#model;
+    const modelMeta = telemetry.enabled ? modelTelemetryMeta(model) : null;
     const wantsSkeleton =
       this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
     const renderer = this.getAttribute("renderer");
@@ -425,6 +444,7 @@ export class MicrovizModel extends HTMLElement {
       if (telemetry.enabled && useHtml) {
         if (warnings && warnings.length > 0) {
           telemetry.emit({
+            modelHash: modelMeta?.hash,
             phase: "warning",
             renderer: renderMode,
             warningCodes,
@@ -433,10 +453,11 @@ export class MicrovizModel extends HTMLElement {
         }
         if (rendererWarnings) {
           telemetry.emit({
+            modelHash: modelMeta?.hash,
             phase: "warning",
             reason: "renderer-unsupported",
             renderer: renderMode,
-            stats: modelTelemetryStats(model) ?? undefined,
+            stats: modelMeta?.stats ?? undefined,
             unsupportedDefs: rendererWarnings.unsupportedDefs,
             unsupportedMarkEffects: rendererWarnings.unsupportedMarkEffects,
             unsupportedMarkTypes: rendererWarnings.unsupportedMarkTypes,
@@ -462,10 +483,20 @@ export class MicrovizModel extends HTMLElement {
     if (skipAnimation || isFirstRender) {
       // No animation: render directly with full replacement
       cleanupAnimation(this.#animState);
-      this.#renderFrame(model, useHtml, wantsSkeleton, false, telemetry);
+      this.#renderFrame(
+        model,
+        useHtml,
+        wantsSkeleton,
+        false,
+        telemetry,
+        modelMeta,
+      );
       this.#animState.previousModel = model;
     } else {
       // Animate with patching for smooth transitions
+      const previousMeta = telemetry.enabled
+        ? modelTelemetryMeta(this.#animState.previousModel)
+        : null;
       const animationStart = telemetry.enabled ? performance.now() : 0;
       let frameCount = 0;
       const emitFrames = telemetry.enabled && telemetry.level === "verbose";
@@ -477,6 +508,8 @@ export class MicrovizModel extends HTMLElement {
           if (emitFrames) {
             telemetry.emit({
               frame: frameCount,
+              modelHash: modelMeta?.hash,
+              modelPrevHash: previousMeta?.hash,
               phase: "animation",
               reason: "frame",
               renderer: renderMode,
@@ -488,6 +521,7 @@ export class MicrovizModel extends HTMLElement {
             wantsSkeleton,
             true,
             telemetry,
+            null,
           );
           this.#maybeReemitHit();
         },
@@ -498,6 +532,8 @@ export class MicrovizModel extends HTMLElement {
                 cancelled: true,
                 durationMs: performance.now() - animationStart,
                 frameCount,
+                modelHash: modelMeta?.hash,
+                modelPrevHash: previousMeta?.hash,
                 phase: "animation",
                 reason: "interrupt",
                 renderer: renderMode,
@@ -509,6 +545,8 @@ export class MicrovizModel extends HTMLElement {
               telemetry.emit({
                 durationMs: performance.now() - animationStart,
                 frameCount,
+                modelHash: modelMeta?.hash,
+                modelPrevHash: previousMeta?.hash,
                 phase: "animation",
                 renderer: renderMode,
               });
@@ -529,7 +567,12 @@ export class MicrovizModel extends HTMLElement {
     wantsSkeleton: boolean,
     usePatch: boolean,
     telemetry: TelemetryHandle = createTelemetry(this),
+    modelMeta?: TelemetryModelMeta | null,
   ): void {
+    const meta = telemetry.enabled
+      ? (modelMeta ?? modelTelemetryMeta(model))
+      : null;
+    this.#telemetryModelMeta = meta;
     this.#renderModel = wantsSkeleton ? null : model;
     if (useHtml) {
       let html: string;
@@ -549,11 +592,12 @@ export class MicrovizModel extends HTMLElement {
         telemetry.emit({
           bytes: html.length,
           durationMs: performance.now() - renderStart,
+          modelHash: meta?.hash,
           phase: "render",
           reason: wantsSkeleton ? "skeleton" : undefined,
           renderer: "html",
-          size: { height: model.height, width: model.width },
-          stats: modelTelemetryStats(model) ?? undefined,
+          size: meta?.size ?? { height: model.height, width: model.width },
+          stats: meta?.stats ?? undefined,
         });
       } else {
         html = renderHtmlString(model);
@@ -563,6 +607,7 @@ export class MicrovizModel extends HTMLElement {
         telemetry,
       });
       patchHtmlIntoShadowRoot(this.#root, html, {
+        modelMeta: meta ?? undefined,
         reason: "render-html",
         telemetry,
       });
@@ -605,6 +650,7 @@ export class MicrovizModel extends HTMLElement {
         telemetry,
       });
       renderSvgModelIntoShadowRoot(this.#root, model, {
+        modelMeta: meta ?? undefined,
         patch: usePatch,
         reason: "render-svg",
         telemetry,
