@@ -160,6 +160,9 @@ You can also enable telemetry globally:
 window.__MICROVIZ_TELEMETRY__ = true; // or "verbose"
 ```
 
+In the demo app, the Browse inspector includes a Telemetry tab (Elements wrapper)
+for a live event log.
+
 ### Motion (animations)
 
 microviz animates between updates by default. To disable motion per element:
