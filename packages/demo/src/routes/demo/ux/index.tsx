@@ -20,6 +20,37 @@ function UxIndexRoute() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <DemoCard
+          description="Button styles including animated action buttons"
+          href="/demo/ux/button"
+          preview={
+            <div className="flex items-center gap-3">
+              <button
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                disabled
+                type="button"
+              >
+                Basic
+              </button>
+              <button
+                className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm dark:from-indigo-400 dark:to-purple-400"
+                disabled
+                type="button"
+              >
+                <span>🎲</span>
+              </button>
+              <button
+                className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm dark:from-indigo-400 dark:to-purple-400"
+                disabled
+                type="button"
+              >
+                <span>🎲</span>
+                Reroll
+              </button>
+            </div>
+          }
+          title="Button"
+        />
+        <DemoCard
           description="Single and multi-select tab toggles with configurable styling"
           href="/demo/ux/tab-toggle"
           preview={
