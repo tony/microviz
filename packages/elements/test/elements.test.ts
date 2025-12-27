@@ -342,6 +342,66 @@ describe("@microviz/elements", () => {
     expect(warnings?.textContent).toContain("HTML renderer ignores marks");
   });
 
+  it("emits renderer warnings for html renderer (microviz-model)", () => {
+    const el = document.createElement("microviz-model") as HTMLElement & {
+      model: RenderModel | null;
+    };
+    el.setAttribute("renderer", "html");
+    document.body.append(el);
+
+    type WarningDetail = {
+      rendererWarnings?: {
+        unsupportedMarkTypes: string[];
+        unsupportedDefs: string[];
+        unsupportedMarkEffects: string[];
+      };
+    };
+    let receivedDetail: WarningDetail | null = null;
+    el.addEventListener("microviz-warning", (event) => {
+      receivedDetail = (event as CustomEvent<WarningDetail>).detail;
+    });
+
+    el.model = {
+      height: 10,
+      marks: [{ d: "M 0 0 L 5 5", id: "p", type: "path" }],
+      width: 10,
+    };
+
+    expect(receivedDetail?.rendererWarnings?.unsupportedMarkTypes).toEqual([
+      "path",
+    ]);
+  });
+
+  it("emits telemetry for html renderer unsupported marks", () => {
+    const el = document.createElement("microviz-model") as HTMLElement & {
+      model: RenderModel | null;
+    };
+    el.setAttribute("renderer", "html");
+    el.setAttribute("telemetry", "basic");
+    document.body.append(el);
+
+    const events: Array<{
+      phase?: string;
+      reason?: string;
+      unsupportedMarkTypes?: string[];
+    }> = [];
+    el.addEventListener("microviz-telemetry", (event) => {
+      events.push((event as CustomEvent).detail);
+    });
+
+    el.model = {
+      height: 10,
+      marks: [{ d: "M 0 0 L 5 5", id: "p", type: "path" }],
+      width: 10,
+    };
+
+    const rendererWarning = events.find(
+      (detail) =>
+        detail.phase === "warning" && detail.reason === "renderer-unsupported",
+    );
+    expect(rendererWarning?.unsupportedMarkTypes).toContain("path");
+  });
+
   it("emits microviz-warning event for model with warnings (microviz-model)", () => {
     const el = document.createElement("microviz-model") as HTMLElement & {
       model: RenderModel | null;
