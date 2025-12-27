@@ -24,6 +24,7 @@ export type CodeEditorProps = {
   language?: "html" | "javascript";
   theme?: "light" | "dark";
   className?: string;
+  readOnly?: boolean;
 };
 
 /**
@@ -36,6 +37,7 @@ export function CodeEditor({
   language = "html",
   theme = "dark",
   className = "",
+  readOnly = false,
 }: CodeEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -52,7 +54,9 @@ export function CodeEditor({
     if (!containerRef.current) return;
 
     const extensions = [
+      EditorState.readOnly.of(readOnly),
       lineNumbers(),
+      EditorView.editable.of(!readOnly),
       highlightActiveLine(),
       highlightActiveLineGutter(),
       history(),
