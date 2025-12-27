@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
 import type { CspMode } from "./cdnPlaygroundState";
 
 export type ConsoleEntry = {
@@ -13,6 +20,11 @@ export type PreviewPaneProps = {
   cspMode: CspMode;
   onConsoleMessage?: (entry: ConsoleEntry) => void;
   className?: string;
+};
+
+export type PreviewPaneHandle = {
+  /** Update an attribute on elements matching the selector without full reload */
+  updateAttribute: (selector: string, attribute: string, value: string) => void;
 };
 
 /**
@@ -86,6 +98,15 @@ function getConsoleCaptureScript(): string {
       }, '*');
     }
   });
+
+  // Listen for reactive attribute updates from parent
+  window.addEventListener('message', (e) => {
+    if (e.data?.type === 'microviz:updateAttribute') {
+      const { selector, attribute, value } = e.data;
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => el.setAttribute(attribute, value));
+    }
+  });
 })();
 </script>`;
 }
@@ -140,55 +161,72 @@ function generateSrcdoc(
 /**
  * Sandboxed iframe preview for the CDN playground.
  */
-export function PreviewPane({
-  code,
-  cdnUrl,
-  cspMode,
-  onConsoleMessage,
-  className = "",
-}: PreviewPaneProps) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+export const PreviewPane = forwardRef<PreviewPaneHandle, PreviewPaneProps>(
+  function PreviewPane(
+    { code, cdnUrl, cspMode, onConsoleMessage, className = "" },
+    ref,
+  ) {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Generate srcdoc from inputs (useMemo ensures it's ready on first render)
-  const srcdoc = useMemo(
-    () => generateSrcdoc(code, cdnUrl, cspMode),
-    [code, cdnUrl, cspMode],
-  );
+    // Expose updateAttribute method to parent via ref
+    const updateAttribute = useCallback(
+      (selector: string, attribute: string, value: string) => {
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            attribute,
+            selector,
+            type: "microviz:updateAttribute",
+            value,
+          },
+          "*",
+        );
+      },
+      [],
+    );
 
-  // Listen for postMessage from iframe
-  const handleMessage = useCallback(
-    (event: MessageEvent) => {
-      // Only accept messages from our iframe
-      if (event.source !== iframeRef.current?.contentWindow) {
-        return;
-      }
+    useImperativeHandle(ref, () => ({ updateAttribute }), [updateAttribute]);
 
-      const data = event.data;
-      if (data?.type === "console" && onConsoleMessage) {
-        onConsoleMessage({
-          args: data.args,
-          timestamp: data.timestamp,
-          type: data.method,
-        });
-      }
-    },
-    [onConsoleMessage],
-  );
+    // Generate srcdoc from inputs (useMemo ensures it's ready on first render)
+    const srcdoc = useMemo(
+      () => generateSrcdoc(code, cdnUrl, cspMode),
+      [code, cdnUrl, cspMode],
+    );
 
-  useEffect(() => {
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [handleMessage]);
+    // Listen for postMessage from iframe
+    const handleMessage = useCallback(
+      (event: MessageEvent) => {
+        // Only accept messages from our iframe
+        if (event.source !== iframeRef.current?.contentWindow) {
+          return;
+        }
 
-  return (
-    <div className={`relative h-full bg-white ${className}`}>
-      <iframe
-        className="h-full w-full border-0"
-        ref={iframeRef}
-        sandbox="allow-scripts"
-        srcDoc={srcdoc}
-        title="Preview"
-      />
-    </div>
-  );
-}
+        const data = event.data;
+        if (data?.type === "console" && onConsoleMessage) {
+          onConsoleMessage({
+            args: data.args,
+            timestamp: data.timestamp,
+            type: data.method,
+          });
+        }
+      },
+      [onConsoleMessage],
+    );
+
+    useEffect(() => {
+      window.addEventListener("message", handleMessage);
+      return () => window.removeEventListener("message", handleMessage);
+    }, [handleMessage]);
+
+    return (
+      <div className={`relative h-full bg-white ${className}`}>
+        <iframe
+          className="h-full w-full border-0"
+          ref={iframeRef}
+          sandbox="allow-scripts"
+          srcDoc={srcdoc}
+          title="Preview"
+        />
+      </div>
+    );
+  },
+);

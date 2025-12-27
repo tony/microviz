@@ -68,6 +68,101 @@ function generateJsArrayData(seed: string, length: number): string {
   return `[${series.map((v) => Math.round(v)).join(", ")}]`;
 }
 
+type AttributeUpdate = {
+  selector: string;
+  attribute: string;
+  value: string;
+};
+
+/**
+ * Generates data updates for reactive attribute changes.
+ * Returns an array of { selector, attribute, value } for each chart element.
+ * Returns null for presets that cannot be updated reactively (e.g., csp-safe).
+ */
+export function generateDataForPreset(
+  presetId: string,
+  seed: string,
+): AttributeUpdate[] | null {
+  const config = PRESET_CONFIGS[presetId];
+  if (!config) return null;
+
+  const rng = createSeededRng(seed);
+  const updates: AttributeUpdate[] = [];
+
+  switch (config.type) {
+    case "sparkline": {
+      // Sparkline uses comma-separated format
+      const subSeed = `${seed}:sparkline:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-sparkline",
+        value: generateSparklineData(subSeed, config.length ?? 9),
+      });
+      // Also update microviz-chart if present (for interactive preset)
+      const chartSeed = `${seed}:chart:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-chart",
+        value: generateBarsData(chartSeed, config.length ?? 12),
+      });
+      break;
+    }
+
+    case "bars": {
+      const subSeed = `${seed}:bars:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-chart",
+        value: generateBarsData(subSeed, config.length ?? 7),
+      });
+      break;
+    }
+
+    case "donut": {
+      const subSeed = `${seed}:donut:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-chart",
+        value: generateDonutData(subSeed, config.segmentCount ?? 3),
+      });
+      break;
+    }
+
+    case "dashboard": {
+      // Dashboard has multiple chart types - update each
+      // Sparklines
+      const sparklineSeed = `${seed}:dash-sparkline:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-sparkline",
+        value: generateSparklineData(sparklineSeed, 7),
+      });
+      // Bar charts (only those with sparkline-bars spec)
+      const barsSeed = `${seed}:dash-bars:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-chart[spec*='sparkline-bars']",
+        value: generateBarsData(barsSeed, 4),
+      });
+      // Donut charts (only those with donut spec)
+      const donutSeed = `${seed}:dash-donut:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: "microviz-chart[spec*='donut']",
+        value: generateDonutData(donutSeed, 3),
+      });
+      break;
+    }
+  }
+
+  // csp-safe cannot be updated reactively (data is in JS code, not attribute)
+  if (presetId === "csp-safe") {
+    return null;
+  }
+
+  return updates.length > 0 ? updates : null;
+}
+
 /**
  * Applies seeded random data to a preset's code template.
  * Uses regex to find and replace data patterns in the HTML.
