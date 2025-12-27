@@ -4,3 +4,4 @@ export * from "./hit-test";
 export * from "./measure";
 export * from "./model";
 export * from "./overlays";
+export * from "./validation";

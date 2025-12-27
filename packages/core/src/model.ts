@@ -273,12 +273,29 @@ export type DiagnosticWarningCode =
   | "EMPTY_DATA"
   | "MISSING_DEF"
   | "MARK_OUT_OF_BOUNDS"
-  | "NAN_COORDINATE";
+  | "NAN_COORDINATE"
+  // Validation codes (from validation module)
+  | "INVALID_TYPE"
+  | "INVALID_VALUE"
+  | "INVALID_DATA_SHAPE"
+  | "MISSING_VALUE"
+  | "MISSING_FIELD"
+  | "MISSING_DATA"
+  | "OUT_OF_RANGE"
+  | "UNKNOWN_CHART_TYPE";
 
 export type DiagnosticWarning = {
   code: DiagnosticWarningCode;
   message: string;
   markId?: MarkId;
+  /** Path to the error location (e.g., ["data", 0, "pct"]) */
+  path?: (string | number)[];
+  /** What was expected (for error messages) */
+  expected?: string;
+  /** What was received (stringified) */
+  received?: string;
+  /** Actionable fix suggestion (copy-pasteable when possible) */
+  hint?: string;
 };
 
 export type ModelStats = {
