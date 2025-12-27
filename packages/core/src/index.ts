@@ -203,6 +203,7 @@ export function buildPixelSegments(
 }
 
 export * from "./index.model";
+export * from "./transition";
 export {
   applyFillRules,
   type FillRule,

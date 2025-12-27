@@ -18,6 +18,7 @@ import {
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
+import { animate, shouldReduceMotion } from "./transition";
 
 type Size = { width: number; height: number };
 type Point = { x: number; y: number };
@@ -73,6 +74,8 @@ export class MicrovizChart extends HTMLElement {
   #measuredSize: Size | null = null;
   #isInteractive = false;
   #model: RenderModel | null = null;
+  #previousModel: RenderModel | null = null;
+  #cancelAnimation: (() => void) | null = null;
   #lastWarningKey: string | null = null;
   #strokeSlopPxOverride: number | undefined = undefined;
   #lastPointerClient: ClientPoint | null = null;
@@ -100,6 +103,8 @@ export class MicrovizChart extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    this.#cancelAnimation?.();
+    this.#cancelAnimation = null;
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = null;
     this.#measuredSize = null;
@@ -552,6 +557,43 @@ export class MicrovizChart extends HTMLElement {
       this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
     const renderer = this.getAttribute("renderer");
     const useHtml = renderer === "html" && !wantsSkeleton;
+
+    // Cancel any in-flight animation
+    this.#cancelAnimation?.();
+    this.#cancelAnimation = null;
+
+    // Determine if we should animate
+    const canAnimate =
+      this.#previousModel &&
+      !useHtml && // HTML renderer has CSS transitions
+      !wantsSkeleton &&
+      !shouldReduceMotion();
+
+    if (canAnimate && this.#previousModel) {
+      this.#cancelAnimation = animate(
+        this.#previousModel,
+        model,
+        (interpolated) =>
+          this.#renderFrame(interpolated, useHtml, wantsSkeleton, size),
+        () => {
+          this.#previousModel = model;
+          this.#cancelAnimation = null;
+        },
+      );
+    } else {
+      this.#renderFrame(model, useHtml, wantsSkeleton, size);
+      this.#previousModel = model;
+    }
+
+    this.#maybeReemitHit();
+  }
+
+  #renderFrame(
+    model: RenderModel,
+    useHtml: boolean,
+    wantsSkeleton: boolean,
+    size: Size,
+  ): void {
     if (useHtml) {
       const html = renderHtmlString(model);
       clearSvgFromShadowRoot(this.#root);
@@ -563,6 +605,5 @@ export class MicrovizChart extends HTMLElement {
       clearHtmlFromShadowRoot(this.#root);
       patchSvgIntoShadowRoot(this.#root, svg);
     }
-    this.#maybeReemitHit();
   }
 }
