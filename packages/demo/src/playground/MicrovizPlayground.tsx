@@ -87,6 +87,13 @@ const chartSubtypeOptions = [
   { id: "dots", label: "Dots" },
 ] as const;
 
+/** Charts with minimal data requirements (single value/ratio). Shown in Primitives section. */
+const PRIMITIVE_CHART_IDS = new Set<ChartId>([
+  "bar",
+  "bullet-delta",
+  "dumbbell",
+]);
+
 const dataPresetOptions: ReadonlyArray<{ id: DataPreset; label: string }> = [
   { id: "balanced", label: "Balanced" },
   { id: "time-series", label: "Time series" },
@@ -103,6 +110,7 @@ type ChartCatalogEntry = {
 
 type ChartBlock =
   | { kind: "sectionHeader"; label: string }
+  | { kind: "primitiveRow"; charts: ChartCatalogEntry[]; isLast: boolean }
   | { kind: "wideRow"; charts: ChartCatalogEntry[]; isLast: boolean }
   | { kind: "squareRow"; charts: ChartCatalogEntry[]; isLast: boolean }
   | { kind: "tallBlock"; charts: ChartCatalogEntry[] };
@@ -1709,22 +1717,27 @@ export const MicrovizPlayground: FC<{
 
   // Group charts by aspect ratio for sectioned display
   const chartsByAspectRatio = useMemo(() => {
+    const primitive: ChartCatalogEntry[] = [];
     const square: ChartCatalogEntry[] = [];
     const tall: ChartCatalogEntry[] = [];
     const wide: ChartCatalogEntry[] = [];
 
     for (const chart of visibleCharts) {
-      const aspectRatio = getPreferredAspectRatio(chart.chartId);
-      if (aspectRatio === "square") {
-        square.push(chart);
-      } else if (aspectRatio === "tall") {
-        tall.push(chart);
+      if (PRIMITIVE_CHART_IDS.has(chart.chartId)) {
+        primitive.push(chart);
       } else {
-        wide.push(chart);
+        const aspectRatio = getPreferredAspectRatio(chart.chartId);
+        if (aspectRatio === "square") {
+          square.push(chart);
+        } else if (aspectRatio === "tall") {
+          tall.push(chart);
+        } else {
+          wide.push(chart);
+        }
       }
     }
 
-    return { square, tall, wide };
+    return { primitive, square, tall, wide };
   }, [visibleCharts]);
 
   useEffect(() => {
@@ -1796,6 +1809,17 @@ export const MicrovizPlayground: FC<{
     );
   }, [chartListContentWidthPx]);
 
+  const primitiveCols = useMemo(() => {
+    const minCardWidth = 210; // 25% smaller than wide
+    if (chartListContentWidthPx <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor(
+        (chartListContentWidthPx + gridGapPx) / (minCardWidth + gridGapPx),
+      ),
+    );
+  }, [chartListContentWidthPx]);
+
   const chartBlocks = useMemo<ChartBlock[]>(() => {
     const blocks: ChartBlock[] = [];
 
@@ -1807,6 +1831,25 @@ export const MicrovizPlayground: FC<{
           charts,
           isLast: i + wideCols >= chartsByAspectRatio.wide.length,
           kind: "wideRow",
+        });
+      }
+    }
+
+    if (chartsByAspectRatio.primitive.length > 0) {
+      blocks.push({ kind: "sectionHeader", label: "Primitives" });
+      for (
+        let i = 0;
+        i < chartsByAspectRatio.primitive.length;
+        i += primitiveCols
+      ) {
+        const charts = chartsByAspectRatio.primitive.slice(
+          i,
+          i + primitiveCols,
+        );
+        blocks.push({
+          charts,
+          isLast: i + primitiveCols >= chartsByAspectRatio.primitive.length,
+          kind: "primitiveRow",
         });
       }
     }
@@ -1829,7 +1872,7 @@ export const MicrovizPlayground: FC<{
     }
 
     return blocks;
-  }, [chartsByAspectRatio, squareCols, wideCols]);
+  }, [chartsByAspectRatio, primitiveCols, squareCols, wideCols]);
 
   const chartBlocksVirtualizer = useVirtualizer({
     count: chartBlocks.length,
@@ -1838,6 +1881,7 @@ export const MicrovizPlayground: FC<{
       if (!block) return 220;
 
       if (block.kind === "sectionHeader") return 22;
+      if (block.kind === "primitiveRow") return 190; // Slightly smaller than wide
       if (block.kind === "squareRow") return 170;
       if (block.kind === "tallBlock") return 160;
       return 220; // wide rows tend to be the tallest
@@ -2889,6 +2933,47 @@ export const MicrovizPlayground: FC<{
                             className="grid gap-3"
                             style={{
                               gridTemplateColumns: `repeat(${wideCols}, minmax(280px, 1fr))`,
+                            }}
+                          >
+                            {block.charts.map((chart) => {
+                              const model = getEffectiveModel(chart.chartId);
+                              const hasWarnings = hasDiagnosticsWarnings(
+                                model,
+                                renderer,
+                                getCanvasUnsupportedFilters,
+                                getHtmlWarnings,
+                              );
+                              return (
+                                <ChartCard
+                                  active={selectedChart === chart.chartId}
+                                  chartId={chart.chartId}
+                                  hasWarnings={hasWarnings}
+                                  htmlWarningTags={
+                                    renderer === "html" ||
+                                    renderer === "html-svg"
+                                      ? getHtmlWarningTags(model)
+                                      : undefined
+                                  }
+                                  key={chart.chartId}
+                                  model={model}
+                                  onSelect={setSelectedChart}
+                                  render={renderSurface(chart.chartId)}
+                                  showHtmlBrokenBadge={
+                                    renderer === "html" && hasWarnings
+                                  }
+                                  timingMs={timingsMs[chart.chartId]}
+                                  title={chart.title}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : block.kind === "primitiveRow" ? (
+                        <div className={block.isLast ? "pb-6" : "pb-3"}>
+                          <div
+                            className="grid gap-3"
+                            style={{
+                              gridTemplateColumns: `repeat(${primitiveCols}, minmax(210px, 1fr))`,
                             }}
                           >
                             {block.charts.map((chart) => {
