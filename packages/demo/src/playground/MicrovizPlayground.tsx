@@ -51,6 +51,7 @@ import {
   statusLed,
   tabButton,
 } from "../ui/styles";
+import { RerollButton } from "../ui/RerollButton";
 import { TabToggle } from "../ui/TabToggle";
 import { ToggleGroup } from "../ui/ToggleGroup";
 import { renderSvgElement } from "../vanilla/svgDom";
@@ -902,7 +903,6 @@ export const MicrovizPlayground: FC<{
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
-  const [rerollKey, setRerollKey] = useState(0);
   const [useDrawerLayout, setUseDrawerLayout] = useState(() => {
     if (typeof window === "undefined") return false;
     const hoverMedia = window.matchMedia("(hover: none)");
@@ -2556,20 +2556,7 @@ export const MicrovizPlayground: FC<{
                         title="Seed"
                         value={seed}
                       />
-                      <button
-                        className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm transition-all hover:from-indigo-600 hover:to-purple-600 active:scale-95 dark:from-indigo-400 dark:to-purple-400 animate-[bounce-pop_0.3s_ease-out]"
-                        key={rerollKey}
-                        onClick={() => {
-                          randomizeSeed();
-                          setRerollKey((k) => k + 1);
-                        }}
-                        title="Randomize seed"
-                        type="button"
-                      >
-                        <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
-                          🎲
-                        </span>
-                      </button>
+                      <RerollButton onClick={randomizeSeed} />
                     </div>
                   </label>
 
@@ -2816,20 +2803,7 @@ export const MicrovizPlayground: FC<{
                     ))}
                   </select>
                 </label>
-                <button
-                  className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm transition-all hover:from-indigo-600 hover:to-purple-600 active:scale-95 dark:from-indigo-400 dark:to-purple-400 animate-[bounce-pop_0.3s_ease-out]"
-                  key={rerollKey}
-                  onClick={() => {
-                    randomizeSeed();
-                    setRerollKey((k) => k + 1);
-                  }}
-                  title="Randomize seed"
-                  type="button"
-                >
-                  <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
-                    🎲
-                  </span>
-                </button>
+                <RerollButton onClick={randomizeSeed} />
                 <div
                   className="min-w-0 max-w-[45vw] truncate text-[10px] text-slate-500 dark:text-slate-400"
                   title={`${wrapper} · ${renderer} · ${computeModeEffective}`}
@@ -2880,21 +2854,7 @@ export const MicrovizPlayground: FC<{
                   value={chartSubtype}
                   variant="muted"
                 />
-                <button
-                  className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1.5 text-sm font-bold text-white shadow-md transition-all hover:from-indigo-600 hover:to-purple-600 hover:shadow-lg active:scale-95 dark:from-indigo-400 dark:to-purple-400 dark:shadow-indigo-500/20 animate-[bounce-pop_0.3s_ease-out]"
-                  key={rerollKey}
-                  onClick={() => {
-                    randomizeSeed();
-                    setRerollKey((k) => k + 1);
-                  }}
-                  title="Randomize seed"
-                  type="button"
-                >
-                  <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
-                    🎲
-                  </span>
-                  Reroll
-                </button>
+                <RerollButton onClick={randomizeSeed} variant="full" />
               </div>
             )}
             {!useDrawerLayout && (
