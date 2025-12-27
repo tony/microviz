@@ -1,4 +1,11 @@
-import { createTelemetry } from "./telemetry";
+import type { RenderModel } from "@microviz/core";
+import { renderSvgString } from "@microviz/renderers";
+import {
+  createTelemetry,
+  modelTelemetryStats,
+  type TelemetryHandle,
+  toTelemetryError,
+} from "./telemetry";
 
 function parseSvgRoot(svg: string): Element | null {
   const template = document.createElement("template");
@@ -286,6 +293,72 @@ export function clearSvgFromShadowRoot(root: ShadowRoot): void {
       phase: "dom",
       renderer: "svg",
     });
+  }
+}
+
+type RenderSvgModelOptions = {
+  telemetry?: TelemetryHandle;
+  specType?: string;
+  reason?: string;
+  patch?: boolean;
+};
+
+export function renderSvgModelIntoShadowRoot(
+  root: ShadowRoot,
+  model: RenderModel,
+  options: RenderSvgModelOptions = {},
+): void {
+  const telemetry = options.telemetry ?? createTelemetry(root);
+  let svg: string;
+
+  if (telemetry.enabled) {
+    const renderStart = performance.now();
+    const stats = modelTelemetryStats(model) ?? undefined;
+    const warnings = model.stats?.warnings;
+    const warningCodes = warnings?.map((warning) => warning.code);
+    try {
+      svg = renderSvgString(model);
+    } catch (error) {
+      telemetry.emit({
+        error: toTelemetryError(error),
+        phase: "error",
+        reason: "render-svg",
+        renderer: "svg",
+        specType: options.specType,
+      });
+      throw error;
+    }
+    telemetry.emit({
+      bytes: svg.length,
+      durationMs: performance.now() - renderStart,
+      phase: "render",
+      reason: options.reason,
+      renderer: "svg",
+      size: { height: model.height, width: model.width },
+      specType: options.specType,
+      stats,
+    });
+    if (warnings && warnings.length > 0) {
+      telemetry.emit({
+        phase: "warning",
+        reason: options.reason,
+        renderer: "svg",
+        size: { height: model.height, width: model.width },
+        specType: options.specType,
+        stats,
+        warningCodes,
+        warnings,
+      });
+    }
+  } else {
+    svg = renderSvgString(model);
+  }
+
+  const usePatch = options.patch ?? true;
+  if (usePatch) {
+    patchSvgIntoShadowRoot(root, svg);
+  } else {
+    renderSvgIntoShadowRoot(root, svg);
   }
 }
 

@@ -1,9 +1,11 @@
+import type { RenderModel } from "@microviz/core";
 import { describe, expect, it } from "vitest";
 import {
   clearHtmlFromShadowRoot,
   clearSvgFromShadowRoot,
   patchHtmlIntoShadowRoot,
   renderSvgIntoShadowRoot,
+  renderSvgModelIntoShadowRoot,
 } from "../src/render";
 
 function createShadowRoot(): ShadowRoot {
@@ -109,5 +111,46 @@ describe("patchHtmlIntoShadowRoot", () => {
     clearHtmlFromShadowRoot(root);
     expect(root.querySelector(".mv-chart")).toBeNull();
     expect(root.querySelector("style")).toBe(style);
+  });
+});
+
+describe("renderSvgModelIntoShadowRoot", () => {
+  it("emits warning telemetry when model has diagnostics", () => {
+    const host = document.createElement("div");
+    host.setAttribute("telemetry", "basic");
+    const root = host.attachShadow({ mode: "open" });
+
+    const events: Array<{ phase?: string; warningCodes?: string[] }> = [];
+    host.addEventListener("microviz-telemetry", (event) => {
+      events.push((event as CustomEvent).detail);
+    });
+
+    const model: RenderModel = {
+      height: 10,
+      marks: [],
+      stats: {
+        hasDefs: false,
+        markCount: 0,
+        textCount: 0,
+        warnings: [
+          {
+            code: "EMPTY_DATA",
+            message: "No data",
+            phase: "normalized",
+          },
+        ],
+      },
+      width: 10,
+    };
+
+    renderSvgModelIntoShadowRoot(root, model);
+
+    const phases = new Set(events.map((detail) => detail.phase));
+    expect(phases.has("render")).toBe(true);
+    expect(phases.has("warning")).toBe(true);
+    expect(phases.has("dom")).toBe(true);
+
+    const warningEvent = events.find((detail) => detail.phase === "warning");
+    expect(warningEvent?.warningCodes).toContain("EMPTY_DATA");
   });
 });

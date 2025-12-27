@@ -1,12 +1,11 @@
 import { computeModel, type RenderModel } from "@microviz/core";
-import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import {
   parseBitfieldSegments,
   parseNumber,
   parseOptionalNumber,
 } from "./parse";
-import { patchSvgIntoShadowRoot } from "./render";
+import { renderSvgModelIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 import {
   type AnimationState,
@@ -70,8 +69,7 @@ export class MicrovizSegmentedPill extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    const svg = renderSvgString(model);
-    patchSvgIntoShadowRoot(this.#root, svg);
+    renderSvgModelIntoShadowRoot(this.#root, model);
   }
 
   #computeFromAttributes(): RenderModel {
