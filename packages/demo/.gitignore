@@ -1,6 +1,9 @@
 # build output
 dist/
 
+# local CDN build (copied from @microviz/elements)
+public/cdn/
+
 # dependencies
 node_modules/
 
