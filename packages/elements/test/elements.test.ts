@@ -201,6 +201,7 @@ describe("@microviz/elements", () => {
     const el = document.createElement("microviz-chart");
     const events: Array<{
       element?: string;
+      modelHash?: string;
       phase?: string;
       renderer?: string;
       specType?: string;
@@ -227,6 +228,8 @@ describe("@microviz/elements", () => {
     expect(svgRender?.element).toBe("microviz-chart");
     expect(svgRender?.renderer).toBe("svg");
     expect(svgRender?.specType).toBe("sparkline");
+    const computeEvent = events.find((detail) => detail.phase === "compute");
+    expect(computeEvent?.modelHash).toMatch(/[0-9a-f]{8}/);
   });
 
   it("applies a11y summary descriptions", () => {

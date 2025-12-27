@@ -2,10 +2,24 @@ import type { RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import {
   createTelemetry,
-  modelTelemetryStats,
+  modelTelemetryMeta,
   type TelemetryHandle,
+  type TelemetryModelMeta,
   toTelemetryError,
 } from "./telemetry";
+
+function applyModelMeta(
+  payload: Parameters<TelemetryHandle["emit"]>[0],
+  modelMeta?: TelemetryModelMeta,
+): Parameters<TelemetryHandle["emit"]>[0] {
+  if (!modelMeta) return payload;
+  return {
+    ...payload,
+    modelHash: payload.modelHash ?? modelMeta.hash,
+    size: payload.size ?? modelMeta.size,
+    stats: payload.stats ?? modelMeta.stats,
+  };
+}
 
 function parseSvgRoot(svg: string): Element | null {
   const template = document.createElement("template");
@@ -23,6 +37,7 @@ export type RenderDomOptions = {
   telemetry?: TelemetryHandle;
   specType?: string;
   reason?: string;
+  modelMeta?: TelemetryModelMeta;
 };
 
 export function renderSvgIntoShadowRoot(
@@ -47,32 +62,42 @@ export function renderSvgIntoShadowRoot(
   if (existing) {
     existing.replaceWith(next);
     if (telemetry.enabled) {
-      telemetry.emit({
-        bytes: svg.length,
-        durationMs: performance.now() - start,
-        nodeCount: next.querySelectorAll("*").length,
-        operation: "replace",
-        phase: "dom",
-        reason: options.reason,
-        renderer: "svg",
-        specType: options.specType,
-      });
+      telemetry.emit(
+        applyModelMeta(
+          {
+            bytes: svg.length,
+            durationMs: performance.now() - start,
+            nodeCount: next.querySelectorAll("*").length,
+            operation: "replace",
+            phase: "dom",
+            reason: options.reason,
+            renderer: "svg",
+            specType: options.specType,
+          },
+          options.modelMeta,
+        ),
+      );
     }
     return;
   }
 
   root.append(next);
   if (telemetry.enabled) {
-    telemetry.emit({
-      bytes: svg.length,
-      durationMs: performance.now() - start,
-      nodeCount: next.querySelectorAll("*").length,
-      operation: "append",
-      phase: "dom",
-      reason: options.reason,
-      renderer: "svg",
-      specType: options.specType,
-    });
+    telemetry.emit(
+      applyModelMeta(
+        {
+          bytes: svg.length,
+          durationMs: performance.now() - start,
+          nodeCount: next.querySelectorAll("*").length,
+          operation: "append",
+          phase: "dom",
+          reason: options.reason,
+          renderer: "svg",
+          specType: options.specType,
+        },
+        options.modelMeta,
+      ),
+    );
   }
 }
 
@@ -314,14 +339,19 @@ export function clearSvgFromShadowRoot(
   const start = telemetry.enabled ? performance.now() : 0;
   existing.remove();
   if (telemetry.enabled) {
-    telemetry.emit({
-      durationMs: performance.now() - start,
-      operation: "clear",
-      phase: "dom",
-      reason: options.reason,
-      renderer: "svg",
-      specType: options.specType,
-    });
+    telemetry.emit(
+      applyModelMeta(
+        {
+          durationMs: performance.now() - start,
+          operation: "clear",
+          phase: "dom",
+          reason: options.reason,
+          renderer: "svg",
+          specType: options.specType,
+        },
+        options.modelMeta,
+      ),
+    );
   }
 }
 
@@ -330,6 +360,7 @@ export type RenderSvgModelOptions = {
   specType?: string;
   reason?: string;
   patch?: boolean;
+  modelMeta?: TelemetryModelMeta;
 };
 
 export function renderSvgModelIntoShadowRoot(
@@ -339,10 +370,13 @@ export function renderSvgModelIntoShadowRoot(
 ): void {
   const telemetry = options.telemetry ?? createTelemetry(root);
   let svg: string;
+  const meta = telemetry.enabled
+    ? (options.modelMeta ?? modelTelemetryMeta(model))
+    : null;
 
   if (telemetry.enabled) {
     const renderStart = performance.now();
-    const stats = modelTelemetryStats(model) ?? undefined;
+    const stats = meta?.stats;
     const warnings = model.stats?.warnings;
     const warningCodes = warnings?.map((warning) => warning.code);
     try {
@@ -360,19 +394,21 @@ export function renderSvgModelIntoShadowRoot(
     telemetry.emit({
       bytes: svg.length,
       durationMs: performance.now() - renderStart,
+      modelHash: meta?.hash,
       phase: "render",
       reason: options.reason,
       renderer: "svg",
-      size: { height: model.height, width: model.width },
+      size: meta?.size ?? { height: model.height, width: model.width },
       specType: options.specType,
       stats,
     });
     if (warnings && warnings.length > 0) {
       telemetry.emit({
+        modelHash: meta?.hash,
         phase: "warning",
         reason: options.reason,
         renderer: "svg",
-        size: { height: model.height, width: model.width },
+        size: meta?.size ?? { height: model.height, width: model.width },
         specType: options.specType,
         stats,
         warningCodes,
@@ -386,12 +422,14 @@ export function renderSvgModelIntoShadowRoot(
   const usePatch = options.patch ?? true;
   if (usePatch) {
     patchSvgIntoShadowRoot(root, svg, {
+      modelMeta: meta ?? undefined,
       reason: options.reason,
       specType: options.specType,
       telemetry,
     });
   } else {
     renderSvgIntoShadowRoot(root, svg, {
+      modelMeta: meta ?? undefined,
       reason: options.reason,
       specType: options.specType,
       telemetry,
@@ -425,16 +463,21 @@ export function patchHtmlIntoShadowRoot(
   if (!existing) {
     root.append(next);
     if (telemetry.enabled) {
-      telemetry.emit({
-        bytes: html.length,
-        durationMs: performance.now() - start,
-        nodeCount: next.querySelectorAll("*").length,
-        operation: "append",
-        phase: "dom",
-        reason: options.reason,
-        renderer: "html",
-        specType: options.specType,
-      });
+      telemetry.emit(
+        applyModelMeta(
+          {
+            bytes: html.length,
+            durationMs: performance.now() - start,
+            nodeCount: next.querySelectorAll("*").length,
+            operation: "append",
+            phase: "dom",
+            reason: options.reason,
+            renderer: "html",
+            specType: options.specType,
+          },
+          options.modelMeta,
+        ),
+      );
     }
     return;
   }
@@ -509,16 +552,21 @@ export function patchHtmlIntoShadowRoot(
   }
 
   if (telemetry.enabled) {
-    telemetry.emit({
-      bytes: html.length,
-      durationMs: performance.now() - start,
-      nodeCount: next.querySelectorAll("*").length,
-      operation: "patch",
-      phase: "dom",
-      reason: options.reason,
-      renderer: "html",
-      specType: options.specType,
-    });
+    telemetry.emit(
+      applyModelMeta(
+        {
+          bytes: html.length,
+          durationMs: performance.now() - start,
+          nodeCount: next.querySelectorAll("*").length,
+          operation: "patch",
+          phase: "dom",
+          reason: options.reason,
+          renderer: "html",
+          specType: options.specType,
+        },
+        options.modelMeta,
+      ),
+    );
   }
 }
 
@@ -544,32 +592,42 @@ export function renderHtmlIntoShadowRoot(
   if (existing) {
     existing.replaceWith(next);
     if (telemetry.enabled) {
-      telemetry.emit({
-        bytes: html.length,
-        durationMs: performance.now() - start,
-        nodeCount: next.querySelectorAll("*").length,
-        operation: "replace",
-        phase: "dom",
-        reason: options.reason,
-        renderer: "html",
-        specType: options.specType,
-      });
+      telemetry.emit(
+        applyModelMeta(
+          {
+            bytes: html.length,
+            durationMs: performance.now() - start,
+            nodeCount: next.querySelectorAll("*").length,
+            operation: "replace",
+            phase: "dom",
+            reason: options.reason,
+            renderer: "html",
+            specType: options.specType,
+          },
+          options.modelMeta,
+        ),
+      );
     }
     return;
   }
 
   root.append(next);
   if (telemetry.enabled) {
-    telemetry.emit({
-      bytes: html.length,
-      durationMs: performance.now() - start,
-      nodeCount: next.querySelectorAll("*").length,
-      operation: "append",
-      phase: "dom",
-      reason: options.reason,
-      renderer: "html",
-      specType: options.specType,
-    });
+    telemetry.emit(
+      applyModelMeta(
+        {
+          bytes: html.length,
+          durationMs: performance.now() - start,
+          nodeCount: next.querySelectorAll("*").length,
+          operation: "append",
+          phase: "dom",
+          reason: options.reason,
+          renderer: "html",
+          specType: options.specType,
+        },
+        options.modelMeta,
+      ),
+    );
   }
 }
 
@@ -583,13 +641,18 @@ export function clearHtmlFromShadowRoot(
   const start = telemetry.enabled ? performance.now() : 0;
   existing.remove();
   if (telemetry.enabled) {
-    telemetry.emit({
-      durationMs: performance.now() - start,
-      operation: "clear",
-      phase: "dom",
-      reason: options.reason,
-      renderer: "html",
-      specType: options.specType,
-    });
+    telemetry.emit(
+      applyModelMeta(
+        {
+          durationMs: performance.now() - start,
+          operation: "clear",
+          phase: "dom",
+          reason: options.reason,
+          renderer: "html",
+          specType: options.specType,
+        },
+        options.modelMeta,
+      ),
+    );
   }
 }

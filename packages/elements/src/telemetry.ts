@@ -16,10 +16,14 @@ export type TelemetryPhase =
 export type TelemetryModelStats = {
   markCount: number;
   textCount: number;
+  defCount: number;
+  layerCount: number;
   hasDefs: boolean;
+  hasLayers: boolean;
   warningCount: number;
   warningCodes?: string[];
   a11yItems?: number;
+  hasA11ySummary: boolean;
 };
 
 export type TelemetryPayload = {
@@ -30,6 +34,8 @@ export type TelemetryPayload = {
   size?: { width: number; height: number };
   specType?: string;
   stats?: TelemetryModelStats;
+  modelHash?: string;
+  modelPrevHash?: string;
   warnings?: ReadonlyArray<DiagnosticWarning>;
   warningCodes?: string[];
   frame?: number;
@@ -47,6 +53,12 @@ export type TelemetryPayload = {
   unsupportedDefs?: Def["type"][];
   unsupportedMarkEffects?: HtmlUnsupportedMarkEffect[];
   error?: { name: string; message: string; stack?: string };
+};
+
+export type TelemetryModelMeta = {
+  hash: string;
+  size: { width: number; height: number };
+  stats: TelemetryModelStats;
 };
 
 export type TelemetryDetail = TelemetryPayload & {
@@ -132,13 +144,56 @@ export function modelTelemetryStats(
       0,
     );
 
+  const defCount = model.defs?.length ?? 0;
+  const layerCount = model.layers?.length ?? 0;
+  const hasDefs = stats?.hasDefs ?? defCount > 0;
+  const hasLayers = layerCount > 0;
+
   return {
     a11yItems: model.a11y?.items?.length ?? 0,
-    hasDefs: stats?.hasDefs ?? Boolean(model.defs?.length),
+    defCount,
+    hasA11ySummary: Boolean(model.a11y?.summary),
+    hasDefs,
+    hasLayers,
+    layerCount,
     markCount: stats?.markCount ?? model.marks.length,
     textCount,
     warningCodes: warningCodes.length > 0 ? warningCodes : undefined,
     warningCount: warningCodes.length,
+  };
+}
+
+function hashTelemetryString(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function hashRenderModel(model: RenderModel): string {
+  const payload = {
+    a11y: model.a11y ?? null,
+    defs: model.defs ?? null,
+    height: model.height,
+    layers: model.layers ?? null,
+    marks: model.marks,
+    width: model.width,
+  };
+  return hashTelemetryString(JSON.stringify(payload));
+}
+
+export function modelTelemetryMeta(
+  model: RenderModel | null,
+): TelemetryModelMeta | null {
+  if (!model) return null;
+  const stats = modelTelemetryStats(model);
+  if (!stats) return null;
+  return {
+    hash: hashRenderModel(model),
+    size: { height: model.height, width: model.width },
+    stats,
   };
 }
 
