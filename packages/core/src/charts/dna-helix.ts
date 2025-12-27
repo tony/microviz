@@ -109,6 +109,7 @@ export const dnaHelixChart = {
         warnings.push({
           code: "NAN_COORDINATE",
           message: `DNA helix segment ${i} has NaN coordinates`,
+          phase: "compute",
         });
       }
     }

@@ -26,7 +26,10 @@ export const sparklineChart = {
   category: "lines" as const,
   defaultPad: 3,
   displayName: "Sparkline",
+  emptyDataHint: "Provide an array of numbers",
   emptyDataWarningMessage: "No series data.",
+  exampleHtml:
+    '<microviz-sparkline data="[10, 25, 15, 30, 20]"></microviz-sparkline>',
   isEmpty(normalized) {
     return normalized.series.length === 0;
   },

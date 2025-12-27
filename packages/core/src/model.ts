@@ -285,8 +285,19 @@ export type DiagnosticWarningCode =
   | "UNKNOWN_CHART_TYPE"
   | "DROPPED_VALUES"; // Values were dropped during parsing (strict mode)
 
+/**
+ * Lifecycle phase where the warning occurred:
+ * - input: Data validation before computation
+ * - normalized: After data normalization (e.g., EMPTY_DATA)
+ * - compute: During mark generation (e.g., NAN_COORDINATE)
+ * - render: Output validation (e.g., BLANK_RENDER, MISSING_DEF)
+ */
+export type DiagnosticPhase = "input" | "normalized" | "compute" | "render";
+
 export type DiagnosticWarning = {
   code: DiagnosticWarningCode;
+  /** Lifecycle phase where the warning occurred */
+  phase: DiagnosticPhase;
   message: string;
   markId?: MarkId;
   /** Path to the error location (e.g., ["data", 0, "pct"]) */
@@ -297,6 +308,10 @@ export type DiagnosticWarning = {
   received?: string;
   /** Actionable fix suggestion (copy-pasteable when possible) */
   hint?: string;
+  /** Copy-pasteable HTML example showing correct usage */
+  example?: string;
+  /** For BLANK_RENDER: the upstream warning code that caused it */
+  cause?: DiagnosticWarningCode;
 };
 
 export type ModelStats = {

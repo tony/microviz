@@ -48,6 +48,8 @@ export function validateSparklineData(
   if (!Array.isArray(input)) {
     return fail({
       code: "INVALID_TYPE",
+      example:
+        '<microviz-sparkline data="[10, 25, 15, 30, 20]"></microviz-sparkline>',
       expected: "array of numbers",
       hint: 'Try: data="[10, 20, 30]" or data="10, 20, 30"',
       message: "Sparkline requires an array of numbers",
@@ -69,6 +71,8 @@ function validateSegment(
   if (typeof input !== "object" || input === null) {
     return fail({
       code: "INVALID_TYPE",
+      example:
+        '<microviz-donut data=\'[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]\'></microviz-donut>',
       expected: "object with {pct, color, name?}",
       hint: 'Use: {pct: 50, color: "#6366f1"}',
       message: "Segment must be an object",
@@ -171,6 +175,8 @@ export function validateSegmentData(
   if (!Array.isArray(input)) {
     return fail({
       code: "INVALID_TYPE",
+      example:
+        '<microviz-donut data=\'[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]\'></microviz-donut>',
       expected: "array of segments [{pct, color, name?}]",
       hint: 'Try: data=\'[{"pct":50,"color":"#6366f1"}]\'',
       message: "Segment data must be an array",
@@ -245,8 +251,14 @@ export function validateChartData(
         ? `data='[{"pct":50,"color":"#6366f1"}]'`
         : 'data="[10, 20, 30]"';
 
+    const htmlExample =
+      dataType === "segments"
+        ? `<microviz-${chartType} data='[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]'></microviz-${chartType}>`
+        : `<microviz-${chartType} data="[10, 25, 15, 30, 20]"></microviz-${chartType}>`;
+
     return fail({
       code: "MISSING_DATA",
+      example: htmlExample,
       expected: expectedShape,
       hint: `Try: ${example}`,
       message: `${chartName} chart requires data`,
@@ -262,6 +274,7 @@ export function validateChartData(
       const chartName = chartType.charAt(0).toUpperCase() + chartType.slice(1);
       return fail({
         code: "INVALID_DATA_SHAPE",
+        example: `<microviz-${chartType} data='[{"pct": 60, "color": "#6366f1"}, {"pct": 40, "color": "#22c55e"}]'></microviz-${chartType}>`,
         expected: "array of segments [{pct, color, name?}]",
         hint: `${chartName} needs segment objects, not plain numbers. Try: [{pct: 50, color: "#6366f1"}]`,
         message: `${chartName} chart expects segment objects, got number array`,

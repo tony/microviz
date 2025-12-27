@@ -32,7 +32,10 @@ export const segmentedPillChart = {
   category: "bars" as const,
   defaultPad: 0,
   displayName: "Segmented Pill",
+  emptyDataHint: "Provide an array of segment objects with pct and color",
   emptyDataWarningMessage: "No segments data.",
+  exampleHtml:
+    '<microviz-segmented-pill data=\'[{"pct": 40, "color": "#ef4444"}, {"pct": 35, "color": "#f59e0b"}, {"pct": 25, "color": "#22c55e"}]\'></microviz-segmented-pill>',
   isEmpty(normalized) {
     return normalized.segments.length === 0;
   },

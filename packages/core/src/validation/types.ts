@@ -42,6 +42,8 @@ export type ValidationError = {
   received: string;
   /** Actionable fix suggestion (copy-pasteable when possible) */
   hint: string;
+  /** Copy-pasteable HTML example showing correct usage */
+  example?: string;
 };
 
 /**

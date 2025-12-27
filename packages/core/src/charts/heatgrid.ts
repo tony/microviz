@@ -18,7 +18,10 @@ export const heatgridChart = {
   category: "grids" as const,
   defaultPad: 0,
   displayName: "Heatgrid",
+  emptyDataHint: "Provide an object with a series array of numbers",
   emptyDataWarningMessage: "No series data.",
+  exampleHtml:
+    "<microviz-heatgrid data='{\"series\": [10, 25, 50, 75, 100, 80, 60, 40]}'></microviz-heatgrid>",
   isEmpty(normalized) {
     return normalized.series.length === 0;
   },
