@@ -519,3 +519,93 @@ Expert synthesis from 5 independent assessments on making microviz more friendly
 - **Expert 3**: "VibePlot" spec (grammar of graphics, 5-layer API, type inference)
 - **Expert 4**: "Universal Visualization Component" (CSP constraints, llms.txt, Arrow)
 - **Expert 5**: "Vibe" engine (greedy parser, bi-directional state, Shadow DOM)
+
+---
+
+## Transition System (2025-12-25)
+
+Smooth animated transitions when chart data changes, across all three renderers (SVG, Canvas, HTML).
+
+### Context
+
+**Completed:**
+- PostMessage API prevents iframe reload in CDN playground
+- `patchSvgIntoShadowRoot()` preserves SVG DOM nodes during updates
+
+**Problem:** CSS cannot animate SVG `d` (path) attributes. DOM patching alone doesn't create smooth transitions—need JavaScript-driven animation for path-based charts (donut, sparkline area, etc.).
+
+### Architecture (CLAUDE.md Compliant)
+
+**Key Constraint:** `core` must be Worker-safe with zero runtime dependencies. No DOM APIs (`requestAnimationFrame`, `performance.now()`) in `core` or `renderers`.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ packages/core/src/transition/                           │
+│ - interpolation.ts   (easing, lerp, mark/model interp)  │
+│ - pathMorph.ts       (SVG path command interpolation)   │
+│ ⚠️  NO DOM APIs - pure functions only                   │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ packages/elements/src/transition/                       │
+│ - animator.ts        (RAF loop, timing, cancel)         │
+│ ✓ DOM APIs allowed here (browser-only layer)            │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌──────────────┬────────────────┬─────────────────────────┐
+│ SVG          │ Canvas         │ HTML                    │
+│ Re-render    │ Clear+redraw   │ CSS transitions         │
+│ + patch DOM  │ each frame     │ (position/opacity)      │
+└──────────────┴────────────────┴─────────────────────────┘
+```
+
+### Implementation Summary
+
+**Phase 1: Core Interpolation (Worker-Safe)**
+- `packages/core/src/transition/interpolation.ts`: easing functions, lerp, mark/model interpolation
+- Pure math only, Tier 0 testable in Node.js
+
+**Phase 2: Path Morphing (Worker-Safe)**
+- `packages/core/src/transition/pathMorph.ts`: parse/serialize SVG path commands, interpolate compatible paths
+- Compatible paths (same command structure) → smooth interpolation
+- Incompatible paths → instant snap to target
+
+**Phase 3: Animation Coordinator (Elements Layer)**
+- `packages/elements/src/transition/animator.ts`: RAF loop, timing, cancel support
+- DOM APIs (`requestAnimationFrame`, `performance.now()`, `matchMedia`) allowed here
+- Respects `prefers-reduced-motion: reduce`
+
+**Phase 4: Element Integration**
+- Modify `chart.ts`, `donut.ts`, `sparkline.ts` to use animator
+- Store previous model, animate to next model on attribute change
+
+### Files to Create/Modify
+
+| File | Change |
+|------|--------|
+| `packages/core/src/transition/interpolation.ts` | NEW: easing, lerp, mark/model interpolation |
+| `packages/core/src/transition/pathMorph.ts` | NEW: SVG path parsing and interpolation |
+| `packages/core/src/transition/index.ts` | NEW: exports |
+| `packages/core/src/index.ts` | Export transition module |
+| `packages/elements/src/transition/animator.ts` | NEW: RAF loop, timing, cancel (DOM APIs) |
+| `packages/elements/src/chart.ts` | Add transition support |
+| `packages/elements/src/donut.ts` | Add transition support |
+| `packages/elements/src/sparkline.ts` | Add transition support |
+
+### Testing Strategy
+
+**Tier 0 (Node.js):** Core interpolation + path morphing unit tests
+**Tier 1 (happy-dom):** Animation loop tests with `vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'performance'] })`
+**Tier 2 (Playwright):** Visual regression for smooth transitions
+
+### Motion Tokens (Already Exist)
+
+```css
+/* packages/themes/base.css */
+--mv-motion-duration: 160ms;
+--mv-motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+@media (prefers-reduced-motion: reduce) {
+  --mv-motion-duration: 0ms;
+}
+```
