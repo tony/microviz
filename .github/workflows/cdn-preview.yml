@@ -6,6 +6,11 @@ on:
   push:
     branches: [main, next]
   workflow_dispatch:
+    inputs:
+      publish_latest:
+        description: Publish latest alias paths
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -15,6 +20,8 @@ jobs:
   publish:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    env:
+      PUBLISH_LATEST: ${{ inputs.publish_latest || 'true' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -58,6 +65,7 @@ jobs:
           fi
           sha="$(git rev-parse HEAD)"
           echo "base_prefix=${channel}/sha/${sha}" >> "$GITHUB_OUTPUT"
+          echo "latest_prefix=${channel}/latest" >> "$GITHUB_OUTPUT"
 
       - name: Upload immutable artifacts
         run: |
@@ -72,3 +80,25 @@ jobs:
           aws s3 sync packages/elements/dist/cdn "s3://${bucket}/${base}/@microviz/elements/cdn" --cache-control "$cache"
           aws s3 sync packages/themes "s3://${bucket}/${base}/@microviz/themes" --exclude "*" --include "*.css" --cache-control "$cache"
           aws s3 sync packages/themes-tailwind "s3://${bucket}/${base}/@microviz/themes-tailwind" --exclude "*" --include "*.css" --cache-control "$cache"
+
+      - name: Upload latest aliases
+        if: env.PUBLISH_LATEST == 'true'
+        run: |
+          bucket="${{ secrets.MICROVIZ_CDN_BUCKET }}"
+          latest="${{ steps.paths.outputs.latest_prefix }}"
+          cache="public,max-age=60"
+
+          aws s3 sync packages/core/dist "s3://${bucket}/${latest}/@microviz/core/dist" --delete --cache-control "$cache"
+          aws s3 sync packages/renderers/dist "s3://${bucket}/${latest}/@microviz/renderers/dist" --delete --cache-control "$cache"
+          aws s3 sync packages/react/dist "s3://${bucket}/${latest}/@microviz/react/dist" --delete --cache-control "$cache"
+          aws s3 sync packages/elements/dist "s3://${bucket}/${latest}/@microviz/elements/dist" --delete --cache-control "$cache"
+          aws s3 sync packages/elements/dist/cdn "s3://${bucket}/${latest}/@microviz/elements/cdn" --delete --cache-control "$cache"
+          aws s3 sync packages/themes "s3://${bucket}/${latest}/@microviz/themes" --exclude "*" --include "*.css" --delete --cache-control "$cache"
+          aws s3 sync packages/themes-tailwind "s3://${bucket}/${latest}/@microviz/themes-tailwind" --exclude "*" --include "*.css" --delete --cache-control "$cache"
+
+      - name: Invalidate CloudFront (latest)
+        if: env.PUBLISH_LATEST == 'true'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.MICROVIZ_CDN_DISTRIBUTION }}" \
+            --paths "/${{ steps.paths.outputs.latest_prefix }}/*"
