@@ -1,3 +1,5 @@
+import { createTelemetry } from "./telemetry";
+
 function parseSvgRoot(svg: string): Element | null {
   const template = document.createElement("template");
   template.innerHTML = svg;
@@ -11,16 +13,45 @@ function parseHtmlRoot(html: string): Element | null {
 }
 
 export function renderSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
+  const telemetry = createTelemetry(root);
+  const start = telemetry.enabled ? performance.now() : 0;
   const next = parseSvgRoot(svg);
-  if (!next) return;
+  if (!next) {
+    telemetry.emit({
+      phase: "error",
+      reason: "parse-svg",
+      renderer: "svg",
+    });
+    return;
+  }
 
   const existing = root.querySelector("svg");
   if (existing) {
     existing.replaceWith(next);
+    if (telemetry.enabled) {
+      telemetry.emit({
+        bytes: svg.length,
+        durationMs: performance.now() - start,
+        nodeCount: next.querySelectorAll("*").length,
+        operation: "replace",
+        phase: "dom",
+        renderer: "svg",
+      });
+    }
     return;
   }
 
   root.append(next);
+  if (telemetry.enabled) {
+    telemetry.emit({
+      bytes: svg.length,
+      durationMs: performance.now() - start,
+      nodeCount: next.querySelectorAll("*").length,
+      operation: "append",
+      phase: "dom",
+      renderer: "svg",
+    });
+  }
 }
 
 /**
@@ -93,13 +124,32 @@ function patchChildren(target: Element, source: Element): void {
  * This preserves DOM nodes and enables smooth CSS transitions.
  */
 export function patchSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
+  const telemetry = createTelemetry(root);
+  const start = telemetry.enabled ? performance.now() : 0;
   const next = parseSvgRoot(svg);
-  if (!next) return;
+  if (!next) {
+    telemetry.emit({
+      phase: "error",
+      reason: "parse-svg",
+      renderer: "svg",
+    });
+    return;
+  }
 
   const existing = root.querySelector("svg");
   if (!existing) {
     // No existing SVG - just append
     root.append(next);
+    if (telemetry.enabled) {
+      telemetry.emit({
+        bytes: svg.length,
+        durationMs: performance.now() - start,
+        nodeCount: next.querySelectorAll("*").length,
+        operation: "append",
+        phase: "dom",
+        renderer: "svg",
+      });
+    }
     return;
   }
 
@@ -214,25 +264,89 @@ export function patchSvgIntoShadowRoot(root: ShadowRoot, svg: string): void {
       }
     }
   }
+
+  if (telemetry.enabled) {
+    telemetry.emit({
+      bytes: svg.length,
+      durationMs: performance.now() - start,
+      nodeCount: next.querySelectorAll("*").length,
+      operation: "patch",
+      phase: "dom",
+      renderer: "svg",
+    });
+  }
 }
 
 export function clearSvgFromShadowRoot(root: ShadowRoot): void {
-  root.querySelector("svg")?.remove();
+  const telemetry = createTelemetry(root);
+  const existing = root.querySelector("svg");
+  if (!existing) return;
+  const start = telemetry.enabled ? performance.now() : 0;
+  existing.remove();
+  if (telemetry.enabled) {
+    telemetry.emit({
+      durationMs: performance.now() - start,
+      operation: "clear",
+      phase: "dom",
+      renderer: "svg",
+    });
+  }
 }
 
 export function renderHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
+  const telemetry = createTelemetry(root);
+  const start = telemetry.enabled ? performance.now() : 0;
   const next = parseHtmlRoot(html);
-  if (!next) return;
+  if (!next) {
+    telemetry.emit({
+      phase: "error",
+      reason: "parse-html",
+      renderer: "html",
+    });
+    return;
+  }
 
   const existing = root.querySelector(".mv-chart");
   if (existing) {
     existing.replaceWith(next);
+    if (telemetry.enabled) {
+      telemetry.emit({
+        bytes: html.length,
+        durationMs: performance.now() - start,
+        nodeCount: next.querySelectorAll("*").length,
+        operation: "replace",
+        phase: "dom",
+        renderer: "html",
+      });
+    }
     return;
   }
 
   root.append(next);
+  if (telemetry.enabled) {
+    telemetry.emit({
+      bytes: html.length,
+      durationMs: performance.now() - start,
+      nodeCount: next.querySelectorAll("*").length,
+      operation: "append",
+      phase: "dom",
+      renderer: "html",
+    });
+  }
 }
 
 export function clearHtmlFromShadowRoot(root: ShadowRoot): void {
-  root.querySelector(".mv-chart")?.remove();
+  const telemetry = createTelemetry(root);
+  const existing = root.querySelector(".mv-chart");
+  if (!existing) return;
+  const start = telemetry.enabled ? performance.now() : 0;
+  existing.remove();
+  if (telemetry.enabled) {
+    telemetry.emit({
+      durationMs: performance.now() - start,
+      operation: "clear",
+      phase: "dom",
+      renderer: "html",
+    });
+  }
 }

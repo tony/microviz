@@ -134,6 +134,32 @@ el?.addEventListener("microviz-focus", (event) => {
 });
 ```
 
+### Telemetry (debug instrumentation)
+
+Add the `telemetry` attribute to emit `microviz-telemetry` events with timings,
+renderer mode, and diagnostics. This is opt-in and meant for debugging and
+profiling.
+
+```ts
+const el = document.querySelector("microviz-chart");
+el?.setAttribute("telemetry", "basic");
+el?.addEventListener("microviz-telemetry", (event) => {
+  console.log((event as CustomEvent).detail);
+});
+```
+
+Telemetry levels:
+
+- `telemetry` / `telemetry="basic"`: compute + render + DOM patch summaries
+- `telemetry="verbose"`: includes per-frame animation events
+
+You can also enable telemetry globally:
+
+```ts
+// Enable for all microviz elements on the page
+window.__MICROVIZ_TELEMETRY__ = true; // or "verbose"
+```
+
 ### Accessibility
 
 - Use `interactive` when you want keyboard navigation; arrow keys move across `a11y.items`.

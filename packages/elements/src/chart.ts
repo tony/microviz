@@ -18,6 +18,12 @@ import {
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
+import {
+  createTelemetry,
+  modelTelemetryStats,
+  type TelemetryHandle,
+  toTelemetryError,
+} from "./telemetry";
 import { animate, shouldReduceMotion } from "./transition";
 
 type Size = { width: number; height: number };
@@ -244,6 +250,11 @@ export class MicrovizChart extends HTMLElement {
         detail: { index: this.#focusIndex, item },
       }),
     );
+    createTelemetry(this).emit({
+      action: "focus",
+      focus: { id: item.id, index: this.#focusIndex, label: item.label },
+      phase: "interaction",
+    });
   }
 
   #onKeyDown = (event: KeyboardEvent): void => {
@@ -364,6 +375,14 @@ export class MicrovizChart extends HTMLElement {
         },
       }),
     );
+    createTelemetry(this).emit({
+      action: "hit",
+      client: this.#lastPointerClient,
+      hit: hit ? { markId: hit.markId, markType: hit.markType } : undefined,
+      phase: "interaction",
+      point,
+      reason: hit ? undefined : "miss",
+    });
   }
 
   #onPointerMove = (event: PointerEvent): void => {
@@ -385,6 +404,14 @@ export class MicrovizChart extends HTMLElement {
         detail: { client, hit, point },
       }),
     );
+    createTelemetry(this).emit({
+      action: "hit",
+      client,
+      hit: hit ? { markId: hit.markId, markType: hit.markType } : undefined,
+      phase: "interaction",
+      point,
+      reason: hit ? undefined : "miss",
+    });
   };
 
   #onPointerLeave = (event: PointerEvent): void => {
@@ -398,6 +425,12 @@ export class MicrovizChart extends HTMLElement {
         detail: { client: { x: event.clientX, y: event.clientY }, hit: null },
       }),
     );
+    createTelemetry(this).emit({
+      action: "leave",
+      client: { x: event.clientX, y: event.clientY },
+      phase: "interaction",
+      reason: "pointer-leave",
+    });
   };
 
   #resolveSize(defaultSize: Size): Size {
@@ -447,6 +480,7 @@ export class MicrovizChart extends HTMLElement {
   }
 
   render(): void {
+    const telemetry = createTelemetry(this);
     const parseWarnings: DiagnosticWarning[] = [];
 
     // Parse spec with error tracking
@@ -496,6 +530,14 @@ export class MicrovizChart extends HTMLElement {
         );
       }
     }
+    if (telemetry.enabled && parseWarnings.length > 0) {
+      telemetry.emit({
+        phase: "parse",
+        specType: spec?.type,
+        warningCodes: parseWarnings.map((warning) => warning.code),
+        warnings: parseWarnings,
+      });
+    }
 
     if (!spec || data === null) {
       // Clear warning key if no parse errors (e.g., missing data attribute)
@@ -520,6 +562,14 @@ export class MicrovizChart extends HTMLElement {
           }),
         );
       }
+      if (telemetry.enabled) {
+        telemetry.emit({
+          operation: "clear",
+          phase: "render",
+          reason: "missing-input",
+          specType: spec?.type,
+        });
+      }
       return;
     }
 
@@ -527,12 +577,40 @@ export class MicrovizChart extends HTMLElement {
     const state = this.#focusedMarkId
       ? { focusedMarkId: this.#focusedMarkId }
       : undefined;
-    const model = computeModel({
-      data: data as never,
-      size,
-      spec,
-      state,
-    });
+    let model: RenderModel;
+    if (telemetry.enabled) {
+      const computeStart = performance.now();
+      try {
+        model = computeModel({
+          data: data as never,
+          size,
+          spec,
+          state,
+        });
+      } catch (error) {
+        telemetry.emit({
+          error: toTelemetryError(error),
+          phase: "error",
+          reason: "compute-model",
+          specType: spec.type,
+        });
+        throw error;
+      }
+      telemetry.emit({
+        durationMs: performance.now() - computeStart,
+        phase: "compute",
+        size,
+        specType: spec.type,
+        stats: modelTelemetryStats(model) ?? undefined,
+      });
+    } else {
+      model = computeModel({
+        data: data as never,
+        size,
+        spec,
+        state,
+      });
+    }
     this.#model = model;
 
     // Emit warning event if model has diagnostics (deduplicated)
@@ -552,6 +630,14 @@ export class MicrovizChart extends HTMLElement {
           },
         }),
       );
+      if (warnings && telemetry.enabled) {
+        telemetry.emit({
+          phase: "warning",
+          specType: spec.type,
+          warningCodes: warnings.map((warning) => warning.code),
+          warnings,
+        });
+      }
     } else if (!warningKey) {
       this.#lastWarningKey = null;
     }
@@ -562,6 +648,7 @@ export class MicrovizChart extends HTMLElement {
       this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
     const renderer = this.getAttribute("renderer");
     const useHtml = renderer === "html" && !wantsSkeleton;
+    const renderMode = useHtml ? "html" : "svg";
 
     // Cancel any in-flight animation
     this.#cancelAnimation?.();
@@ -575,20 +662,59 @@ export class MicrovizChart extends HTMLElement {
       !shouldReduceMotion();
 
     if (canAnimate && this.#previousModel) {
-      this.#cancelAnimation = animate(
+      const animationStart = telemetry.enabled ? performance.now() : 0;
+      let frameCount = 0;
+      const emitFrames = telemetry.enabled && telemetry.level === "verbose";
+      const cancel = animate(
         this.#previousModel,
         model,
         (interpolated) => {
-          this.#renderFrame(interpolated, useHtml, wantsSkeleton, size);
+          frameCount += 1;
+          if (emitFrames) {
+            telemetry.emit({
+              frame: frameCount,
+              phase: "animation",
+              reason: "frame",
+              renderer: renderMode,
+            });
+          }
+          this.#renderFrame(
+            interpolated,
+            useHtml,
+            wantsSkeleton,
+            size,
+            telemetry,
+          );
           this.#maybeReemitHit();
         },
         () => {
           this.#previousModel = model;
           this.#cancelAnimation = null;
+          if (telemetry.enabled) {
+            telemetry.emit({
+              durationMs: performance.now() - animationStart,
+              frameCount,
+              phase: "animation",
+              renderer: renderMode,
+            });
+          }
         },
       );
+      this.#cancelAnimation = () => {
+        cancel();
+        if (telemetry.enabled) {
+          telemetry.emit({
+            cancelled: true,
+            durationMs: performance.now() - animationStart,
+            frameCount,
+            phase: "animation",
+            reason: "interrupt",
+            renderer: renderMode,
+          });
+        }
+      };
     } else {
-      this.#renderFrame(model, useHtml, wantsSkeleton, size);
+      this.#renderFrame(model, useHtml, wantsSkeleton, size, telemetry);
       this.#previousModel = model;
       this.#maybeReemitHit();
     }
@@ -599,16 +725,77 @@ export class MicrovizChart extends HTMLElement {
     useHtml: boolean,
     wantsSkeleton: boolean,
     size: Size,
+    telemetry: TelemetryHandle = createTelemetry(this),
   ): void {
     this.#renderModel = wantsSkeleton ? null : model;
     if (useHtml) {
-      const html = renderHtmlString(model);
+      let html: string;
+      if (telemetry.enabled) {
+        const renderStart = performance.now();
+        try {
+          html = renderHtmlString(model);
+        } catch (error) {
+          telemetry.emit({
+            error: toTelemetryError(error),
+            phase: "error",
+            reason: "render-html",
+            renderer: "html",
+          });
+          throw error;
+        }
+        telemetry.emit({
+          bytes: html.length,
+          durationMs: performance.now() - renderStart,
+          phase: "render",
+          reason: wantsSkeleton ? "skeleton" : undefined,
+          renderer: "html",
+          size,
+          stats: modelTelemetryStats(model) ?? undefined,
+        });
+      } else {
+        html = renderHtmlString(model);
+      }
       clearSvgFromShadowRoot(this.#root);
       renderHtmlIntoShadowRoot(this.#root, html);
     } else {
-      const svg = wantsSkeleton
-        ? renderSkeletonSvg(size)
-        : renderSvgString(model);
+      let svg: string;
+      if (wantsSkeleton) {
+        const renderStart = telemetry.enabled ? performance.now() : 0;
+        svg = renderSkeletonSvg(size);
+        if (telemetry.enabled) {
+          telemetry.emit({
+            bytes: svg.length,
+            durationMs: performance.now() - renderStart,
+            phase: "render",
+            reason: "skeleton",
+            renderer: "svg",
+            size,
+          });
+        }
+      } else if (telemetry.enabled) {
+        const renderStart = performance.now();
+        try {
+          svg = renderSvgString(model);
+        } catch (error) {
+          telemetry.emit({
+            error: toTelemetryError(error),
+            phase: "error",
+            reason: "render-svg",
+            renderer: "svg",
+          });
+          throw error;
+        }
+        telemetry.emit({
+          bytes: svg.length,
+          durationMs: performance.now() - renderStart,
+          phase: "render",
+          renderer: "svg",
+          size,
+          stats: modelTelemetryStats(model) ?? undefined,
+        });
+      } else {
+        svg = renderSvgString(model);
+      }
       clearHtmlFromShadowRoot(this.#root);
       patchSvgIntoShadowRoot(this.#root, svg);
     }
