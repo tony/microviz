@@ -16,7 +16,26 @@
  *   - https://unpkg.com/@microviz/elements/cdn/microviz.js
  */
 import { resolve } from "node:path";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
+
+const shouldAnalyze =
+  process.env.ANALYZE === "1" || process.env.ANALYZE === "true";
+const analyzePlugins = shouldAnalyze
+  ? [
+      visualizer({
+        brotliSize: true,
+        filename: resolve(__dirname, "dist/cdn/stats.json"),
+        gzipSize: true,
+        sourcemap: true,
+        template: "raw-data",
+      }),
+      visualizer({
+        filename: resolve(__dirname, "dist/cdn/stats.yml"),
+        template: "list",
+      }),
+    ]
+  : [];
 
 export default defineConfig({
   build: {
@@ -34,6 +53,7 @@ export default defineConfig({
     },
     sourcemap: true,
   },
+  plugins: analyzePlugins,
   // Resolve workspace dependencies
   resolve: {
     alias: {
