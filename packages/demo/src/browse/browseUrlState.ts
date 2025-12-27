@@ -16,7 +16,7 @@ export type SidebarTab = "browse" | "debug" | "settings";
 export type PaletteMode = "value" | "random" | "chunks";
 export type HtmlFilter = "all" | "safe" | "broken";
 
-export type PlaygroundState = {
+export type BrowseState = {
   applyNoiseOverlay: boolean;
   chartFilter: string;
   chartSubtype: ChartSubtype;
@@ -39,7 +39,7 @@ export type PlaygroundState = {
   wrapper: Wrapper;
 };
 
-export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
+export const DEFAULT_BROWSE_STATE: BrowseState = {
   applyNoiseOverlay: false,
   chartFilter: "",
   chartSubtype: "all",
@@ -62,7 +62,7 @@ export const DEFAULT_PLAYGROUND_STATE: PlaygroundState = {
   wrapper: "vanilla",
 };
 
-type PlaygroundSerializedState = {
+type BrowseSerializedState = {
   /** applyNoiseOverlay */
   n?: 1;
   /** chartFilter */
@@ -191,8 +191,8 @@ function isSidebarTab(value: unknown): value is SidebarTab {
   return value === "browse" || value === "settings" || value === "debug";
 }
 
-function normalizePlaygroundState(state: PlaygroundState): PlaygroundState {
-  const next: PlaygroundState = { ...state };
+function normalizeBrowseState(state: BrowseState): BrowseState {
+  const next: BrowseState = { ...state };
 
   if (next.wrapper === "elements") {
     next.renderer = "svg-string";
@@ -209,42 +209,39 @@ function normalizePlaygroundState(state: PlaygroundState): PlaygroundState {
   return next;
 }
 
-function serializePlaygroundState(
-  input: PlaygroundState,
-): PlaygroundSerializedState {
-  const state = normalizePlaygroundState(input);
-  const s: PlaygroundSerializedState = {};
+function serializeBrowseState(input: BrowseState): BrowseSerializedState {
+  const state = normalizeBrowseState(input);
+  const s: BrowseSerializedState = {};
 
-  if (state.wrapper !== DEFAULT_PLAYGROUND_STATE.wrapper) s.wr = state.wrapper;
-  if (state.renderer !== DEFAULT_PLAYGROUND_STATE.renderer)
-    s.r = state.renderer;
-  if (state.computeMode !== DEFAULT_PLAYGROUND_STATE.computeMode)
+  if (state.wrapper !== DEFAULT_BROWSE_STATE.wrapper) s.wr = state.wrapper;
+  if (state.renderer !== DEFAULT_BROWSE_STATE.renderer) s.r = state.renderer;
+  if (state.computeMode !== DEFAULT_BROWSE_STATE.computeMode)
     s.cm = state.computeMode;
-  if (state.dataPreset !== DEFAULT_PLAYGROUND_STATE.dataPreset)
+  if (state.dataPreset !== DEFAULT_BROWSE_STATE.dataPreset)
     s.dp = state.dataPreset;
-  if (state.htmlFilter !== DEFAULT_PLAYGROUND_STATE.htmlFilter)
+  if (state.htmlFilter !== DEFAULT_BROWSE_STATE.htmlFilter)
     s.hf = state.htmlFilter;
-  if (state.paletteMode !== DEFAULT_PLAYGROUND_STATE.paletteMode)
+  if (state.paletteMode !== DEFAULT_BROWSE_STATE.paletteMode)
     s.pm = state.paletteMode;
-  if (state.seriesPreset !== DEFAULT_PLAYGROUND_STATE.seriesPreset)
+  if (state.seriesPreset !== DEFAULT_BROWSE_STATE.seriesPreset)
     s.sp = state.seriesPreset;
 
-  if (state.seed !== DEFAULT_PLAYGROUND_STATE.seed) s.s = state.seed;
-  if (state.seriesLength !== DEFAULT_PLAYGROUND_STATE.seriesLength)
+  if (state.seed !== DEFAULT_BROWSE_STATE.seed) s.s = state.seed;
+  if (state.seriesLength !== DEFAULT_BROWSE_STATE.seriesLength)
     s.sl = state.seriesLength;
-  if (state.segmentCount !== DEFAULT_PLAYGROUND_STATE.segmentCount)
+  if (state.segmentCount !== DEFAULT_BROWSE_STATE.segmentCount)
     s.sc = state.segmentCount;
 
-  if (state.selectedChart !== DEFAULT_PLAYGROUND_STATE.selectedChart)
+  if (state.selectedChart !== DEFAULT_BROWSE_STATE.selectedChart)
     s.ch = state.selectedChart;
-  if (state.chartSubtype !== DEFAULT_PLAYGROUND_STATE.chartSubtype)
+  if (state.chartSubtype !== DEFAULT_BROWSE_STATE.chartSubtype)
     s.st = state.chartSubtype;
-  if (state.chartFilter !== DEFAULT_PLAYGROUND_STATE.chartFilter)
+  if (state.chartFilter !== DEFAULT_BROWSE_STATE.chartFilter)
     s.f = state.chartFilter;
 
-  if (state.width !== DEFAULT_PLAYGROUND_STATE.width) s.w = state.width;
-  if (state.height !== DEFAULT_PLAYGROUND_STATE.height) s.h = state.height;
-  if (state.sidebarTab !== DEFAULT_PLAYGROUND_STATE.sidebarTab)
+  if (state.width !== DEFAULT_BROWSE_STATE.width) s.w = state.width;
+  if (state.height !== DEFAULT_BROWSE_STATE.height) s.h = state.height;
+  if (state.sidebarTab !== DEFAULT_BROWSE_STATE.sidebarTab)
     s.tb = state.sidebarTab;
 
   if (state.applyNoiseOverlay) s.n = 1;
@@ -255,90 +252,90 @@ function serializePlaygroundState(
   return s;
 }
 
-function deserializePlaygroundState(
-  serialized: PlaygroundSerializedState,
-): PlaygroundState {
+function deserializeBrowseState(
+  serialized: BrowseSerializedState,
+): BrowseState {
   const seed =
     typeof serialized.s === "string" && serialized.s.trim()
       ? serialized.s.trim()
-      : DEFAULT_PLAYGROUND_STATE.seed;
+      : DEFAULT_BROWSE_STATE.seed;
 
   const chartFilter =
     typeof serialized.f === "string"
       ? serialized.f.slice(0, 80)
-      : DEFAULT_PLAYGROUND_STATE.chartFilter;
+      : DEFAULT_BROWSE_STATE.chartFilter;
 
-  return normalizePlaygroundState({
+  return normalizeBrowseState({
     applyNoiseOverlay: serialized.n === 1,
     chartFilter,
     chartSubtype: isChartSubtype(serialized.st)
       ? serialized.st
-      : DEFAULT_PLAYGROUND_STATE.chartSubtype,
+      : DEFAULT_BROWSE_STATE.chartSubtype,
     computeMode: isComputeMode(serialized.cm)
       ? serialized.cm
-      : DEFAULT_PLAYGROUND_STATE.computeMode,
+      : DEFAULT_BROWSE_STATE.computeMode,
     dataPreset: isDataPreset(serialized.dp)
       ? serialized.dp
-      : DEFAULT_PLAYGROUND_STATE.dataPreset,
+      : DEFAULT_BROWSE_STATE.dataPreset,
     fallbackSvgWhenCanvasUnsupported: serialized.fb === 1,
     height:
       typeof serialized.h === "number" && Number.isFinite(serialized.h)
         ? clamp(Math.round(serialized.h), 16, 140)
-        : DEFAULT_PLAYGROUND_STATE.height,
+        : DEFAULT_BROWSE_STATE.height,
     htmlFilter: isHtmlFilter(serialized.hf)
       ? serialized.hf
       : serialized.hs === 1
         ? "safe"
-        : DEFAULT_PLAYGROUND_STATE.htmlFilter,
+        : DEFAULT_BROWSE_STATE.htmlFilter,
     paletteMode: isPaletteMode(serialized.pm)
       ? serialized.pm
-      : DEFAULT_PLAYGROUND_STATE.paletteMode,
+      : DEFAULT_BROWSE_STATE.paletteMode,
     renderer: isRenderer(serialized.r)
       ? serialized.r
-      : DEFAULT_PLAYGROUND_STATE.renderer,
+      : DEFAULT_BROWSE_STATE.renderer,
     seed,
     segmentCount:
       typeof serialized.sc === "number" && Number.isFinite(serialized.sc)
         ? clamp(Math.round(serialized.sc), 1, 8)
-        : DEFAULT_PLAYGROUND_STATE.segmentCount,
+        : DEFAULT_BROWSE_STATE.segmentCount,
     selectedChart: isChartId(serialized.ch)
       ? serialized.ch
-      : DEFAULT_PLAYGROUND_STATE.selectedChart,
+      : DEFAULT_BROWSE_STATE.selectedChart,
     seriesLength:
       typeof serialized.sl === "number" && Number.isFinite(serialized.sl)
         ? clamp(Math.round(serialized.sl), 3, 80)
-        : DEFAULT_PLAYGROUND_STATE.seriesLength,
+        : DEFAULT_BROWSE_STATE.seriesLength,
     seriesPreset: isSeriesPreset(serialized.sp)
       ? serialized.sp
-      : DEFAULT_PLAYGROUND_STATE.seriesPreset,
+      : DEFAULT_BROWSE_STATE.seriesPreset,
     showHoverTooltip: serialized.ht === 1,
     showHtmlSvgOverlay: serialized.ho !== 0,
     sidebarTab: isSidebarTab(serialized.tb)
       ? serialized.tb
-      : DEFAULT_PLAYGROUND_STATE.sidebarTab,
+      : DEFAULT_BROWSE_STATE.sidebarTab,
     width:
       typeof serialized.w === "number" && Number.isFinite(serialized.w)
         ? clamp(Math.round(serialized.w), 80, 520)
-        : DEFAULT_PLAYGROUND_STATE.width,
+        : DEFAULT_BROWSE_STATE.width,
     wrapper: isWrapper(serialized.wr)
       ? serialized.wr
-      : DEFAULT_PLAYGROUND_STATE.wrapper,
+      : DEFAULT_BROWSE_STATE.wrapper,
   });
 }
 
-export function encodePlaygroundState(state: PlaygroundState): string {
-  const serialized = serializePlaygroundState(state);
+export function encodeBrowseState(state: BrowseState): string {
+  const serialized = serializeBrowseState(state);
   if (Object.keys(serialized).length === 0) return "";
   return utf8ToBase64(JSON.stringify(serialized));
 }
 
-export function decodePlaygroundState(encoded: string): PlaygroundState | null {
+export function decodeBrowseState(encoded: string): BrowseState | null {
   if (!encoded) return null;
   try {
     const json = base64ToUtf8(encoded);
     const parsed = JSON.parse(json) as unknown;
     if (!parsed || typeof parsed !== "object") return null;
-    return deserializePlaygroundState(parsed as PlaygroundSerializedState);
+    return deserializeBrowseState(parsed as BrowseSerializedState);
   } catch {
     return null;
   }

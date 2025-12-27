@@ -26,7 +26,7 @@ export const tabContainer = cva(
 
 /**
  * Tab/toggle button used in navigation and filters.
- * Used in: App.tsx, MicrovizPlayground.tsx (sidebar tabs, chart filter, inspector tabs)
+ * Used in: App.tsx, MicrovizBrowse.tsx (sidebar tabs, chart filter, inspector tabs)
  *
  * Variants:
  * - default: white bg when active, transparent when inactive

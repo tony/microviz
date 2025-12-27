@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { MicrovizPlayground } from "../playground/MicrovizPlayground";
 import {
-  DEFAULT_PLAYGROUND_STATE,
-  decodePlaygroundState,
-  encodePlaygroundState,
-  type PlaygroundState,
-} from "../playground/playgroundUrlState";
+  type BrowseState,
+  DEFAULT_BROWSE_STATE,
+  decodeBrowseState,
+  encodeBrowseState,
+} from "../browse/browseUrlState";
+import { MicrovizBrowse } from "../browse/MicrovizBrowse";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): { state?: string } => {
@@ -23,13 +23,13 @@ function IndexComponent() {
 
   const encoded = search.state ?? "";
   const urlState = useMemo(
-    () => decodePlaygroundState(encoded) ?? DEFAULT_PLAYGROUND_STATE,
+    () => decodeBrowseState(encoded) ?? DEFAULT_BROWSE_STATE,
     [encoded],
   );
 
   const onUrlStateChange = useCallback(
-    (nextState: PlaygroundState) => {
-      const nextEncoded = encodePlaygroundState(nextState) || undefined;
+    (nextState: BrowseState) => {
+      const nextEncoded = encodeBrowseState(nextState) || undefined;
       if (nextEncoded === search.state) return;
 
       void navigate({
@@ -41,9 +41,6 @@ function IndexComponent() {
   );
 
   return (
-    <MicrovizPlayground
-      onUrlStateChange={onUrlStateChange}
-      urlState={urlState}
-    />
+    <MicrovizBrowse onUrlStateChange={onUrlStateChange} urlState={urlState} />
   );
 }

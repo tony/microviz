@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ResizablePane } from "../playground/ResizablePane";
+import { ResizablePane } from "../browse/ResizablePane";
 import { CdnSourcePicker } from "./CdnSourcePicker";
 import { CodeEditor } from "./CodeEditor";
 import { ConsoleOutput } from "./ConsoleOutput";

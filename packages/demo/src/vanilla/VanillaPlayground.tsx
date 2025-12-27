@@ -19,8 +19,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { buildCompareRange } from "../browse/seed";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
-import { buildCompareRange } from "../playground/seed";
 import { renderSvgElement } from "./svgDom";
 
 type Surface =
