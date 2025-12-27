@@ -1,9 +1,11 @@
 import { computeModel, type RenderModel } from "@microviz/core";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { registerMicrovizElements } from "../src";
 
 describe("@microviz/elements", () => {
   beforeEach(() => {
+    // Mock matchMedia to prefer reduced motion, skipping animations in tests
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
     registerMicrovizElements();
   });
 

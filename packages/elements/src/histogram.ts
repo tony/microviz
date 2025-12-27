@@ -2,8 +2,14 @@ import { computeModel, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseNumber, parseNumberArray } from "./parse";
-import { renderSvgIntoShadowRoot } from "./render";
+import { patchSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
+import {
+  type AnimationState,
+  animateTransition,
+  cleanupAnimation,
+  createAnimationState,
+} from "./transition";
 
 export class MicrovizHistogram extends HTMLElement {
   static observedAttributes = [
@@ -18,6 +24,7 @@ export class MicrovizHistogram extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
+  readonly #animState: AnimationState = createAnimationState();
   #modelOverride: RenderModel | null = null;
 
   constructor() {
@@ -32,6 +39,10 @@ export class MicrovizHistogram extends HTMLElement {
 
   connectedCallback(): void {
     this.render();
+  }
+
+  disconnectedCallback(): void {
+    cleanupAnimation(this.#animState);
   }
 
   attributeChangedCallback(): void {
@@ -50,8 +61,12 @@ export class MicrovizHistogram extends HTMLElement {
   render(): void {
     const model = this.#modelOverride ?? this.#computeFromAttributes();
     applyMicrovizA11y(this, this.#internals, model);
+    animateTransition(this.#animState, model, (m) => this.#renderFrame(m));
+  }
+
+  #renderFrame(model: RenderModel): void {
     const svg = renderSvgString(model);
-    renderSvgIntoShadowRoot(this.#root, svg);
+    patchSvgIntoShadowRoot(this.#root, svg);
   }
 
   #computeFromAttributes(): RenderModel {
