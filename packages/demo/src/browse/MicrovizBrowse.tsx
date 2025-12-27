@@ -5,8 +5,10 @@ import {
   type ComputeModelInput,
   computeModel,
   type Def,
+  easings,
   getAllChartMeta,
   getPreferredAspectRatio,
+  interpolateModel,
   type Mark,
   type RenderModel,
 } from "@microviz/core";
@@ -38,6 +40,7 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -123,6 +126,68 @@ const chartMetaMap = new Map<string, ChartMeta>(
 
 const useLayoutEffectSafe =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const DEFAULT_ANIMATION_MS = 300;
+
+function useAnimatedModel(
+  targetModel: RenderModel,
+  options: { disableAnimation?: boolean; durationMs?: number } = {},
+): RenderModel {
+  const { disableAnimation = false, durationMs = DEFAULT_ANIMATION_MS } =
+    options;
+  const currentModelRef = useRef<RenderModel>(targetModel);
+  const previousModelRef = useRef<RenderModel | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+  if (rafIdRef.current === null) {
+    currentModelRef.current = targetModel;
+  }
+
+  useEffect(() => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+
+    const canAnimate = previousModelRef.current !== null && !disableAnimation;
+    if (canAnimate && previousModelRef.current) {
+      const from = previousModelRef.current;
+      const to = targetModel;
+      const startTime = performance.now();
+      const easing = easings.easeOut;
+
+      const tick = (now: number) => {
+        const elapsed = now - startTime;
+        const rawT = Math.min(elapsed / durationMs, 1);
+        const t = easing(rawT);
+        currentModelRef.current = interpolateModel(from, to, t);
+        forceUpdate();
+
+        if (rawT < 1) {
+          rafIdRef.current = requestAnimationFrame(tick);
+        } else {
+          previousModelRef.current = to;
+          rafIdRef.current = null;
+        }
+      };
+
+      rafIdRef.current = requestAnimationFrame(tick);
+    } else {
+      currentModelRef.current = targetModel;
+      previousModelRef.current = targetModel;
+    }
+
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [disableAnimation, durationMs, targetModel]);
+
+  return currentModelRef.current;
+}
 
 function buildChartCatalog(chartIds: readonly ChartId[]): ChartCatalogEntry[] {
   return chartIds.map((chartId) => {
@@ -2173,25 +2238,23 @@ export const MicrovizBrowse: FC<{
     if (renderer === "svg-string") {
       if (wrapper === "react")
         return (
-          <MicrovizReactSvgString
+          <AnimatedReactSvgString
             className="inline-block rounded bg-[var(--mv-bg)]"
             model={model}
           />
         );
-      const svg = renderSvgString(model);
-      return <SvgStringPreview svg={svg} />;
+      return <AnimatedSvgStringPreview model={model} />;
     }
 
     if (shouldFallbackToSvg) {
       if (wrapper === "react")
         return (
-          <MicrovizReactSvgString
+          <AnimatedReactSvgString
             className="inline-block rounded bg-[var(--mv-bg)]"
             model={model}
           />
         );
-      const svg = renderSvgString(model);
-      return <SvgStringPreview svg={svg} />;
+      return <AnimatedSvgStringPreview model={model} />;
     }
 
     if (renderer === "html-svg") {
@@ -2213,22 +2276,22 @@ export const MicrovizBrowse: FC<{
       if (wrapper === "react")
         return (
           <div className="inline-block rounded bg-[var(--mv-bg)]">
-            <MicrovizReactSvg className="block" model={model} />
+            <AnimatedReactSvg className="block" model={model} />
           </div>
         );
-      return <SvgDomPreview model={model} />;
+      return <AnimatedSvgDomPreview model={model} />;
     }
 
     if (renderer === "canvas") {
       if (wrapper === "react")
         return (
-          <MicrovizReactCanvas
+          <AnimatedReactCanvas
             className="rounded bg-[var(--mv-bg)]"
             model={model}
             options={canvasOptions}
           />
         );
-      return <CanvasPreview model={model} options={canvasOptions} />;
+      return <AnimatedCanvasPreview model={model} options={canvasOptions} />;
     }
 
     if (renderer === "offscreen-canvas") {
@@ -3535,6 +3598,56 @@ const HtmlSvgOverlayPreview: FC<{ html: string; svg: string }> = ({
       />
     </div>
   );
+};
+
+const AnimatedReactSvgString: FC<{
+  className?: string;
+  model: RenderModel;
+}> = ({ className, model }) => {
+  const animatedModel = useAnimatedModel(model);
+  return <MicrovizReactSvgString className={className} model={animatedModel} />;
+};
+
+const AnimatedReactSvg: FC<{
+  className?: string;
+  model: RenderModel;
+}> = ({ className, model }) => {
+  const animatedModel = useAnimatedModel(model);
+  return <MicrovizReactSvg className={className} model={animatedModel} />;
+};
+
+const AnimatedReactCanvas: FC<{
+  className?: string;
+  model: RenderModel;
+  options?: RenderCanvasOptions;
+}> = ({ className, model, options }) => {
+  const animatedModel = useAnimatedModel(model);
+  return (
+    <MicrovizReactCanvas
+      className={className}
+      model={animatedModel}
+      options={options}
+    />
+  );
+};
+
+const AnimatedSvgStringPreview: FC<{ model: RenderModel }> = ({ model }) => {
+  const animatedModel = useAnimatedModel(model);
+  const svg = renderSvgString(animatedModel);
+  return <SvgStringPreview svg={svg} />;
+};
+
+const AnimatedSvgDomPreview: FC<{ model: RenderModel }> = ({ model }) => {
+  const animatedModel = useAnimatedModel(model);
+  return <SvgDomPreview model={animatedModel} />;
+};
+
+const AnimatedCanvasPreview: FC<{
+  model: RenderModel;
+  options: RenderCanvasOptions;
+}> = ({ model, options }) => {
+  const animatedModel = useAnimatedModel(model);
+  return <CanvasPreview model={animatedModel} options={options} />;
 };
 
 const SvgStringPreview: FC<{ svg: string }> = ({ svg }) => {
