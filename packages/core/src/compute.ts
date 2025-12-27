@@ -24,6 +24,7 @@ import type {
   Mark,
   RenderModel,
 } from "./model";
+import { validateChartData } from "./validation";
 
 export type { InteractionState, Layout, ThemeTokens } from "./charts/context";
 export type {
@@ -515,6 +516,22 @@ export function computeModel<S extends ChartSpec>(
   input: ComputeModelInput<S>,
 ): RenderModel {
   const warnings: DiagnosticWarning[] = [];
+
+  // Validate chart data and add any errors as warnings
+  const validationResult = validateChartData(input.spec, input.data);
+  if (!validationResult.success) {
+    for (const error of validationResult.errors) {
+      pushWarning(warnings, {
+        code: error.code,
+        expected: error.expected,
+        hint: error.hint,
+        message: error.message,
+        path: error.path,
+        received: error.received,
+      });
+    }
+  }
+
   const normalized = normalizeData(input.spec, input.data);
 
   const def = getChartDefinition(input.spec.type);
