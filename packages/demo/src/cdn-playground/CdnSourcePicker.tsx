@@ -14,6 +14,7 @@ export type CdnSourcePickerProps = {
 };
 
 const SOURCE_TYPES: CdnSourceType[] = [
+  "cdn-dev",
   "local",
   "jsdelivr",
   "unpkg",
