@@ -33,6 +33,7 @@ export class MicrovizModel extends HTMLElement {
   readonly #root: ShadowRoot;
   readonly #animState: AnimationState = createAnimationState();
   #model: RenderModel | null = null;
+  #renderModel: RenderModel | null = null;
   #wasSkeletonRender = false;
   #lastWarningKey: string | null = null;
   #isInteractive = false;
@@ -205,24 +206,26 @@ export class MicrovizModel extends HTMLElement {
   }
 
   #hitTestAt(point: Point): ReturnType<typeof hitTest> {
-    if (!this.#model) return null;
+    const model = this.#renderModel ?? this.#model;
+    if (!model) return null;
     return this.#strokeSlopPxOverride === undefined
-      ? hitTest(this.#model, point)
-      : hitTest(this.#model, point, {
+      ? hitTest(model, point)
+      : hitTest(model, point, {
           strokeSlopPx: this.#strokeSlopPxOverride,
         });
   }
 
   #toModelPoint(client: ClientPoint): Point | null {
-    if (!this.#model) return null;
+    const model = this.#renderModel ?? this.#model;
+    if (!model) return null;
     const surface =
       this.#root.querySelector("svg") ?? this.#root.querySelector(".mv-chart");
     if (!surface) return null;
     const rect = surface.getBoundingClientRect();
     if (!(rect.width > 0) || !(rect.height > 0)) return null;
 
-    const x = ((client.x - rect.left) / rect.width) * this.#model.width;
-    const y = ((client.y - rect.top) / rect.height) * this.#model.height;
+    const x = ((client.x - rect.left) / rect.width) * model.width;
+    const y = ((client.y - rect.top) / rect.height) * model.height;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
 
     return { x, y };
@@ -267,7 +270,8 @@ export class MicrovizModel extends HTMLElement {
   }
 
   #onPointerMove = (event: PointerEvent): void => {
-    if (!this.#model) return;
+    const model = this.#renderModel ?? this.#model;
+    if (!model) return;
     const client = { x: event.clientX, y: event.clientY };
     this.#lastPointerClient = client;
 
@@ -306,6 +310,7 @@ export class MicrovizModel extends HTMLElement {
       this.#setA11yItems([]);
       clearSvgFromShadowRoot(this.#root);
       clearHtmlFromShadowRoot(this.#root);
+      this.#renderModel = null;
       if (this.#isInteractive && this.#lastHitKey !== null) {
         this.#lastHitKey = null;
         this.#lastPoint = null;
@@ -367,9 +372,10 @@ export class MicrovizModel extends HTMLElement {
       this.#animState.previousModel = model;
     } else {
       // Animate with patching for smooth transitions
-      animateTransition(this.#animState, model, (interpolated) =>
-        this.#renderFrame(interpolated, useHtml, wantsSkeleton, true),
-      );
+      animateTransition(this.#animState, model, (interpolated) => {
+        this.#renderFrame(interpolated, useHtml, wantsSkeleton, true);
+        this.#maybeReemitHit();
+      });
     }
 
     this.#wasSkeletonRender = wantsSkeleton;
@@ -382,6 +388,7 @@ export class MicrovizModel extends HTMLElement {
     wantsSkeleton: boolean,
     usePatch: boolean,
   ): void {
+    this.#renderModel = wantsSkeleton ? null : model;
     if (useHtml) {
       const html = renderHtmlString(model);
       clearSvgFromShadowRoot(this.#root);

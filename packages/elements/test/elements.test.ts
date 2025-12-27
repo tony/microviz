@@ -108,33 +108,93 @@ describe("@microviz/elements", () => {
       width: 100,
     };
 
-    const svg = el.shadowRoot?.querySelector("svg") as unknown as {
-      getBoundingClientRect: () => {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-      };
-    };
-    svg.getBoundingClientRect = () => ({
+    const originalGetBoundingClientRect =
+      Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = () => ({
       height: 100,
       left: 0,
       top: 0,
       width: 100,
     });
 
-    let lastHit: string | null | undefined;
-    el.addEventListener("microviz-hit", (event) => {
-      lastHit = (event as CustomEvent).detail.hit?.markId ?? null;
+    try {
+      let lastHit: string | null | undefined;
+      el.addEventListener("microviz-hit", (event) => {
+        lastHit = (event as CustomEvent).detail.hit?.markId ?? null;
+      });
+
+      el.dispatchEvent(
+        new MouseEvent("pointermove", { clientX: 50, clientY: 52 }),
+      );
+      expect(lastHit).toBe("l");
+
+      el.setAttribute("hit-slop", "0");
+      expect(lastHit).toBeNull();
+    } finally {
+      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+    }
+  });
+
+  it("uses animated render state for hit testing (microviz-model)", () => {
+    const originalMatchMedia = window.matchMedia;
+    const originalRaf = window.requestAnimationFrame;
+    const originalCaf = window.cancelAnimationFrame;
+    const originalGetBoundingClientRect =
+      Element.prototype.getBoundingClientRect;
+
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    const nowSpy = vi.spyOn(performance, "now").mockReturnValue(0);
+    const rafCallbacks: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = (callback) => {
+      rafCallbacks.push(callback);
+      return rafCallbacks.length;
+    };
+    window.cancelAnimationFrame = () => {};
+    Element.prototype.getBoundingClientRect = () => ({
+      height: 100,
+      left: 0,
+      top: 0,
+      width: 100,
     });
 
-    el.dispatchEvent(
-      new MouseEvent("pointermove", { clientX: 50, clientY: 52 }),
-    );
-    expect(lastHit).toBe("l");
+    try {
+      const el = document.createElement("microviz-model") as HTMLElement & {
+        model: RenderModel | null;
+      };
+      el.setAttribute("interactive", "");
+      el.setAttribute("hit-slop", "0");
+      document.body.append(el);
 
-    el.setAttribute("hit-slop", "0");
-    expect(lastHit).toBeNull();
+      const lineModel = (y: number): RenderModel => ({
+        height: 100,
+        marks: [{ id: "l", type: "line", x1: 0, x2: 100, y1: y, y2: y }],
+        width: 100,
+      });
+
+      el.model = lineModel(0);
+
+      let lastHit: string | null | undefined;
+      el.addEventListener("microviz-hit", (event) => {
+        lastHit = (event as CustomEvent).detail.hit?.markId ?? null;
+      });
+
+      el.model = lineModel(100);
+
+      expect(rafCallbacks.length).toBeGreaterThan(0);
+      rafCallbacks.shift()?.(62);
+
+      el.dispatchEvent(
+        new MouseEvent("pointermove", { clientX: 50, clientY: 50 }),
+      );
+
+      expect(lastHit).toBe("l");
+    } finally {
+      nowSpy.mockRestore();
+      window.matchMedia = originalMatchMedia;
+      window.requestAnimationFrame = originalRaf;
+      window.cancelAnimationFrame = originalCaf;
+      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+    }
   });
 
   it("applies a11y summary descriptions", () => {
