@@ -221,7 +221,9 @@ describe("@microviz/elements", () => {
     expect(phases.has("dom")).toBe(true);
 
     const renderEvents = events.filter((detail) => detail.phase === "render");
-    const svgRender = renderEvents.find((detail) => detail.renderer === "svg");
+    const svgRender = renderEvents.find(
+      (detail) => detail.renderer === "svg" && detail.specType === "sparkline",
+    );
     expect(svgRender?.element).toBe("microviz-chart");
     expect(svgRender?.renderer).toBe("svg");
     expect(svgRender?.specType).toBe("sparkline");

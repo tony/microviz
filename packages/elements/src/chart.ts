@@ -547,6 +547,8 @@ export class MicrovizChart extends HTMLElement {
     }
 
     if (!spec || data === null) {
+      const renderer = this.getAttribute("renderer");
+      const renderMode = renderer === "html" ? "html" : "svg";
       // Clear warning key if no parse errors (e.g., missing data attribute)
       if (parseWarnings.length === 0) {
         this.#lastWarningKey = null;
@@ -556,8 +558,16 @@ export class MicrovizChart extends HTMLElement {
       this.#setFocusedMarkId(null);
       applyMicrovizA11y(this, this.#internals, null);
       this.#setA11yItems([]);
-      clearSvgFromShadowRoot(this.#root);
-      clearHtmlFromShadowRoot(this.#root);
+      clearSvgFromShadowRoot(this.#root, {
+        reason: "missing-input",
+        specType: spec?.type,
+        telemetry,
+      });
+      clearHtmlFromShadowRoot(this.#root, {
+        reason: "missing-input",
+        specType: spec?.type,
+        telemetry,
+      });
       if (this.#isInteractive && this.#lastHitKey !== null) {
         this.#lastHitKey = null;
         this.#lastPoint = null;
@@ -574,6 +584,7 @@ export class MicrovizChart extends HTMLElement {
           operation: "clear",
           phase: "render",
           reason: "missing-input",
+          renderer: renderMode,
           specType: spec?.type,
         });
       }
@@ -779,8 +790,16 @@ export class MicrovizChart extends HTMLElement {
       } else {
         html = renderHtmlString(model);
       }
-      clearSvgFromShadowRoot(this.#root);
-      patchHtmlIntoShadowRoot(this.#root, html);
+      clearSvgFromShadowRoot(this.#root, {
+        reason: "render-html",
+        specType,
+        telemetry,
+      });
+      patchHtmlIntoShadowRoot(this.#root, html, {
+        reason: "render-html",
+        specType,
+        telemetry,
+      });
     } else {
       if (wantsSkeleton) {
         const renderStart = telemetry.enabled ? performance.now() : 0;
@@ -795,13 +814,26 @@ export class MicrovizChart extends HTMLElement {
             size,
           });
         }
-        clearHtmlFromShadowRoot(this.#root);
-        patchSvgIntoShadowRoot(this.#root, svg);
+        clearHtmlFromShadowRoot(this.#root, {
+          reason: "skeleton",
+          specType,
+          telemetry,
+        });
+        patchSvgIntoShadowRoot(this.#root, svg, {
+          reason: "skeleton",
+          specType,
+          telemetry,
+        });
         return;
       }
-      clearHtmlFromShadowRoot(this.#root);
+      clearHtmlFromShadowRoot(this.#root, {
+        reason: "render-svg",
+        specType,
+        telemetry,
+      });
       renderSvgModelIntoShadowRoot(this.#root, model, {
         patch: true,
+        reason: "render-svg",
         specType,
         telemetry,
       });

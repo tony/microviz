@@ -341,11 +341,19 @@ export class MicrovizModel extends HTMLElement {
   render(): void {
     const telemetry = createTelemetry(this);
     if (!this.#model) {
+      const renderer = this.getAttribute("renderer");
+      const renderMode = renderer === "html" ? "html" : "svg";
       cleanupAnimation(this.#animState);
       applyMicrovizA11y(this, this.#internals, null);
       this.#setA11yItems([]);
-      clearSvgFromShadowRoot(this.#root);
-      clearHtmlFromShadowRoot(this.#root);
+      clearSvgFromShadowRoot(this.#root, {
+        reason: "missing-model",
+        telemetry,
+      });
+      clearHtmlFromShadowRoot(this.#root, {
+        reason: "missing-model",
+        telemetry,
+      });
       this.#renderModel = null;
       if (this.#isInteractive && this.#lastHitKey !== null) {
         this.#lastHitKey = null;
@@ -363,6 +371,7 @@ export class MicrovizModel extends HTMLElement {
           operation: "clear",
           phase: "render",
           reason: "missing-model",
+          renderer: renderMode,
         });
       }
       return;
@@ -515,8 +524,14 @@ export class MicrovizModel extends HTMLElement {
       } else {
         html = renderHtmlString(model);
       }
-      clearSvgFromShadowRoot(this.#root);
-      patchHtmlIntoShadowRoot(this.#root, html);
+      clearSvgFromShadowRoot(this.#root, {
+        reason: "render-html",
+        telemetry,
+      });
+      patchHtmlIntoShadowRoot(this.#root, html, {
+        reason: "render-html",
+        telemetry,
+      });
     } else {
       if (wantsSkeleton) {
         const renderStart = telemetry.enabled ? performance.now() : 0;
@@ -534,17 +549,30 @@ export class MicrovizModel extends HTMLElement {
             size: { height: model.height, width: model.width },
           });
         }
-        clearHtmlFromShadowRoot(this.#root);
+        clearHtmlFromShadowRoot(this.#root, {
+          reason: "skeleton",
+          telemetry,
+        });
         if (usePatch) {
-          patchSvgIntoShadowRoot(this.#root, svg);
+          patchSvgIntoShadowRoot(this.#root, svg, {
+            reason: "skeleton",
+            telemetry,
+          });
         } else {
-          renderSvgIntoShadowRoot(this.#root, svg);
+          renderSvgIntoShadowRoot(this.#root, svg, {
+            reason: "skeleton",
+            telemetry,
+          });
         }
         return;
       }
-      clearHtmlFromShadowRoot(this.#root);
+      clearHtmlFromShadowRoot(this.#root, {
+        reason: "render-svg",
+        telemetry,
+      });
       renderSvgModelIntoShadowRoot(this.#root, model, {
         patch: usePatch,
+        reason: "render-svg",
         telemetry,
       });
     }

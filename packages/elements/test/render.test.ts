@@ -120,7 +120,12 @@ describe("renderSvgModelIntoShadowRoot", () => {
     host.setAttribute("telemetry", "basic");
     const root = host.attachShadow({ mode: "open" });
 
-    const events: Array<{ phase?: string; warningCodes?: string[] }> = [];
+    const events: Array<{
+      operation?: string;
+      phase?: string;
+      specType?: string;
+      warningCodes?: string[];
+    }> = [];
     host.addEventListener("microviz-telemetry", (event) => {
       events.push((event as CustomEvent).detail);
     });
@@ -143,7 +148,7 @@ describe("renderSvgModelIntoShadowRoot", () => {
       width: 10,
     };
 
-    renderSvgModelIntoShadowRoot(root, model);
+    renderSvgModelIntoShadowRoot(root, model, { specType: "sparkline" });
 
     const phases = new Set(events.map((detail) => detail.phase));
     expect(phases.has("render")).toBe(true);
@@ -152,5 +157,8 @@ describe("renderSvgModelIntoShadowRoot", () => {
 
     const warningEvent = events.find((detail) => detail.phase === "warning");
     expect(warningEvent?.warningCodes).toContain("EMPTY_DATA");
+
+    const domEvent = events.find((detail) => detail.phase === "dom");
+    expect(domEvent?.specType).toBe("sparkline");
   });
 });
