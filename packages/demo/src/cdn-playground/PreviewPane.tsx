@@ -222,7 +222,7 @@ export const PreviewPane = forwardRef<PreviewPaneHandle, PreviewPaneProps>(
         <iframe
           className="h-full w-full border-0"
           ref={iframeRef}
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-same-origin"
           srcDoc={srcdoc}
           title="Preview"
         />
