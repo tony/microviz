@@ -35,9 +35,7 @@ export function RerollButton({
       title="Randomize seed"
       type="button"
     >
-      <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
-        🎲
-      </span>
+      <span className="inline-block animate-[spin-dice_0.3s_ease-out]">🎲</span>
       {variant === "full" && "Reroll"}
     </button>
   );
