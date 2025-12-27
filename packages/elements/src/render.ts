@@ -189,16 +189,21 @@ export function patchSvgIntoShadowRoot(
     // No existing SVG - just append
     root.append(next);
     if (telemetry.enabled) {
-      telemetry.emit({
-        bytes: svg.length,
-        durationMs: performance.now() - start,
-        nodeCount: next.querySelectorAll("*").length,
-        operation: "append",
-        phase: "dom",
-        reason: options.reason,
-        renderer: "svg",
-        specType: options.specType,
-      });
+      telemetry.emit(
+        applyModelMeta(
+          {
+            bytes: svg.length,
+            durationMs: performance.now() - start,
+            nodeCount: next.querySelectorAll("*").length,
+            operation: "append",
+            phase: "dom",
+            reason: options.reason,
+            renderer: "svg",
+            specType: options.specType,
+          },
+          options.modelMeta,
+        ),
+      );
     }
     return;
   }
@@ -316,16 +321,21 @@ export function patchSvgIntoShadowRoot(
   }
 
   if (telemetry.enabled) {
-    telemetry.emit({
-      bytes: svg.length,
-      durationMs: performance.now() - start,
-      nodeCount: next.querySelectorAll("*").length,
-      operation: "patch",
-      phase: "dom",
-      reason: options.reason,
-      renderer: "svg",
-      specType: options.specType,
-    });
+    telemetry.emit(
+      applyModelMeta(
+        {
+          bytes: svg.length,
+          durationMs: performance.now() - start,
+          nodeCount: next.querySelectorAll("*").length,
+          operation: "patch",
+          phase: "dom",
+          reason: options.reason,
+          renderer: "svg",
+          specType: options.specType,
+        },
+        options.modelMeta,
+      ),
+    );
   }
 }
 
