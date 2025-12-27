@@ -6,6 +6,8 @@
  */
 
 import type { RenderModel } from "@microviz/core";
+import type { TelemetryHandle } from "../telemetry";
+import { createTelemetry } from "../telemetry";
 import {
   animate,
   getMotionConfig,
@@ -46,10 +48,12 @@ export function createAnimationState(
 export type AnimateTransitionOptions = {
   /** Skip animation even if conditions allow it (e.g., skeleton mode) */
   skipAnimation?: boolean;
+  renderer?: "svg" | "html";
   onStart?: () => void;
   onFrame?: (info: { frameCount: number }) => void;
   onComplete?: (info: { frameCount: number }) => void;
   onCancel?: (info: { frameCount: number }) => void;
+  telemetry?: TelemetryHandle | "off";
 };
 
 /**
@@ -101,6 +105,15 @@ export function animateTransition(
   const motionConfig = getMotionConfig(state.host);
   const duration = motionConfig.duration;
   const durationDisabled = typeof duration === "number" && duration <= 0;
+  const telemetry =
+    options.telemetry === "off"
+      ? null
+      : (options.telemetry ??
+        (state.host ? createTelemetry(state.host) : null));
+  const emitFrames = Boolean(
+    telemetry?.enabled && telemetry.level === "verbose",
+  );
+  const renderer = options.renderer ?? "svg";
   const canAnimate =
     state.previousModel !== null &&
     !options.skipAnimation &&
@@ -109,6 +122,7 @@ export function animateTransition(
     !durationDisabled;
 
   if (canAnimate && state.previousModel) {
+    const animationStart = telemetry?.enabled ? performance.now() : 0;
     let frameCount = 0;
     options.onStart?.();
     const cancel = animate(
@@ -118,12 +132,28 @@ export function animateTransition(
         frameCount += 1;
         renderFrame(model);
         options.onFrame?.({ frameCount });
+        if (emitFrames) {
+          telemetry?.emit({
+            frame: frameCount,
+            phase: "animation",
+            reason: "frame",
+            renderer,
+          });
+        }
       },
       () => {
         state.previousModel = nextModel;
         state.cancelAnimation = null;
         state.onCancel = null;
         options.onComplete?.({ frameCount });
+        if (telemetry?.enabled) {
+          telemetry.emit({
+            durationMs: performance.now() - animationStart,
+            frameCount,
+            phase: "animation",
+            renderer,
+          });
+        }
       },
       motionConfig,
     );
@@ -135,6 +165,16 @@ export function animateTransition(
       state.onCancel?.();
       state.onCancel = null;
       state.cancelAnimation = null;
+      if (telemetry?.enabled) {
+        telemetry.emit({
+          cancelled: true,
+          durationMs: performance.now() - animationStart,
+          frameCount,
+          phase: "animation",
+          reason: "interrupt",
+          renderer,
+        });
+      }
     };
   } else {
     renderFrame(nextModel);

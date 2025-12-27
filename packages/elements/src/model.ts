@@ -470,6 +470,7 @@ export class MicrovizModel extends HTMLElement {
               });
             }
           },
+          telemetry: "off",
         },
       );
     }
