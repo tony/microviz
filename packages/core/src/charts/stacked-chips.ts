@@ -148,7 +148,7 @@ export const stackedChipsChart = {
     const segments = normalizeSegments(data);
     return { segments, type: "stacked-chips" as const };
   },
-  preferredAspectRatio: "wide" as const,
+  preferredAspectRatio: "square" as const,
   type: "stacked-chips",
 } satisfies ChartDefinition<
   "stacked-chips",
