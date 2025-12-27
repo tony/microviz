@@ -133,6 +133,25 @@ const useLayoutEffectSafe =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const DEFAULT_ANIMATION_MS = 300;
+const TELEMETRY_LIMIT = 200;
+
+const telemetryModeOptions = [
+  { id: "off", label: "Off" },
+  { id: "basic", label: "Basic" },
+  { id: "verbose", label: "Verbose" },
+] as const;
+
+type TelemetryMode = (typeof telemetryModeOptions)[number]["id"];
+type TelemetryDetail = {
+  at: number;
+  element: string;
+  elementId: string | null;
+  level: "off" | "basic" | "verbose";
+  phase: string;
+  renderer?: "svg" | "html";
+  specType?: string;
+  [key: string]: unknown;
+};
 
 function useAnimatedModel(
   targetModel: RenderModel,
@@ -2178,6 +2197,7 @@ export const MicrovizBrowse: FC<{
 
   const inspectorTabOptions = [
     "diagnostics",
+    "telemetry",
     "model",
     "data",
     "a11y",
@@ -2190,6 +2210,7 @@ export const MicrovizBrowse: FC<{
     diagnostics: "Diagnostics",
     export: "Export",
     model: "Model",
+    telemetry: "Telemetry",
   };
   const inspectorTabTitles: Record<InspectorTab, string> = {
     a11y: "Accessibility",
@@ -2197,6 +2218,7 @@ export const MicrovizBrowse: FC<{
     diagnostics: "Warnings",
     export: "Export assets",
     model: "Render model",
+    telemetry: "Render telemetry",
   };
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
   const [a11yCopied, setA11yCopied] = useState(false);
@@ -2207,6 +2229,8 @@ export const MicrovizBrowse: FC<{
   const codeCopyTimeoutRef = useRef<number | null>(null);
   const [exportingPng, setExportingPng] = useState(false);
   const [copyingPng, setCopyingPng] = useState(false);
+  const [telemetryMode, setTelemetryMode] = useState<TelemetryMode>("off");
+  const [telemetryEvents, setTelemetryEvents] = useState<TelemetryDetail[]>([]);
   const selectedModel = getEffectiveModel(selectedChart);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const exportNoticeTimeoutRef = useRef<number | null>(null);
@@ -2220,6 +2244,40 @@ export const MicrovizBrowse: FC<{
       setExportNotice(null);
     }, 1400);
   }, []);
+
+  useEffect(() => {
+    if (wrapper !== "elements" && telemetryMode !== "off") {
+      setTelemetryMode("off");
+    }
+  }, [telemetryMode, wrapper]);
+
+  useEffect(() => {
+    if (telemetryMode === "off") {
+      setTelemetryEvents([]);
+      return;
+    }
+    setTelemetryEvents([]);
+  }, [telemetryMode]);
+
+  useEffect(() => {
+    if (telemetryMode === "off") return;
+
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as
+        | TelemetryDetail
+        | undefined;
+      if (!detail) return;
+      setTelemetryEvents((prev) => {
+        const next = [detail, ...prev];
+        return next.length > TELEMETRY_LIMIT
+          ? next.slice(0, TELEMETRY_LIMIT)
+          : next;
+      });
+    };
+
+    document.addEventListener("microviz-telemetry", handler);
+    return () => document.removeEventListener("microviz-telemetry", handler);
+  }, [telemetryMode]);
 
   const downloadBlob = useCallback((blob: Blob, filename: string) => {
     if (typeof document === "undefined") return;
@@ -2347,7 +2405,12 @@ export const MicrovizBrowse: FC<{
 
     if (wrapper === "elements") {
       return (
-        <ElementPreview model={model} showHoverTooltip={showHoverTooltip} />
+        <ElementPreview
+          chartId={chartId}
+          model={model}
+          showHoverTooltip={showHoverTooltip}
+          telemetryMode={chartId === selectedChart ? telemetryMode : "off"}
+        />
       );
     }
 
@@ -3460,6 +3523,51 @@ export const MicrovizBrowse: FC<{
               </div>
             )}
 
+            {inspectorTab === "telemetry" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>Telemetry</span>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    onClick={() => setTelemetryEvents([])}
+                    type="button"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <ToggleGroup
+                  columns={3}
+                  disabled={wrapper !== "elements"}
+                  label="Telemetry level"
+                  onChange={setTelemetryMode}
+                  options={telemetryModeOptions}
+                  value={telemetryMode}
+                />
+                {wrapper !== "elements" ? (
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Telemetry events are available for the Elements wrapper.
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {telemetryMode === "verbose"
+                      ? "Verbose includes per-frame animation events."
+                      : "Basic captures render, compute, and warnings."}
+                  </div>
+                )}
+                <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
+                  {telemetryEvents.length === 0 ? (
+                    <div className="text-sm">No telemetry events yet.</div>
+                  ) : (
+                    <JsonViewer data={telemetryEvents} />
+                  )}
+                </div>
+              </div>
+            )}
+
             {inspectorTab === "a11y" && (
               <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
                 <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -3935,10 +4043,12 @@ const CanvasPreview: FC<{
   );
 };
 
-const ElementPreview: FC<{ model: RenderModel; showHoverTooltip: boolean }> = ({
-  model,
-  showHoverTooltip,
-}) => {
+const ElementPreview: FC<{
+  chartId: ChartId;
+  model: RenderModel;
+  showHoverTooltip: boolean;
+  telemetryMode: TelemetryMode;
+}> = ({ chartId, model, showHoverTooltip, telemetryMode }) => {
   const ref = useRef<MicrovizModelElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState<{
@@ -3995,7 +4105,12 @@ const ElementPreview: FC<{ model: RenderModel; showHoverTooltip: boolean }> = ({
 
   return (
     <div className="relative inline-block" ref={containerRef}>
-      <microviz-model interactive={showHoverTooltip} ref={setRef} />
+      <microviz-model
+        id={`microviz-${chartId}`}
+        interactive={showHoverTooltip}
+        ref={setRef}
+        telemetry={telemetryMode === "off" ? undefined : telemetryMode}
+      />
       {showHoverTooltip && hovered && (
         <div
           className="pointer-events-none absolute z-10 rounded-md bg-slate-900/90 px-2 py-1 text-xs text-slate-50 shadow-sm"

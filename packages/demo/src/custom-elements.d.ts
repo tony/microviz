@@ -5,17 +5,27 @@ type BaseProps = React.DetailedHTMLProps<
   HTMLElement
 >;
 
+type TelemetryAttribute =
+  | "off"
+  | "basic"
+  | "verbose"
+  | "frames"
+  | "true"
+  | "false";
+
 type MicrovizChartProps = BaseProps & {
   autosize?: boolean;
   data?: string;
   interactive?: boolean;
   renderer?: "html" | "svg";
   spec?: string;
+  telemetry?: TelemetryAttribute;
 };
 
 type MicrovizModelProps = BaseProps & {
   interactive?: boolean;
   renderer?: "html" | "svg";
+  telemetry?: TelemetryAttribute;
 };
 
 declare module "react" {
