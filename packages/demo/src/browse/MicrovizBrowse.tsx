@@ -55,19 +55,19 @@ import {
 import { TabToggle } from "../ui/TabToggle";
 import { ToggleGroup } from "../ui/ToggleGroup";
 import { renderSvgElement } from "../vanilla/svgDom";
-import { JsonViewer } from "./JsonViewer";
 import {
+  type BrowseState,
   type ChartId,
   type ChartSubtype,
   type ComputeMode,
-  DEFAULT_PLAYGROUND_STATE,
+  DEFAULT_BROWSE_STATE,
   type HtmlFilter,
   type PaletteMode,
-  type PlaygroundState,
   type Renderer,
   type SidebarTab,
   type Wrapper,
-} from "./playgroundUrlState";
+} from "./browseUrlState";
+import { JsonViewer } from "./JsonViewer";
 import { ResizablePane } from "./ResizablePane";
 import {
   buildCompareRange,
@@ -840,11 +840,11 @@ function ChartCard({
   );
 }
 
-export const MicrovizPlayground: FC<{
-  onUrlStateChange?: (state: PlaygroundState) => void;
-  urlState?: PlaygroundState;
+export const MicrovizBrowse: FC<{
+  onUrlStateChange?: (state: BrowseState) => void;
+  urlState?: BrowseState;
 }> = ({ onUrlStateChange, urlState }) => {
-  const initialUrlState = urlState ?? DEFAULT_PLAYGROUND_STATE;
+  const initialUrlState = urlState ?? DEFAULT_BROWSE_STATE;
 
   const [wrapper, setWrapper] = useState<Wrapper>(
     () => initialUrlState.wrapper,

@@ -1,4 +1,4 @@
-import { createSeededRng } from "./playground/seed";
+import { createSeededRng } from "./browse/seed";
 
 export type PaletteMode = "value" | "random" | "chunks";
 

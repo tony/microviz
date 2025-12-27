@@ -5,7 +5,7 @@ import {
   JsonViewer,
   MICROVIZ_JSON_VIEWER_THEME_DARK,
   MICROVIZ_JSON_VIEWER_THEME_LIGHT,
-} from "../../src/playground/JsonViewer";
+} from "../../src/browse/JsonViewer";
 
 const SAMPLE_DATA = {
   bool: true,
