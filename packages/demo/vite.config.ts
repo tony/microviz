@@ -26,6 +26,7 @@ export default defineConfig({
     },
   },
   server: {
+    cors: true, // Allow CORS for sandboxed iframe (origin: null)
     fs: {
       allow: [resolve(__dirname, "..")],
     },
