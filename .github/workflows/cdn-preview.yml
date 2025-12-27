@@ -1,0 +1,74 @@
+name: CDN Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, next]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          pnpm build
+          pnpm --filter @microviz/elements build:cdn
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.MICROVIZ_CDN_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Compute publish paths
+        id: paths
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            channel="preview/pr/${{ github.event.pull_request.number }}"
+          else
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              channel="canary/main"
+            else
+              channel="canary/${{ github.ref_name }}"
+            fi
+          fi
+          sha="$(git rev-parse HEAD)"
+          echo "base_prefix=${channel}/sha/${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable artifacts
+        run: |
+          bucket="${{ secrets.MICROVIZ_CDN_BUCKET }}"
+          base="${{ steps.paths.outputs.base_prefix }}"
+          cache="public,max-age=31536000,immutable"
+
+          aws s3 sync packages/core/dist "s3://${bucket}/${base}/@microviz/core/dist" --cache-control "$cache"
+          aws s3 sync packages/renderers/dist "s3://${bucket}/${base}/@microviz/renderers/dist" --cache-control "$cache"
+          aws s3 sync packages/react/dist "s3://${bucket}/${base}/@microviz/react/dist" --cache-control "$cache"
+          aws s3 sync packages/elements/dist "s3://${bucket}/${base}/@microviz/elements/dist" --cache-control "$cache"
+          aws s3 sync packages/elements/dist/cdn "s3://${bucket}/${base}/@microviz/elements/cdn" --cache-control "$cache"
+          aws s3 sync packages/themes "s3://${bucket}/${base}/@microviz/themes" --exclude "*" --include "*.css" --cache-control "$cache"
+          aws s3 sync packages/themes-tailwind "s3://${bucket}/${base}/@microviz/themes-tailwind" --exclude "*" --include "*.css" --cache-control "$cache"
