@@ -1,26 +1,31 @@
-name: Deploy
+name: Deploy Site
 
 on:
   push:
-    branches: [main, next]
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: site
     env:
       IBM_TELEMETRY_DISABLED: "true"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: "24.x"
+          node-version: "22.x"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -35,25 +40,17 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.MICROVIZ_SITE_ROLE_ARN }}
           aws-region: us-east-1
 
-      - name: Sync to S3
-        uses: jakejarvis/s3-sync-action@v0.5.1
-        with:
-          args: --follow-symlinks --delete
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SOURCE_DIR: "packages/demo/dist/"
+      - name: Deploy to S3
+        run: |
+          aws s3 sync packages/demo/dist "s3://${{ secrets.MICROVIZ_SITE_BUCKET }}" \
+            --delete \
+            --cache-control "public,max-age=3600"
 
       - name: Invalidate CloudFront
-        uses: chetan/invalidate-cloudfront-action@v2.4
-        env:
-          DISTRIBUTION: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION }}
-          PATHS: "/ /index.html /*"
-          AWS_REGION: "us-east-1"
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.MICROVIZ_SITE_DISTRIBUTION }}" \
+            --paths "/*"
