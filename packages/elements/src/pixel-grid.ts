@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "pixel-grid";
+
 export class MicrovizPixelGrid extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -66,7 +68,9 @@ export class MicrovizPixelGrid extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -90,7 +94,7 @@ export class MicrovizPixelGrid extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { cols, gap, interleave, pad, rows, type: "pixel-grid" },
+      spec: { cols, gap, interleave, pad, rows, type: SPEC_TYPE },
     });
   }
 }

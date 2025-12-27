@@ -14,6 +14,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "segmented-pill";
+
 export class MicrovizSegmentedPill extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -69,7 +71,9 @@ export class MicrovizSegmentedPill extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -97,7 +101,7 @@ export class MicrovizSegmentedPill extends HTMLElement {
         separatorStroke: separatorStroke?.trim() ? separatorStroke : undefined,
         separatorStrokeOpacity,
         separatorStrokeWidth,
-        type: "segmented-pill",
+        type: SPEC_TYPE,
       },
     });
   }

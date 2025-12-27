@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "layered-waves";
+
 export class MicrovizLayeredWaves extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizLayeredWaves extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -92,7 +96,7 @@ export class MicrovizLayeredWaves extends HTMLElement {
         baseOpacity,
         cornerRadius,
         pad,
-        type: "layered-waves",
+        type: SPEC_TYPE,
         waveOffset,
       },
     });

@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "dna-helix";
+
 export class MicrovizDnaHelix extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizDnaHelix extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizDnaHelix extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, pad, strandGap, strandHeight, type: "dna-helix" },
+      spec: { gap, pad, strandGap, strandHeight, type: SPEC_TYPE },
     });
   }
 }

@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "bullet-delta";
+
 export class MicrovizBulletDelta extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -64,7 +66,9 @@ export class MicrovizBulletDelta extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -82,7 +86,7 @@ export class MicrovizBulletDelta extends HTMLElement {
     return computeModel({
       data: { current, max, previous },
       size: { height, width },
-      spec: { pad, type: "bullet-delta" },
+      spec: { pad, type: SPEC_TYPE },
     });
   }
 }

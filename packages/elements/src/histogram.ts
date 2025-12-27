@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "histogram";
+
 export class MicrovizHistogram extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizHistogram extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -89,7 +93,7 @@ export class MicrovizHistogram extends HTMLElement {
     return computeModel({
       data: { opacities, series },
       size: { height, width },
-      spec: { barRadius, bins, pad, type: "histogram" },
+      spec: { barRadius, bins, pad, type: SPEC_TYPE },
     });
   }
 }

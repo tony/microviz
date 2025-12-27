@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "bullet-gauge";
+
 export class MicrovizBulletGauge extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -66,7 +68,9 @@ export class MicrovizBulletGauge extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -98,7 +102,7 @@ export class MicrovizBulletGauge extends HTMLElement {
         markerPosition,
         markerWidth,
         pad,
-        type: "bullet-gauge",
+        type: SPEC_TYPE,
       },
     });
   }

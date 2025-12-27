@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "micro-heatline";
+
 export class MicrovizMicroHeatline extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizMicroHeatline extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizMicroHeatline extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, lineHeight, maxLines, pad, type: "micro-heatline" },
+      spec: { gap, lineHeight, maxLines, pad, type: SPEC_TYPE },
     });
   }
 }

@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "stacked-bar";
+
 export class MicrovizStackedBar extends HTMLElement {
   static observedAttributes = ["animate", "data", "width", "height", "pad"];
 
@@ -56,7 +58,9 @@ export class MicrovizStackedBar extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -71,7 +75,7 @@ export class MicrovizStackedBar extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { pad, type: "stacked-bar" },
+      spec: { pad, type: SPEC_TYPE },
     });
   }
 }

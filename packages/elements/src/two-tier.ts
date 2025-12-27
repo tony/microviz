@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "two-tier";
+
 export class MicrovizTwoTier extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizTwoTier extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizTwoTier extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { bottomOpacity, gap, pad, topRatio, type: "two-tier" },
+      spec: { bottomOpacity, gap, pad, topRatio, type: SPEC_TYPE },
     });
   }
 }

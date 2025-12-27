@@ -14,6 +14,8 @@ import {
   shouldReduceMotion,
 } from "./transition";
 
+const SPEC_TYPE = "sparkline";
+
 export class MicrovizSparkline extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -90,7 +92,7 @@ export class MicrovizSparkline extends HTMLElement {
     const model = computeModel({
       data,
       size: { height, width },
-      spec: { pad, type: "sparkline" },
+      spec: { pad, type: SPEC_TYPE },
       validation,
     });
 
@@ -169,6 +171,8 @@ export class MicrovizSparkline extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 }
