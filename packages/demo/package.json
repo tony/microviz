@@ -21,6 +21,12 @@
     "ncu": "ncu"
   },
   "dependencies": {
+    "@codemirror/lang-html": "^6.4.11",
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/state": "^6.5.3",
+    "@codemirror/view": "^6.39.7",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "codemirror": "^6.0.2",
     "@andypf/json-viewer": "^2.2.0",
     "@microviz/core": "workspace:*",
     "@microviz/elements": "workspace:*",
