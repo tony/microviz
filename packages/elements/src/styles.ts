@@ -5,29 +5,21 @@
  * these fallback values ensure charts render with a reasonable palette.
  * Uses Tableau 10 colors for colorblind accessibility.
  */
+/**
+ * Fallback colors (Tableau 10, colorblind-safe) used when no theme is loaded.
+ * These are referenced directly in class rules since CSS custom properties
+ * cannot self-reference (e.g., --mv-series-1: var(--mv-series-1, fallback) is invalid).
+ */
+const FALLBACK_SERIES_1 = "#4e79a7";
+const FALLBACK_MUTED = "#94a3b8";
+
 const stylesText = `
 :host {
   display: inline-block;
   color: var(--mv-fg, currentColor);
   font-family: var(--mv-font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
-  /* Fallback palette: Tableau 10 (colorblind-safe) */
-  --mv-series-1: var(--mv-series-1, #4e79a7);
-  --mv-series-2: var(--mv-series-2, #f28e2c);
-  --mv-series-3: var(--mv-series-3, #e15759);
-  --mv-series-4: var(--mv-series-4, #76b7b2);
-  --mv-series-5: var(--mv-series-5, #59a14f);
-  --mv-series-6: var(--mv-series-6, #edc949);
-  --mv-series-7: var(--mv-series-7, #af7aa1);
-  --mv-series-8: var(--mv-series-8, #ff9da7);
-  --mv-series-9: var(--mv-series-9, #9c755f);
-  --mv-series-10: var(--mv-series-10, #bab0ab);
-  --mv-muted: var(--mv-muted, #94a3b8);
-  --mv-stroke-width: var(--mv-stroke-width, 1.5px);
-  --mv-focus-ring: var(--mv-focus-ring, #3b82f6);
-  --mv-focus-ring-width: var(--mv-focus-ring-width, 2px);
-  --mv-focus-ring-offset: var(--mv-focus-ring-offset, 2px);
   /* Motion tokens for transitions */
-  --mv-motion-duration: var(--mv-motion-duration, 160ms);
+  --mv-motion-duration: var(--mv-motion-duration, 300ms);
   --mv-motion-easing: var(--mv-motion-easing, cubic-bezier(0.2, 0.7, 0.3, 1));
 }
 
@@ -65,7 +57,7 @@ svg {
 }
 
 .mv-skeleton {
-  fill: var(--mv-muted, currentColor);
+  fill: var(--mv-muted, ${FALLBACK_MUTED});
   animation: mv-skeleton-pulse 1.25s ease-in-out infinite;
 }
 
@@ -91,77 +83,77 @@ svg {
 }
 
 .mv-line {
-  stroke: var(--mv-series-1, currentColor);
+  stroke: var(--mv-series-1, ${FALLBACK_SERIES_1});
   stroke-width: var(--mv-stroke-width, 1.5px);
   fill: none;
 }
 
 .mv-range-band-band {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-range-band-line {
-  stroke: var(--mv-series-1, currentColor);
+  stroke: var(--mv-series-1, ${FALLBACK_SERIES_1});
   fill: none;
 }
 
 .mv-range-band-dot {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-spark-area-line {
-  stroke: var(--mv-series-1, currentColor);
+  stroke: var(--mv-series-1, ${FALLBACK_SERIES_1});
   fill: none;
 }
 
 .mv-spark-area-dot {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-bullet-delta-track {
   fill: none;
-  stroke: var(--mv-muted, currentColor);
+  stroke: var(--mv-muted, ${FALLBACK_MUTED});
 }
 
 .mv-bullet-delta-delta {
   fill: none;
-  stroke: var(--mv-series-1, currentColor);
+  stroke: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-bullet-delta-previous {
-  fill: var(--mv-muted, currentColor);
+  fill: var(--mv-muted, ${FALLBACK_MUTED});
 }
 
 .mv-bullet-delta-current {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-bullet-delta-arrow {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-bar {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-sparkline-dot {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-step-line-dot {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-histogram-bar {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-heatgrid-cell {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-dot-matrix-dot {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-barcode-bin {
@@ -185,24 +177,24 @@ svg {
 }
 
 .mv-dumbbell-track {
-  stroke: var(--mv-muted, currentColor);
+  stroke: var(--mv-muted, ${FALLBACK_MUTED});
 }
 
 .mv-dumbbell-range {
-  stroke: var(--mv-series-1, currentColor);
+  stroke: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-dumbbell-current {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-dumbbell-target {
-  fill: var(--mv-series-1, currentColor);
-  stroke: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
+  stroke: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 
 .mv-sparkline-bars-bar {
-  fill: var(--mv-series-1, currentColor);
+  fill: var(--mv-series-1, ${FALLBACK_SERIES_1});
 }
 `;
 

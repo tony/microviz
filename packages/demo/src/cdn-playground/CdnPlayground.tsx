@@ -30,6 +30,12 @@ export function CdnPlayground({
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
   const previewRef = useRef<PreviewPaneHandle>(null);
 
+  // Stable code for iframe - only updated when full reload is needed.
+  // This prevents iframe reloads during reactive attribute updates (Reroll).
+  // The iframe gets data updates via postMessage, so stableCode can lag behind
+  // urlState.code without causing visual issues.
+  const [stableCode, setStableCode] = useState(urlState.code);
+
   // Derive theme from system preference
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "dark";
@@ -59,6 +65,8 @@ export function CdnPlayground({
 
   const handleCodeChange = useCallback(
     (code: string) => {
+      // User edited code - need full reload
+      setStableCode(code);
       onUrlStateChange({ ...urlState, code, presetId: null });
     },
     [urlState, onUrlStateChange],
@@ -66,6 +74,7 @@ export function CdnPlayground({
 
   const handleCdnSourceChange = useCallback(
     (cdnSource: CdnSource) => {
+      // CDN source change - need full reload (stableCode stays same, but cdnUrl changes)
       onUrlStateChange({ ...urlState, cdnSource });
     },
     [urlState, onUrlStateChange],
@@ -73,6 +82,7 @@ export function CdnPlayground({
 
   const handleCspModeChange = useCallback(
     (cspMode: CspMode) => {
+      // CSP mode change - need full reload (stableCode stays same, but cspMode changes)
       onUrlStateChange({ ...urlState, cspMode });
     },
     [urlState, onUrlStateChange],
@@ -83,6 +93,8 @@ export function CdnPlayground({
       const preset = PRESETS.find((p) => p.id === presetId);
       if (preset) {
         const code = applySeededData(presetId, preset.code, urlState.seed);
+        // Preset change - need full reload
+        setStableCode(code);
         onUrlStateChange({
           ...urlState,
           code,
@@ -100,7 +112,7 @@ export function CdnPlayground({
       // Try reactive update first (no iframe reload)
       const updates = generateDataForPreset(urlState.presetId, newSeed);
       if (updates && previewRef.current) {
-        // Send reactive updates to iframe
+        // Send reactive updates to iframe via postMessage
         for (const update of updates) {
           previewRef.current.updateAttribute(
             update.selector,
@@ -108,18 +120,15 @@ export function CdnPlayground({
             update.value,
           );
         }
-        // Update URL state without triggering srcdoc change
-        // We update the code to keep it in sync for URL sharing
+        // Update URL state for editor display and URL sharing
+        // Do NOT update stableCode - animation plays via postMessage update
         const preset = PRESETS.find((p) => p.id === urlState.presetId);
         if (preset) {
           const code = applySeededData(urlState.presetId, preset.code, newSeed);
-          // Use a microtask to batch the state update after postMessage
-          queueMicrotask(() => {
-            onUrlStateChange({
-              ...urlState,
-              code,
-              seed: newSeed,
-            });
+          onUrlStateChange({
+            ...urlState,
+            code,
+            seed: newSeed,
           });
         }
         return;
@@ -129,6 +138,7 @@ export function CdnPlayground({
       const preset = PRESETS.find((p) => p.id === urlState.presetId);
       if (preset) {
         const code = applySeededData(urlState.presetId, preset.code, newSeed);
+        setStableCode(code);
         onUrlStateChange({
           ...urlState,
           code,
@@ -151,10 +161,10 @@ export function CdnPlayground({
   }, []);
 
   const handleRun = useCallback(() => {
-    // Force re-render of preview by clearing and re-setting code
+    // Force full iframe reload with current code
     setConsoleLogs([]);
-    onUrlStateChange({ ...urlState });
-  }, [urlState, onUrlStateChange]);
+    setStableCode(urlState.code);
+  }, [urlState.code]);
 
   return (
     <div className="flex h-full flex-col bg-slate-100 dark:bg-slate-900">
@@ -262,7 +272,7 @@ export function CdnPlayground({
             <PreviewPane
               cdnUrl={cdnUrl}
               className="h-full"
-              code={urlState.code}
+              code={stableCode}
               cspMode={urlState.cspMode}
               onConsoleMessage={handleConsoleMessage}
               ref={previewRef}

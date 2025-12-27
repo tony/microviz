@@ -16,7 +16,7 @@ export type AnimationConfig = {
 };
 
 const DEFAULT_CONFIG: AnimationConfig = {
-  duration: 160,
+  duration: 300,
   easing: "easeOut",
 };
 
