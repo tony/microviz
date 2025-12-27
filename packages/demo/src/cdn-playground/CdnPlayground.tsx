@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ResizablePane } from "../browse/ResizablePane";
 import { RerollButton } from "../ui/RerollButton";
 import { CdnSourcePicker } from "./CdnSourcePicker";
@@ -6,8 +6,12 @@ import { CodeEditor } from "./CodeEditor";
 import { ConsoleOutput } from "./ConsoleOutput";
 import type { CdnPlaygroundState, CspMode } from "./cdnPlaygroundState";
 import { type CdnSource, getCdnUrl } from "./cdnSources";
-import { type ConsoleEntry, PreviewPane } from "./PreviewPane";
-import { applySeededData } from "./presetData";
+import {
+  type ConsoleEntry,
+  PreviewPane,
+  type PreviewPaneHandle,
+} from "./PreviewPane";
+import { applySeededData, generateDataForPreset } from "./presetData";
 import { PRESETS } from "./presets";
 
 export type CdnPlaygroundProps = {
@@ -24,6 +28,7 @@ export function CdnPlayground({
   onUrlStateChange,
 }: CdnPlaygroundProps) {
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
+  const previewRef = useRef<PreviewPaneHandle>(null);
 
   // Derive theme from system preference
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -92,6 +97,35 @@ export function CdnPlayground({
   const handleReroll = useCallback(() => {
     const newSeed = `mv-${Math.floor(Math.random() * 10_000)}`;
     if (urlState.presetId) {
+      // Try reactive update first (no iframe reload)
+      const updates = generateDataForPreset(urlState.presetId, newSeed);
+      if (updates && previewRef.current) {
+        // Send reactive updates to iframe
+        for (const update of updates) {
+          previewRef.current.updateAttribute(
+            update.selector,
+            update.attribute,
+            update.value,
+          );
+        }
+        // Update URL state without triggering srcdoc change
+        // We update the code to keep it in sync for URL sharing
+        const preset = PRESETS.find((p) => p.id === urlState.presetId);
+        if (preset) {
+          const code = applySeededData(urlState.presetId, preset.code, newSeed);
+          // Use a microtask to batch the state update after postMessage
+          queueMicrotask(() => {
+            onUrlStateChange({
+              ...urlState,
+              code,
+              seed: newSeed,
+            });
+          });
+        }
+        return;
+      }
+
+      // Fallback: full reload for presets that don't support reactive updates
       const preset = PRESETS.find((p) => p.id === urlState.presetId);
       if (preset) {
         const code = applySeededData(urlState.presetId, preset.code, newSeed);
@@ -231,6 +265,7 @@ export function CdnPlayground({
               code={urlState.code}
               cspMode={urlState.cspMode}
               onConsoleMessage={handleConsoleMessage}
+              ref={previewRef}
             />
           </div>
 
