@@ -55,7 +55,7 @@ export class MicrovizWaveform extends HTMLElement {
   }
 
   #computeFromAttributes(): RenderModel {
-    const series = parseNumberArray(this.getAttribute("data"));
+    const { data: series } = parseNumberArray(this.getAttribute("data"));
     const width = parseNumber(this.getAttribute("width"), 200);
     const height = parseNumber(this.getAttribute("height"), 32);
     const pad = this.hasAttribute("pad")

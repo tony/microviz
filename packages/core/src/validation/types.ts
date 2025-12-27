@@ -4,6 +4,14 @@
  */
 
 /**
+ * Validation mode for chart elements.
+ * - "normal": Validate after parsing (default)
+ * - "strict": Warn about dropped/coerced values during parsing
+ * - "skip": No validation (performance, trusted data)
+ */
+export type ValidationMode = "normal" | "strict" | "skip";
+
+/**
  * Validation error codes.
  * Each code has a specific meaning for tooling and error handling.
  */

@@ -24,6 +24,15 @@ export function parseBoolean(value: string | null, fallback: boolean): boolean {
 }
 
 /**
+ * Result of parsing with optional dropped value tracking.
+ */
+export type ParseNumberArrayResult = {
+  data: number[];
+  /** Raw tokens that were dropped (only tracked in strict mode) */
+  dropped?: string[];
+};
+
+/**
  * Parse a data attribute into a number array.
  *
  * Supports multiple formats for vibe-coding / sandbox friendliness:
@@ -31,21 +40,36 @@ export function parseBoolean(value: string | null, fallback: boolean): boolean {
  * - Comma-separated: `1,2,3` or `1, 2, 3`
  * - Space-separated: `1 2 3`
  * - Mixed delimiters: `1, 2 3` (comma + space)
+ *
+ * @param value - The raw attribute value
+ * @param strict - If true, track dropped values for warnings
  */
-export function parseNumberArray(value: string | null): number[] {
-  if (!value) return [];
+export function parseNumberArray(
+  value: string | null,
+  strict?: boolean,
+): ParseNumberArrayResult {
+  if (!value) return { data: [] };
 
   const trimmed = value.trim();
-  if (!trimmed) return [];
+  if (!trimmed) return { data: [] };
 
   // Try JSON first (handles arrays with brackets)
   if (trimmed.startsWith("[")) {
     try {
       const parsed: unknown = JSON.parse(trimmed);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter(
-        (v): v is number => typeof v === "number" && Number.isFinite(v),
-      );
+      if (!Array.isArray(parsed)) {
+        return strict ? { data: [], dropped: [trimmed] } : { data: [] };
+      }
+      const valid: number[] = [];
+      const dropped: string[] = [];
+      for (const v of parsed) {
+        if (typeof v === "number" && Number.isFinite(v)) {
+          valid.push(v);
+        } else if (strict) {
+          dropped.push(String(v));
+        }
+      }
+      return dropped.length > 0 ? { data: valid, dropped } : { data: valid };
     } catch {
       // Fall through to delimiter parsing
     }
@@ -53,13 +77,20 @@ export function parseNumberArray(value: string | null): number[] {
 
   // Try comma/space-separated (lenient parsing for vibe coding)
   // Matches: "1,2,3" or "1 2 3" or "1, 2, 3" or "-1.5, 2.5, 3"
-  const numbers = trimmed
-    .split(/[\s,]+/)
-    .filter(Boolean)
-    .map(Number)
-    .filter(Number.isFinite);
+  const tokens = trimmed.split(/[\s,]+/).filter(Boolean);
+  const valid: number[] = [];
+  const dropped: string[] = [];
 
-  return numbers;
+  for (const token of tokens) {
+    const n = Number(token);
+    if (Number.isFinite(n)) {
+      valid.push(n);
+    } else if (strict) {
+      dropped.push(token);
+    }
+  }
+
+  return dropped.length > 0 ? { data: valid, dropped } : { data: valid };
 }
 
 export type BitfieldSegmentInput = {
