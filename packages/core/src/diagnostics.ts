@@ -51,6 +51,7 @@ export function validateDefReferences(
         code: "MISSING_DEF",
         markId: mark.id,
         message: `Missing def '#${defId}' referenced by ${refKind} on mark (${mark.type}); expected ${expectedText}.`,
+        phase: "render",
       });
       return;
     }
@@ -60,6 +61,7 @@ export function validateDefReferences(
         code: "MISSING_DEF",
         markId: mark.id,
         message: `Def '#${defId}' referenced by ${refKind} on mark (${mark.type}) is ${actual}; expected ${expectedText}.`,
+        phase: "render",
       });
     }
   };

@@ -83,6 +83,7 @@ export class MicrovizSparkline extends HTMLElement {
         code: "DROPPED_VALUES" as const,
         hint: "Use valid numbers only",
         message: `Dropped ${dropped.length} invalid value(s): ${dropped.map((d) => `"${d}"`).join(", ")}`,
+        phase: "input" as const,
       };
       (model as { stats: typeof model.stats }).stats = {
         ...model.stats,

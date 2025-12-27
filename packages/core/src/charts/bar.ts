@@ -24,6 +24,8 @@ export const barChart = {
   category: "bars" as const,
   defaultPad: 3,
   displayName: "Bar",
+  exampleHtml:
+    '<microviz-bar data=\'{"value": 75, "max": 100}\'></microviz-bar>',
   isEmpty(_normalized) {
     return false;
   },
