@@ -2507,6 +2507,10 @@ export const MicrovizBrowse: FC<{
     getCanvasUnsupportedFilters,
     getHtmlWarnings,
   );
+  const selectedHtmlWarnings = useMemo(
+    () => (selectedModel ? getHtmlWarnings(selectedModel) : []),
+    [getHtmlWarnings, selectedModel],
+  );
   const warningCount = selectedWarnings.length;
   const a11ySummary = selectedModel?.a11y?.summary;
   const a11yItems = selectedModel?.a11y?.items ?? [];
@@ -2525,6 +2529,10 @@ export const MicrovizBrowse: FC<{
   const selectedWarningSummary = useMemo(
     () => summarizeWarningCounts(selectedWarnings),
     [selectedWarnings],
+  );
+  const selectedHtmlWarningSummary = useMemo(
+    () => summarizeWarningCounts(selectedHtmlWarnings),
+    [selectedHtmlWarnings],
   );
   const htmlSvgMarkCounts = useMemo(() => {
     if (renderer !== "html-svg" || !selectedModel) return null;
@@ -3480,6 +3488,32 @@ export const MicrovizBrowse: FC<{
                   )}
                   <div className="mt-2">
                     {formatWarningsList(selectedWarnings)}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    HTML renderer warnings
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    Computed from the model, even when another renderer is
+                    active.
+                  </div>
+                  {selectedHtmlWarningSummary.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      {selectedHtmlWarningSummary.map((summary) => (
+                        <span
+                          className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800/60"
+                          key={summary.code}
+                          title={summary.code}
+                        >
+                          {summary.label} ×{summary.count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    {formatWarningsList(selectedHtmlWarnings)}
                   </div>
                 </div>
 
