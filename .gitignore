@@ -24,6 +24,7 @@ __traces__/
 
 # playwright
 playwright-report/
+.playwright-mcp/
 
 # tsc
 *.tsbuildinfo
