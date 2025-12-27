@@ -1,5 +1,5 @@
 import { type A11yItem, hitTest, type RenderModel } from "@microviz/core";
-import { renderHtmlString, renderSvgString } from "@microviz/renderers";
+import { renderHtmlString } from "@microviz/renderers";
 import { applyMicrovizA11y, getA11yItems, updateA11yFocus } from "./a11y";
 import { parseOptionalNumber } from "./parse";
 import {
@@ -8,6 +8,7 @@ import {
   patchHtmlIntoShadowRoot,
   patchSvgIntoShadowRoot,
   renderSvgIntoShadowRoot,
+  renderSvgModelIntoShadowRoot,
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
@@ -368,6 +369,11 @@ export class MicrovizModel extends HTMLElement {
     }
 
     const model = this.#model;
+    const wantsSkeleton =
+      this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
+    const renderer = this.getAttribute("renderer");
+    const useHtml = renderer === "html" && !wantsSkeleton;
+    const renderMode = useHtml ? "html" : "svg";
 
     // Emit warning event if model has diagnostics (deduplicated)
     const warnings = model.stats?.warnings;
@@ -386,9 +392,10 @@ export class MicrovizModel extends HTMLElement {
           },
         }),
       );
-      if (warnings && telemetry.enabled) {
+      if (warnings && telemetry.enabled && useHtml) {
         telemetry.emit({
           phase: "warning",
+          renderer: renderMode,
           warningCodes: warnings.map((warning) => warning.code),
           warnings,
         });
@@ -399,12 +406,6 @@ export class MicrovizModel extends HTMLElement {
 
     applyMicrovizA11y(this, this.#internals, model);
     this.#setA11yItems(getA11yItems(model));
-
-    const wantsSkeleton =
-      this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
-    const renderer = this.getAttribute("renderer");
-    const useHtml = renderer === "html" && !wantsSkeleton;
-    const renderMode = useHtml ? "html" : "svg";
 
     // Skip animation when transitioning to/from skeleton (incompatible mark structures)
     const skeletonStateChanged = wantsSkeleton !== this.#wasSkeletonRender;
@@ -517,10 +518,12 @@ export class MicrovizModel extends HTMLElement {
       clearSvgFromShadowRoot(this.#root);
       patchHtmlIntoShadowRoot(this.#root, html);
     } else {
-      let svg: string;
       if (wantsSkeleton) {
         const renderStart = telemetry.enabled ? performance.now() : 0;
-        svg = renderSkeletonSvg({ height: model.height, width: model.width });
+        const svg = renderSkeletonSvg({
+          height: model.height,
+          width: model.width,
+        });
         if (telemetry.enabled) {
           telemetry.emit({
             bytes: svg.length,
@@ -531,36 +534,19 @@ export class MicrovizModel extends HTMLElement {
             size: { height: model.height, width: model.width },
           });
         }
-      } else if (telemetry.enabled) {
-        const renderStart = performance.now();
-        try {
-          svg = renderSvgString(model);
-        } catch (error) {
-          telemetry.emit({
-            error: toTelemetryError(error),
-            phase: "error",
-            reason: "render-svg",
-            renderer: "svg",
-          });
-          throw error;
+        clearHtmlFromShadowRoot(this.#root);
+        if (usePatch) {
+          patchSvgIntoShadowRoot(this.#root, svg);
+        } else {
+          renderSvgIntoShadowRoot(this.#root, svg);
         }
-        telemetry.emit({
-          bytes: svg.length,
-          durationMs: performance.now() - renderStart,
-          phase: "render",
-          renderer: "svg",
-          size: { height: model.height, width: model.width },
-          stats: modelTelemetryStats(model) ?? undefined,
-        });
-      } else {
-        svg = renderSvgString(model);
+        return;
       }
       clearHtmlFromShadowRoot(this.#root);
-      if (usePatch) {
-        patchSvgIntoShadowRoot(this.#root, svg);
-      } else {
-        renderSvgIntoShadowRoot(this.#root, svg);
-      }
+      renderSvgModelIntoShadowRoot(this.#root, model, {
+        patch: usePatch,
+        telemetry,
+      });
     }
   }
 }
