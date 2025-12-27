@@ -275,6 +275,7 @@ export type DiagnosticWarningCode =
   | "MARK_OUT_OF_BOUNDS"
   | "NAN_COORDINATE"
   // Validation codes (from validation module)
+  | "INVALID_JSON" // JSON parsing failed
   | "INVALID_TYPE"
   | "INVALID_VALUE"
   | "INVALID_DATA_SHAPE"
