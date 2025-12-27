@@ -8,10 +8,10 @@ import { parseNumber, parseNumberArray } from "./parse";
 import { renderSvgModelIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 import {
-  animate,
-  getMotionConfig,
-  isAnimationEnabled,
-  shouldReduceMotion,
+  type AnimationState,
+  animateTransition,
+  cleanupAnimation,
+  createAnimationState,
 } from "./transition";
 
 const SPEC_TYPE = "sparkline";
@@ -28,9 +28,8 @@ export class MicrovizSparkline extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
-  #previousModel: RenderModel | null = null;
-  #cancelAnimation: (() => void) | null = null;
   #lastWarningKey: string | null = null;
 
   constructor() {
@@ -48,8 +47,7 @@ export class MicrovizSparkline extends HTMLElement {
   }
 
   disconnectedCallback(): void {
-    this.#cancelAnimation?.();
-    this.#cancelAnimation = null;
+    cleanupAnimation(this.#animState);
   }
 
   attributeChangedCallback(): void {
@@ -68,7 +66,9 @@ export class MicrovizSparkline extends HTMLElement {
   render(): void {
     if (this.#modelOverride) {
       applyMicrovizA11y(this, this.#internals, this.#modelOverride);
-      this.#animateToModel(this.#modelOverride);
+      animateTransition(this.#animState, this.#modelOverride, (m) =>
+        this.#renderFrame(m),
+      );
       return;
     }
 
@@ -136,38 +136,7 @@ export class MicrovizSparkline extends HTMLElement {
     }
 
     applyMicrovizA11y(this, this.#internals, model);
-    this.#animateToModel(model);
-  }
-
-  #animateToModel(model: RenderModel): void {
-    // Cancel any in-flight animation
-    this.#cancelAnimation?.();
-    this.#cancelAnimation = null;
-
-    const motionConfig = getMotionConfig(this);
-    const durationDisabled =
-      typeof motionConfig.duration === "number" && motionConfig.duration <= 0;
-    const canAnimate =
-      this.#previousModel &&
-      isAnimationEnabled(this) &&
-      !shouldReduceMotion() &&
-      !durationDisabled;
-    // Animate if we have a previous model and motion is not reduced
-    if (canAnimate && this.#previousModel) {
-      this.#cancelAnimation = animate(
-        this.#previousModel,
-        model,
-        (interpolated) => this.#renderFrame(interpolated),
-        () => {
-          this.#previousModel = model;
-          this.#cancelAnimation = null;
-        },
-        motionConfig,
-      );
-    } else {
-      this.#renderFrame(model);
-      this.#previousModel = model;
-    }
+    animateTransition(this.#animState, model, (m) => this.#renderFrame(m));
   }
 
   #renderFrame(model: RenderModel): void {
