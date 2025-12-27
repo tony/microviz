@@ -296,7 +296,7 @@ export function clearSvgFromShadowRoot(root: ShadowRoot): void {
   }
 }
 
-type RenderSvgModelOptions = {
+export type RenderSvgModelOptions = {
   telemetry?: TelemetryHandle;
   specType?: string;
   reason?: string;
