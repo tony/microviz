@@ -43,6 +43,7 @@ import {
 } from "react";
 import { buildPaletteColors } from "../demoPalette";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
+import { RerollButton } from "../ui/RerollButton";
 import {
   chartCard,
   chartCardContent,
@@ -51,7 +52,6 @@ import {
   statusLed,
   tabButton,
 } from "../ui/styles";
-import { RerollButton } from "../ui/RerollButton";
 import { TabToggle } from "../ui/TabToggle";
 import { ToggleGroup } from "../ui/ToggleGroup";
 import { renderSvgElement } from "../vanilla/svgDom";
