@@ -71,6 +71,8 @@ export type {
   MicrovizClientPoint,
   MicrovizHitDetail,
   MicrovizHitEvent,
+  MicrovizWarningDetail,
+  MicrovizWarningEvent,
 } from "./events";
 
 export {

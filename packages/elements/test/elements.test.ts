@@ -247,4 +247,108 @@ describe("@microviz/elements", () => {
     const warnings = el.shadowRoot?.querySelector("#mv-a11y-warnings");
     expect(warnings?.textContent).toContain("HTML renderer ignores marks");
   });
+
+  it("emits microviz-warning event for model with warnings (microviz-model)", () => {
+    const el = document.createElement("microviz-model") as HTMLElement & {
+      model: RenderModel | null;
+    };
+    document.body.append(el);
+
+    type WarningDetail = { warnings: Array<{ code: string; message: string }> };
+    let receivedDetail: WarningDetail | null = null;
+    el.addEventListener("microviz-warning", (event) => {
+      receivedDetail = (event as CustomEvent<WarningDetail>).detail;
+    });
+
+    el.model = {
+      height: 10,
+      marks: [],
+      stats: {
+        hasDefs: false,
+        markCount: 0,
+        textCount: 0,
+        warnings: [{ code: "EMPTY_DATA", message: "No data provided" }],
+      },
+      width: 10,
+    };
+
+    expect(receivedDetail).not.toBeNull();
+    expect(receivedDetail?.warnings).toHaveLength(1);
+    expect(receivedDetail?.warnings[0]?.code).toBe("EMPTY_DATA");
+  });
+
+  it("emits microviz-warning event for invalid sparkline data", () => {
+    const el = document.createElement("microviz-sparkline");
+
+    type WarningDetail = {
+      element: string;
+      warnings: Array<{ code: string; message: string }>;
+    };
+    let receivedDetail: WarningDetail | null = null;
+    el.addEventListener("microviz-warning", (event) => {
+      receivedDetail = (event as CustomEvent<WarningDetail>).detail;
+    });
+
+    // Attach listener before setting attributes (first attribute triggers render)
+    el.setAttribute("width", "80");
+    el.setAttribute("height", "12");
+    el.setAttribute("data", "invalid-not-an-array");
+    document.body.append(el);
+
+    expect(receivedDetail).not.toBeNull();
+    expect(receivedDetail?.element).toBe("microviz-sparkline");
+    expect(receivedDetail?.warnings.some((w) => w.code === "EMPTY_DATA")).toBe(
+      true,
+    );
+  });
+
+  it("emits microviz-warning event for chart with warnings", () => {
+    const el = document.createElement("microviz-chart");
+    el.setAttribute("width", "80");
+    el.setAttribute("height", "12");
+    el.setAttribute("type", "sparkline");
+
+    type WarningDetail = {
+      element: string;
+      warnings: Array<{ code: string; message: string }>;
+    };
+    let receivedDetail: WarningDetail | null = null;
+    el.addEventListener("microviz-warning", (event) => {
+      receivedDetail = (event as CustomEvent<WarningDetail>).detail;
+    });
+
+    el.setAttribute("data", "[]");
+    document.body.append(el);
+
+    expect(receivedDetail).not.toBeNull();
+    expect(receivedDetail?.element).toBe("microviz-chart");
+    expect(receivedDetail?.warnings.some((w) => w.code === "EMPTY_DATA")).toBe(
+      true,
+    );
+  });
+
+  it("deduplicates microviz-warning events (same warnings emit once)", () => {
+    const el = document.createElement("microviz-sparkline");
+
+    let emitCount = 0;
+    el.addEventListener("microviz-warning", () => {
+      emitCount++;
+    });
+
+    // First render triggers warning
+    el.setAttribute("data", "invalid");
+    document.body.append(el);
+    expect(emitCount).toBe(1);
+
+    // Additional renders with same warnings should NOT emit
+    el.setAttribute("width", "100");
+    el.setAttribute("height", "20");
+    el.setAttribute("width", "150");
+    expect(emitCount).toBe(1);
+
+    // Changing to valid data clears warnings, then back to invalid emits again
+    el.setAttribute("data", "[1,2,3]");
+    el.setAttribute("data", "still-invalid");
+    expect(emitCount).toBe(2);
+  });
 });

@@ -15,6 +15,7 @@ export class MicrovizSparkline extends HTMLElement {
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
   #modelOverride: RenderModel | null = null;
+  #lastWarningKey: string | null = null;
 
   constructor() {
     super();
@@ -90,6 +91,27 @@ export class MicrovizSparkline extends HTMLElement {
         textCount: model.stats?.textCount ?? 0,
         warnings: [droppedWarning, ...existingWarnings],
       };
+    }
+
+    // Emit warning event if model has diagnostics (deduplicated)
+    const warnings = model.stats?.warnings;
+    const warningKey = warnings?.length
+      ? warnings.map((w) => w.code).join(",")
+      : null;
+    if (warningKey && warningKey !== this.#lastWarningKey) {
+      this.#lastWarningKey = warningKey;
+      this.dispatchEvent(
+        new CustomEvent("microviz-warning", {
+          bubbles: true,
+          composed: true,
+          detail: {
+            element: this.tagName.toLowerCase(),
+            warnings,
+          },
+        }),
+      );
+    } else if (!warningKey) {
+      this.#lastWarningKey = null;
     }
 
     applyMicrovizA11y(this, this.#internals, model);

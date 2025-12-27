@@ -72,6 +72,20 @@ function getConsoleCaptureScript(): string {
       timestamp: Date.now(),
     }, '*');
   };
+
+  // Listen for microviz-warning events and forward to console
+  document.addEventListener('microviz-warning', (event) => {
+    const detail = event.detail;
+    if (!detail || !detail.warnings) return;
+    for (const warning of detail.warnings) {
+      parent.postMessage({
+        type: 'console',
+        method: 'warn',
+        args: [\`⚠ [\${warning.code}] \${warning.message}\${warning.hint ? ' — ' + warning.hint : ''}\`],
+        timestamp: Date.now(),
+      }, '*');
+    }
+  });
 })();
 </script>`;
 }
