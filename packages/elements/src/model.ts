@@ -5,11 +5,18 @@ import { parseOptionalNumber } from "./parse";
 import {
   clearHtmlFromShadowRoot,
   clearSvgFromShadowRoot,
+  patchSvgIntoShadowRoot,
   renderHtmlIntoShadowRoot,
   renderSvgIntoShadowRoot,
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
+import {
+  type AnimationState,
+  animateTransition,
+  cleanupAnimation,
+  createAnimationState,
+} from "./transition";
 
 type Point = { x: number; y: number };
 type ClientPoint = { x: number; y: number };
@@ -24,7 +31,9 @@ export class MicrovizModel extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
+  readonly #animState: AnimationState = createAnimationState();
   #model: RenderModel | null = null;
+  #wasSkeletonRender = false;
   #lastWarningKey: string | null = null;
   #isInteractive = false;
   #strokeSlopPxOverride: number | undefined = undefined;
@@ -51,6 +60,7 @@ export class MicrovizModel extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    cleanupAnimation(this.#animState);
     this.#setInteractive(false);
   }
 
@@ -291,6 +301,7 @@ export class MicrovizModel extends HTMLElement {
 
   render(): void {
     if (!this.#model) {
+      cleanupAnimation(this.#animState);
       applyMicrovizA11y(this, this.#internals, null);
       this.#setA11yItems([]);
       clearSvgFromShadowRoot(this.#root);
@@ -339,6 +350,38 @@ export class MicrovizModel extends HTMLElement {
       this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
     const renderer = this.getAttribute("renderer");
     const useHtml = renderer === "html" && !wantsSkeleton;
+
+    // Skip animation when transitioning to/from skeleton (incompatible mark structures)
+    const skeletonStateChanged = wantsSkeleton !== this.#wasSkeletonRender;
+    const skipAnimation = useHtml || wantsSkeleton || skeletonStateChanged;
+
+    // When animating, we need to differentiate between:
+    // 1. Direct render (no animation) → use replacement
+    // 2. Animation frames → use patching for smooth transitions
+    const isFirstRender = this.#animState.previousModel === null;
+
+    if (skipAnimation || isFirstRender) {
+      // No animation: render directly with full replacement
+      cleanupAnimation(this.#animState);
+      this.#renderFrame(model, useHtml, wantsSkeleton, false);
+      this.#animState.previousModel = model;
+    } else {
+      // Animate with patching for smooth transitions
+      animateTransition(this.#animState, model, (interpolated) =>
+        this.#renderFrame(interpolated, useHtml, wantsSkeleton, true),
+      );
+    }
+
+    this.#wasSkeletonRender = wantsSkeleton;
+    this.#maybeReemitHit();
+  }
+
+  #renderFrame(
+    model: RenderModel,
+    useHtml: boolean,
+    wantsSkeleton: boolean,
+    usePatch: boolean,
+  ): void {
     if (useHtml) {
       const html = renderHtmlString(model);
       clearSvgFromShadowRoot(this.#root);
@@ -348,8 +391,11 @@ export class MicrovizModel extends HTMLElement {
         ? renderSkeletonSvg({ height: model.height, width: model.width })
         : renderSvgString(model);
       clearHtmlFromShadowRoot(this.#root);
-      renderSvgIntoShadowRoot(this.#root, svg);
+      if (usePatch) {
+        patchSvgIntoShadowRoot(this.#root, svg);
+      } else {
+        renderSvgIntoShadowRoot(this.#root, svg);
+      }
     }
-    this.#maybeReemitHit();
   }
 }
