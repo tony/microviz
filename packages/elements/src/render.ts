@@ -95,18 +95,14 @@ function patchChildren(target: Element, source: Element): void {
       // Patch existing child
       if (targetChild.tagName === sourceChild.tagName) {
         patchAttributes(targetChild, sourceChild);
+        const hasElementChildren =
+          sourceChild.children.length > 0 || targetChild.children.length > 0;
         // Recursively patch nested children (for defs, patterns, etc.)
-        if (
-          sourceChild.children.length > 0 ||
-          targetChild.children.length > 0
-        ) {
+        if (hasElementChildren) {
           patchChildren(targetChild, sourceChild);
-        }
-        // Handle text content for text elements
-        if (sourceChild.tagName === "text" || sourceChild.tagName === "title") {
-          if (targetChild.textContent !== sourceChild.textContent) {
-            targetChild.textContent = sourceChild.textContent;
-          }
+        } else if (targetChild.textContent !== sourceChild.textContent) {
+          // Update text-only nodes (SVG <text>, HTML divs, etc.)
+          targetChild.textContent = sourceChild.textContent;
         }
       } else {
         // Tag mismatch - replace
@@ -289,6 +285,120 @@ export function clearSvgFromShadowRoot(root: ShadowRoot): void {
       operation: "clear",
       phase: "dom",
       renderer: "svg",
+    });
+  }
+}
+
+/**
+ * Patch HTML into shadow root without replacing the entire element.
+ * Uses data-mark-id markers to keep DOM nodes stable for transitions.
+ */
+export function patchHtmlIntoShadowRoot(root: ShadowRoot, html: string): void {
+  const telemetry = createTelemetry(root);
+  const start = telemetry.enabled ? performance.now() : 0;
+  const next = parseHtmlRoot(html);
+  if (!next) {
+    telemetry.emit({
+      phase: "error",
+      reason: "parse-html",
+      renderer: "html",
+    });
+    return;
+  }
+
+  const existing = root.querySelector(".mv-chart");
+  if (!existing) {
+    root.append(next);
+    if (telemetry.enabled) {
+      telemetry.emit({
+        bytes: html.length,
+        durationMs: performance.now() - start,
+        nodeCount: next.querySelectorAll("*").length,
+        operation: "append",
+        phase: "dom",
+        renderer: "html",
+      });
+    }
+    return;
+  }
+
+  patchAttributes(existing, next);
+
+  const existingMarks = [...existing.children];
+  const nextMarks = [...next.children];
+
+  const existingById = new Map<string, Element>();
+  for (const mark of existingMarks) {
+    const id = mark.getAttribute("data-mark-id");
+    if (id) existingById.set(id, mark);
+  }
+
+  const processedIds = new Set<string>();
+  let insertionPoint: Element | null = null;
+
+  for (const nextMark of nextMarks) {
+    const id = nextMark.getAttribute("data-mark-id");
+    const existingMark = id ? existingById.get(id) : undefined;
+
+    if (id && existingMark) {
+      patchAttributes(existingMark, nextMark);
+      patchChildren(existingMark, nextMark);
+      if (
+        nextMark.children.length === 0 &&
+        existingMark.textContent !== nextMark.textContent
+      ) {
+        existingMark.textContent = nextMark.textContent;
+      }
+      processedIds.add(id);
+
+      if (insertionPoint) {
+        if (existingMark.previousElementSibling !== insertionPoint) {
+          insertionPoint.after(existingMark);
+        }
+      }
+      insertionPoint = existingMark;
+    } else {
+      const newMark = nextMark.cloneNode(true) as Element;
+      if (insertionPoint) {
+        insertionPoint.after(newMark);
+      } else {
+        const firstMark = existingMarks[0];
+        if (firstMark) {
+          firstMark.before(newMark);
+        } else {
+          existing.append(newMark);
+        }
+      }
+      insertionPoint = newMark;
+      if (id) processedIds.add(id);
+    }
+  }
+
+  for (const existingMark of existingMarks) {
+    const id = existingMark.getAttribute("data-mark-id");
+    if (id && !processedIds.has(id)) {
+      existingMark.remove();
+    } else if (!id) {
+      const stillExists = nextMarks.some(
+        (m) =>
+          !m.getAttribute("data-mark-id") &&
+          m.tagName === existingMark.tagName &&
+          m.outerHTML === existingMark.outerHTML,
+      );
+      if (!stillExists) {
+        existingMark.remove();
+      }
+    }
+  }
+
+  if (telemetry.enabled) {
+    telemetry.emit({
+      bytes: html.length,
+      durationMs: performance.now() - start,
+      nodeCount: next.querySelectorAll("*").length,
+      operation: "patch",
+      phase: "dom",
+      renderer: "html",
     });
   }
 }

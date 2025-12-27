@@ -20,7 +20,7 @@ const stylesText = `
   font-family: var(--mv-font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
   /* Motion tokens for transitions */
   --mv-motion-duration: var(--mv-motion-duration, 300ms);
-  --mv-motion-easing: var(--mv-motion-easing, cubic-bezier(0.2, 0.7, 0.3, 1));
+  --mv-motion-easing: var(--mv-motion-ease, cubic-bezier(0.2, 0.7, 0.3, 1));
 }
 
 :host(:focus-visible) {
@@ -78,6 +78,7 @@ svg {
     top var(--mv-motion-duration) var(--mv-motion-easing),
     width var(--mv-motion-duration) var(--mv-motion-easing),
     height var(--mv-motion-duration) var(--mv-motion-easing),
+    transform var(--mv-motion-duration) var(--mv-motion-easing),
     opacity var(--mv-motion-duration) var(--mv-motion-easing),
     background var(--mv-motion-duration) var(--mv-motion-easing);
 }
