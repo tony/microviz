@@ -236,6 +236,35 @@ export const PRESETS: Preset[] = [
     id: "multiple-charts",
     name: "Multiple Charts",
   },
+  {
+    code: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz CDN Dev Preview</title>
+  <script type="module">
+    // Replace with your PR/sha build output:
+    const base = "https://cdn-dev.microviz.org/preview/pr/1/sha/REPLACE_SHA";
+    await import(\`\${base}/@microviz/elements/cdn/microviz.js\`);
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>CDN Dev Preview</h1>
+  <microviz-sparkline
+    data="10, 25, 15, 30, 20, 35, 25, 40, 30"
+    width="200"
+    height="32">
+  </microviz-sparkline>
+</body>
+</html>`,
+    description: "Preview a PR build from cdn-dev.microviz.org",
+    id: "cdn-dev-preview",
+    name: "CDN Dev Preview",
+  },
 ];
 
 export const DEFAULT_PRESET = PRESETS[0];
