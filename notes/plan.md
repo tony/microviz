@@ -610,89 +610,127 @@ Smooth animated transitions when chart data changes, across all three renderers 
 }
 ```
 
-### Implementation Status (2025-12-25)
+### Implementation Status (2025-12-26)
 
-**✅ Phase 1-4 Complete:**
+**✅ Phase 1-5 Complete:**
 - Core interpolation module with easing, lerp, mark/model interpolation
 - Path morphing for SVG path command interpolation
-- Elements animator with RAF loop
-- Integration into `chart.ts`, `donut.ts`, `sparkline.ts`
-- Tier 0 tests for interpolation (18 tests) and path morphing (22 tests)
+- Elements animator with RAF loop (300ms duration, easeOut)
+- Animation mixin: `createAnimationState()`, `animateTransition()`, `cleanupAnimation()`
+- CSS motion tokens in `styles.ts` (300ms, reduced-motion support)
+- Tier 0 tests: 18 interpolation + 22 path morph
+- Tier 1 tests: 13 animator tests in `packages/elements/test/animator.test.ts`
+- CSS fallback colors fixed (Shadow DOM compatibility)
+- HTML renderer CSS transitions added (`.mv-html-mark`)
 
-**Current Coverage: 3 of 68 elements have animation support**
+**Current Coverage: 5 of 67 elements have animation support**
 
 | Element | Animation | Notes |
 |---------|-----------|-------|
-| `MicrovizChart` | ✅ | Full support via `#previousModel` + `animate()` |
-| `MicrovizDonut` | ✅ | Full support |
-| `MicrovizSparkline` | ✅ | Full support |
-| `MicrovizModel` | ❌ | Generic renderer, no animation |
-| 64 other elements | ❌ | Direct render, no `#previousModel` tracking |
+| `chart.ts` | ✅ | Generic `<microviz-chart>` with full animation |
+| `donut.ts` | ✅ | Arc path morphing works |
+| `sparkline.ts` | ✅ | Line path morphing works |
+| `sparkline-bars.ts` | ✅ | Bar height transitions |
+| `model.ts` | ✅ | Generic `<microviz-model>` renderer |
+| 62 other elements | ❌ | Direct render, no animation |
 
-### Next Steps: Full Transition Integration
+### Phase 6: Remaining Element Animation (NEXT UP)
 
-#### Phase 5: Animation Infrastructure (HIGH PRIORITY)
+**62 elements need animation integration.** Pattern is established—mechanical work using existing mixin.
 
-**5a. Create animation mixin/helper** — Eliminate copy-paste across 65 elements:
+#### Tier 1: High-Value (13 elements)
+Charts that commonly update with new data and benefit most from smooth transitions:
+
+```
+bar.ts              - bar height changes
+segmented-bar.ts    - segment width changes
+stacked-bar.ts      - segment proportions
+progress-pills.ts   - fill changes
+histogram.ts        - bin heights
+heatgrid.ts         - opacity/color
+equalizer.ts        - bar heights
+waveform.ts         - bar heights
+nano-ring.ts        - arc length
+segmented-ring.ts   - segment arcs
+bullet-gauge.ts     - marker position
+bullet-delta.ts     - arrow/dot position
+dumbbell.ts         - endpoint positions
+```
+
+#### Tier 2: Medium-Value (17 elements)
+Update less frequently but animation improves perceived quality:
+
+```
+range-band.ts              spark-area.ts
+step-line.ts               dot-matrix.ts
+pixel-grid.ts              barcode.ts
+pareto.ts                  lollipop.ts
+skyline.ts                 cascade-steps.ts
+ranked-lanes.ts            concentric-arcs.ts
+concentric-arcs-horiz.ts   radial-bars.ts
+orbital-dots.ts            two-tier.ts
+split-pareto.ts
+```
+
+#### Tier 3: Low-Value (32 elements)
+Mostly static patterns where animation adds minimal value:
+
+```
+bitfield.ts         gradient-fade.ts     stripe-density.ts
+perforated.ts       masked-wave.ts       pattern-tiles.ts
+code-minimap.ts     mosaic.ts            pixel-treemap.ts
+pixel-pill.ts       pixel-column.ts      chevron.ts
+pipeline.ts         tapered.ts           interlocking.ts
+dna-helix.ts        matryoshka.ts        layered-waves.ts
+hand-of-cards.ts    shadow-depth.ts      stepped-area.ts
+faded-pyramid.ts    variable-ribbon.ts   split-ribbon.ts
+micro-heatline.ts   vertical-stack.ts    radial-burst.ts
+stacked-chips.ts    segmented-pill.ts    shape-row.ts
+dot-row.ts          dot-cascade.ts
+```
+
+### Implementation Pattern
+
+Each element needs these changes (~5 min each):
+
 ```typescript
-// packages/elements/src/transition/animatable.ts
-export function createAnimationState(): AnimationState;
-export function animateTransition(
-  state: AnimationState,
-  nextModel: RenderModel,
-  renderFrame: (model: RenderModel) => void,
-  options?: { skipAnimation?: boolean }
-): void;
-```
+// 1. Add imports
+import {
+  type AnimationState,
+  animateTransition,
+  cleanupAnimation,
+  createAnimationState,
+} from "./transition";
+import { patchSvgIntoShadowRoot } from "./render";
 
-**5b. Add CSS motion variables to styles.ts:**
-```css
-:host {
-  --mv-motion-duration: 160ms;
-  --mv-motion-easing: cubic-bezier(0.2, 0.7, 0.3, 1);
+// 2. Add state field
+readonly #animState: AnimationState = createAnimationState();
+
+// 3. Add disconnectedCallback
+disconnectedCallback(): void {
+  cleanupAnimation(this.#animState);
 }
-@media (prefers-reduced-motion: reduce) {
-  :host { --mv-motion-duration: 0ms; }
+
+// 4. Update render() to use animateTransition
+render(): void {
+  const model = this.#computeFromAttributes();
+  applyMicrovizA11y(this, this.#internals, model);
+  animateTransition(this.#animState, model, (m) => this.#renderFrame(m));
 }
-```
 
-**5c. Add Tier 1 animator tests** with `vi.useFakeTimers()`:
-- Animation cancellation on data change
-- `shouldReduceMotion()` behavior
-- RAF cleanup on unmount
-- Rapid attribute changes mid-animation
-
-#### Phase 6: Element Integration (MEDIUM PRIORITY)
-
-**6a. Apply animation to `MicrovizModel`** — The generic element for arbitrary models
-
-**6b. Apply animation to high-value specialized elements:**
-- `sparkline-bars.ts` (bar chart transitions)
-- `bar.ts` (simple bar)
-- `segmented-bar.ts` (segment transitions)
-- `donut.ts` already done
-- `nano-ring.ts` (ring transitions)
-
-**6c. Batch integrate remaining elements** — Use mixin pattern for consistency
-
-#### Phase 7: HTML Renderer CSS Transitions (MEDIUM PRIORITY)
-
-Currently `chart.ts:568` skips JS animation for HTML renderer, assuming CSS handles it.
-But `styles.ts` has no transition rules.
-
-**Add CSS transitions for HTML marks:**
-```css
-.mv-mark {
-  transition:
-    transform var(--mv-motion-duration) var(--mv-motion-easing),
-    opacity var(--mv-motion-duration) var(--mv-motion-easing),
-    width var(--mv-motion-duration) var(--mv-motion-easing),
-    height var(--mv-motion-duration) var(--mv-motion-easing);
+// 5. Extract render logic to #renderFrame
+#renderFrame(model: RenderModel): void {
+  const svg = renderSvgString(model);
+  patchSvgIntoShadowRoot(this.#root, svg);
 }
 ```
 
-#### Phase 8: Polish (LOW PRIORITY)
+### Execution Plan
 
-- Document animation support per element
-- Canvas renderer animation if performance use case emerges
-- React wrapper integration if needed
+| Batch | Elements | Est. Time | Priority |
+|-------|----------|-----------|----------|
+| 1 | Tier 1 (13 high-value) | ~1 hour | HIGH |
+| 2 | Tier 2 (17 medium-value) | ~1.5 hours | MEDIUM |
+| 3 | Tier 3 (32 low-value) | ~2.5 hours | LOW/Optional |
+
+**Batch 1 is the next immediate task.**
