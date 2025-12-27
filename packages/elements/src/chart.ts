@@ -7,7 +7,7 @@ import {
   isChartType,
   type RenderModel,
 } from "@microviz/core";
-import { renderHtmlString, renderSvgString } from "@microviz/renderers";
+import { renderHtmlString } from "@microviz/renderers";
 import { applyMicrovizA11y, getA11yItems, updateA11yFocus } from "./a11y";
 import { parseNumber, parseOptionalNumber } from "./parse";
 import {
@@ -15,6 +15,7 @@ import {
   clearSvgFromShadowRoot,
   patchHtmlIntoShadowRoot,
   patchSvgIntoShadowRoot,
+  renderSvgModelIntoShadowRoot,
 } from "./render";
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
@@ -619,6 +620,12 @@ export class MicrovizChart extends HTMLElement {
     }
     this.#model = model;
 
+    const wantsSkeleton =
+      this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
+    const renderer = this.getAttribute("renderer");
+    const useHtml = renderer === "html" && !wantsSkeleton;
+    const renderMode = useHtml ? "html" : "svg";
+
     // Emit warning event if model has diagnostics (deduplicated)
     const warnings = model.stats?.warnings;
     const warningKey = warnings?.length
@@ -636,9 +643,10 @@ export class MicrovizChart extends HTMLElement {
           },
         }),
       );
-      if (warnings && telemetry.enabled) {
+      if (warnings && telemetry.enabled && useHtml) {
         telemetry.emit({
           phase: "warning",
+          renderer: renderMode,
           specType: spec.type,
           warningCodes: warnings.map((warning) => warning.code),
           warnings,
@@ -650,11 +658,6 @@ export class MicrovizChart extends HTMLElement {
 
     applyMicrovizA11y(this, this.#internals, model);
     this.#setA11yItems(getA11yItems(model));
-    const wantsSkeleton =
-      this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
-    const renderer = this.getAttribute("renderer");
-    const useHtml = renderer === "html" && !wantsSkeleton;
-    const renderMode = useHtml ? "html" : "svg";
 
     // Cancel any in-flight animation
     this.#cancelAnimation?.();
@@ -695,6 +698,7 @@ export class MicrovizChart extends HTMLElement {
             wantsSkeleton,
             size,
             telemetry,
+            spec?.type,
           );
           this.#maybeReemitHit();
         },
@@ -726,7 +730,14 @@ export class MicrovizChart extends HTMLElement {
         }
       };
     } else {
-      this.#renderFrame(model, useHtml, wantsSkeleton, size, telemetry);
+      this.#renderFrame(
+        model,
+        useHtml,
+        wantsSkeleton,
+        size,
+        telemetry,
+        spec?.type,
+      );
       this.#previousModel = model;
       this.#maybeReemitHit();
     }
@@ -738,6 +749,7 @@ export class MicrovizChart extends HTMLElement {
     wantsSkeleton: boolean,
     size: Size,
     telemetry: TelemetryHandle = createTelemetry(this),
+    specType?: string,
   ): void {
     this.#renderModel = wantsSkeleton ? null : model;
     if (useHtml) {
@@ -770,10 +782,9 @@ export class MicrovizChart extends HTMLElement {
       clearSvgFromShadowRoot(this.#root);
       patchHtmlIntoShadowRoot(this.#root, html);
     } else {
-      let svg: string;
       if (wantsSkeleton) {
         const renderStart = telemetry.enabled ? performance.now() : 0;
-        svg = renderSkeletonSvg(size);
+        const svg = renderSkeletonSvg(size);
         if (telemetry.enabled) {
           telemetry.emit({
             bytes: svg.length,
@@ -784,32 +795,16 @@ export class MicrovizChart extends HTMLElement {
             size,
           });
         }
-      } else if (telemetry.enabled) {
-        const renderStart = performance.now();
-        try {
-          svg = renderSvgString(model);
-        } catch (error) {
-          telemetry.emit({
-            error: toTelemetryError(error),
-            phase: "error",
-            reason: "render-svg",
-            renderer: "svg",
-          });
-          throw error;
-        }
-        telemetry.emit({
-          bytes: svg.length,
-          durationMs: performance.now() - renderStart,
-          phase: "render",
-          renderer: "svg",
-          size,
-          stats: modelTelemetryStats(model) ?? undefined,
-        });
-      } else {
-        svg = renderSvgString(model);
+        clearHtmlFromShadowRoot(this.#root);
+        patchSvgIntoShadowRoot(this.#root, svg);
+        return;
       }
       clearHtmlFromShadowRoot(this.#root);
-      patchSvgIntoShadowRoot(this.#root, svg);
+      renderSvgModelIntoShadowRoot(this.#root, model, {
+        patch: true,
+        specType,
+        telemetry,
+      });
     }
   }
 }
