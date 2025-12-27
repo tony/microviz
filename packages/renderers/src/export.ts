@@ -1,3 +1,8 @@
+import type { RenderModel } from "@microviz/core";
+import type { Canvas2DContext, RenderCanvasOptions } from "./canvas";
+import { renderCanvas } from "./canvas";
+import { renderSvgString } from "./svg";
+
 export type CanvasExportSurface = HTMLCanvasElement | OffscreenCanvas;
 
 export type CanvasToBlobOptions = {
@@ -25,6 +30,50 @@ export function svgStringToBlob(
  */
 export function svgStringToDataUrl(svg: string): string {
   return `data:${DEFAULT_SVG_MIME},${encodeURIComponent(svg)}`;
+}
+
+export type RenderModelToSvgOptions = {
+  renderOptions?: { title?: string };
+  type?: string;
+};
+
+export type RenderModelToPngOptions = {
+  canvas: CanvasExportSurface;
+  context?: Canvas2DContext | null;
+  renderOptions?: RenderCanvasOptions;
+  type?: string;
+  quality?: number;
+};
+
+export function renderModelToSvgBlob(
+  model: RenderModel,
+  options?: RenderModelToSvgOptions,
+): Blob {
+  const svg = renderSvgString(model, options?.renderOptions);
+  return svgStringToBlob(svg, { type: options?.type });
+}
+
+export function renderModelToSvgDataUrl(
+  model: RenderModel,
+  options?: { renderOptions?: { title?: string } },
+): string {
+  const svg = renderSvgString(model, options?.renderOptions);
+  return svgStringToDataUrl(svg);
+}
+
+export async function renderModelToPngBlob(
+  model: RenderModel,
+  options: RenderModelToPngOptions,
+): Promise<Blob> {
+  const ctx = options.context ?? options.canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas 2D context not available.");
+  }
+  renderCanvas(ctx as Canvas2DContext, model, options.renderOptions);
+  return await canvasToBlob(options.canvas, {
+    quality: options.quality,
+    type: options.type,
+  });
 }
 
 /**
