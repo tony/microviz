@@ -894,6 +894,7 @@ export const MicrovizPlayground: FC<{
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+  const [rerollKey, setRerollKey] = useState(0);
   const [useDrawerLayout, setUseDrawerLayout] = useState(() => {
     if (typeof window === "undefined") return false;
     const hoverMedia = window.matchMedia("(hover: none)");
@@ -2815,6 +2816,21 @@ export const MicrovizPlayground: FC<{
                   value={chartSubtype}
                   variant="muted"
                 />
+                <button
+                  className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1.5 text-sm font-bold text-white shadow-md transition-all hover:from-indigo-600 hover:to-purple-600 hover:shadow-lg active:scale-95 dark:from-indigo-400 dark:to-purple-400 dark:shadow-indigo-500/20 animate-[bounce-pop_0.3s_ease-out]"
+                  key={rerollKey}
+                  onClick={() => {
+                    randomizeSeed();
+                    setRerollKey((k) => k + 1);
+                  }}
+                  title="Randomize seed"
+                  type="button"
+                >
+                  <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
+                    🎲
+                  </span>
+                  Reroll
+                </button>
               </div>
             )}
             {!useDrawerLayout && (
