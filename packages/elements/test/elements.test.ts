@@ -197,6 +197,25 @@ describe("@microviz/elements", () => {
     }
   });
 
+  it("emits telemetry events when telemetry is enabled", () => {
+    const el = document.createElement("microviz-chart");
+    const events: Array<{ phase?: string }> = [];
+    el.addEventListener("microviz-telemetry", (event) => {
+      events.push((event as CustomEvent).detail);
+    });
+
+    el.setAttribute("telemetry", "basic");
+    el.setAttribute("width", "80");
+    el.setAttribute("height", "12");
+    el.setAttribute("spec", JSON.stringify({ type: "sparkline" }));
+    el.setAttribute("data", JSON.stringify([2, 4, 6]));
+    document.body.append(el);
+
+    const phases = new Set(events.map((detail) => detail.phase));
+    expect(phases.has("compute")).toBe(true);
+    expect(phases.has("dom")).toBe(true);
+  });
+
   it("applies a11y summary descriptions", () => {
     const el = document.createElement("microviz-model") as HTMLElement & {
       model: RenderModel | null;

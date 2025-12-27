@@ -14,6 +14,7 @@ import { animate, shouldReduceMotion } from "./animator";
 export type AnimationState = {
   previousModel: RenderModel | null;
   cancelAnimation: (() => void) | null;
+  onCancel: (() => void) | null;
 };
 
 /**
@@ -23,6 +24,7 @@ export type AnimationState = {
 export function createAnimationState(): AnimationState {
   return {
     cancelAnimation: null,
+    onCancel: null,
     previousModel: null,
   };
 }
@@ -33,6 +35,10 @@ export function createAnimationState(): AnimationState {
 export type AnimateTransitionOptions = {
   /** Skip animation even if conditions allow it (e.g., skeleton mode) */
   skipAnimation?: boolean;
+  onStart?: () => void;
+  onFrame?: (info: { frameCount: number }) => void;
+  onComplete?: (info: { frameCount: number }) => void;
+  onCancel?: (info: { frameCount: number }) => void;
 };
 
 /**
@@ -78,6 +84,7 @@ export function animateTransition(
   // Cancel any in-flight animation
   state.cancelAnimation?.();
   state.cancelAnimation = null;
+  state.onCancel = null;
 
   // Determine if we should animate
   const canAnimate =
@@ -86,15 +93,32 @@ export function animateTransition(
     !shouldReduceMotion();
 
   if (canAnimate && state.previousModel) {
-    state.cancelAnimation = animate(
+    let frameCount = 0;
+    options.onStart?.();
+    const cancel = animate(
       state.previousModel,
       nextModel,
-      renderFrame,
+      (model) => {
+        frameCount += 1;
+        renderFrame(model);
+        options.onFrame?.({ frameCount });
+      },
       () => {
         state.previousModel = nextModel;
         state.cancelAnimation = null;
+        state.onCancel = null;
+        options.onComplete?.({ frameCount });
       },
     );
+    state.onCancel = options.onCancel
+      ? () => options.onCancel?.({ frameCount })
+      : null;
+    state.cancelAnimation = () => {
+      cancel();
+      state.onCancel?.();
+      state.onCancel = null;
+      state.cancelAnimation = null;
+    };
   } else {
     renderFrame(nextModel);
     state.previousModel = nextModel;
@@ -108,4 +132,5 @@ export function animateTransition(
 export function cleanupAnimation(state: AnimationState): void {
   state.cancelAnimation?.();
   state.cancelAnimation = null;
+  state.onCancel = null;
 }

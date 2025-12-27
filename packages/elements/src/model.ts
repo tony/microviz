@@ -12,6 +12,12 @@ import {
 import { renderSkeletonSvg, shouldRenderSkeleton } from "./skeleton";
 import { applyMicrovizStyles } from "./styles";
 import {
+  createTelemetry,
+  modelTelemetryStats,
+  type TelemetryHandle,
+  toTelemetryError,
+} from "./telemetry";
+import {
   type AnimationState,
   animateTransition,
   cleanupAnimation,
@@ -151,6 +157,11 @@ export class MicrovizModel extends HTMLElement {
         detail: { index: this.#focusIndex, item },
       }),
     );
+    createTelemetry(this).emit({
+      action: "focus",
+      focus: { id: item.id, index: this.#focusIndex, label: item.label },
+      phase: "interaction",
+    });
   }
 
   #onKeyDown = (event: KeyboardEvent): void => {
@@ -267,6 +278,14 @@ export class MicrovizModel extends HTMLElement {
         },
       }),
     );
+    createTelemetry(this).emit({
+      action: "hit",
+      client: this.#lastPointerClient,
+      hit: hit ? { markId: hit.markId, markType: hit.markType } : undefined,
+      phase: "interaction",
+      point,
+      reason: hit ? undefined : "miss",
+    });
   }
 
   #onPointerMove = (event: PointerEvent): void => {
@@ -288,6 +307,14 @@ export class MicrovizModel extends HTMLElement {
         detail: { client, hit, point },
       }),
     );
+    createTelemetry(this).emit({
+      action: "hit",
+      client,
+      hit: hit ? { markId: hit.markId, markType: hit.markType } : undefined,
+      phase: "interaction",
+      point,
+      reason: hit ? undefined : "miss",
+    });
   };
 
   #onPointerLeave = (event: PointerEvent): void => {
@@ -301,9 +328,16 @@ export class MicrovizModel extends HTMLElement {
         detail: { client: { x: event.clientX, y: event.clientY }, hit: null },
       }),
     );
+    createTelemetry(this).emit({
+      action: "leave",
+      client: { x: event.clientX, y: event.clientY },
+      phase: "interaction",
+      reason: "pointer-leave",
+    });
   };
 
   render(): void {
+    const telemetry = createTelemetry(this);
     if (!this.#model) {
       cleanupAnimation(this.#animState);
       applyMicrovizA11y(this, this.#internals, null);
@@ -321,6 +355,13 @@ export class MicrovizModel extends HTMLElement {
             detail: { hit: null },
           }),
         );
+      }
+      if (telemetry.enabled) {
+        telemetry.emit({
+          operation: "clear",
+          phase: "render",
+          reason: "missing-model",
+        });
       }
       return;
     }
@@ -344,6 +385,13 @@ export class MicrovizModel extends HTMLElement {
           },
         }),
       );
+      if (warnings && telemetry.enabled) {
+        telemetry.emit({
+          phase: "warning",
+          warningCodes: warnings.map((warning) => warning.code),
+          warnings,
+        });
+      }
     } else if (!warningKey) {
       this.#lastWarningKey = null;
     }
@@ -355,6 +403,7 @@ export class MicrovizModel extends HTMLElement {
       this.hasAttribute("skeleton") && shouldRenderSkeleton(model);
     const renderer = this.getAttribute("renderer");
     const useHtml = renderer === "html" && !wantsSkeleton;
+    const renderMode = useHtml ? "html" : "svg";
 
     // Skip animation when transitioning to/from skeleton (incompatible mark structures)
     const skeletonStateChanged = wantsSkeleton !== this.#wasSkeletonRender;
@@ -368,14 +417,60 @@ export class MicrovizModel extends HTMLElement {
     if (skipAnimation || isFirstRender) {
       // No animation: render directly with full replacement
       cleanupAnimation(this.#animState);
-      this.#renderFrame(model, useHtml, wantsSkeleton, false);
+      this.#renderFrame(model, useHtml, wantsSkeleton, false, telemetry);
       this.#animState.previousModel = model;
     } else {
       // Animate with patching for smooth transitions
-      animateTransition(this.#animState, model, (interpolated) => {
-        this.#renderFrame(interpolated, useHtml, wantsSkeleton, true);
-        this.#maybeReemitHit();
-      });
+      const animationStart = telemetry.enabled ? performance.now() : 0;
+      let frameCount = 0;
+      const emitFrames = telemetry.enabled && telemetry.level === "verbose";
+      animateTransition(
+        this.#animState,
+        model,
+        (interpolated) => {
+          frameCount += 1;
+          if (emitFrames) {
+            telemetry.emit({
+              frame: frameCount,
+              phase: "animation",
+              reason: "frame",
+              renderer: renderMode,
+            });
+          }
+          this.#renderFrame(
+            interpolated,
+            useHtml,
+            wantsSkeleton,
+            true,
+            telemetry,
+          );
+          this.#maybeReemitHit();
+        },
+        {
+          onCancel: () => {
+            if (telemetry.enabled) {
+              telemetry.emit({
+                cancelled: true,
+                durationMs: performance.now() - animationStart,
+                frameCount,
+                phase: "animation",
+                reason: "interrupt",
+                renderer: renderMode,
+              });
+            }
+          },
+          onComplete: () => {
+            if (telemetry.enabled) {
+              telemetry.emit({
+                durationMs: performance.now() - animationStart,
+                frameCount,
+                phase: "animation",
+                renderer: renderMode,
+              });
+            }
+          },
+        },
+      );
     }
 
     this.#wasSkeletonRender = wantsSkeleton;
@@ -387,16 +482,77 @@ export class MicrovizModel extends HTMLElement {
     useHtml: boolean,
     wantsSkeleton: boolean,
     usePatch: boolean,
+    telemetry: TelemetryHandle = createTelemetry(this),
   ): void {
     this.#renderModel = wantsSkeleton ? null : model;
     if (useHtml) {
-      const html = renderHtmlString(model);
+      let html: string;
+      if (telemetry.enabled) {
+        const renderStart = performance.now();
+        try {
+          html = renderHtmlString(model);
+        } catch (error) {
+          telemetry.emit({
+            error: toTelemetryError(error),
+            phase: "error",
+            reason: "render-html",
+            renderer: "html",
+          });
+          throw error;
+        }
+        telemetry.emit({
+          bytes: html.length,
+          durationMs: performance.now() - renderStart,
+          phase: "render",
+          reason: wantsSkeleton ? "skeleton" : undefined,
+          renderer: "html",
+          size: { height: model.height, width: model.width },
+          stats: modelTelemetryStats(model) ?? undefined,
+        });
+      } else {
+        html = renderHtmlString(model);
+      }
       clearSvgFromShadowRoot(this.#root);
       renderHtmlIntoShadowRoot(this.#root, html);
     } else {
-      const svg = wantsSkeleton
-        ? renderSkeletonSvg({ height: model.height, width: model.width })
-        : renderSvgString(model);
+      let svg: string;
+      if (wantsSkeleton) {
+        const renderStart = telemetry.enabled ? performance.now() : 0;
+        svg = renderSkeletonSvg({ height: model.height, width: model.width });
+        if (telemetry.enabled) {
+          telemetry.emit({
+            bytes: svg.length,
+            durationMs: performance.now() - renderStart,
+            phase: "render",
+            reason: "skeleton",
+            renderer: "svg",
+            size: { height: model.height, width: model.width },
+          });
+        }
+      } else if (telemetry.enabled) {
+        const renderStart = performance.now();
+        try {
+          svg = renderSvgString(model);
+        } catch (error) {
+          telemetry.emit({
+            error: toTelemetryError(error),
+            phase: "error",
+            reason: "render-svg",
+            renderer: "svg",
+          });
+          throw error;
+        }
+        telemetry.emit({
+          bytes: svg.length,
+          durationMs: performance.now() - renderStart,
+          phase: "render",
+          renderer: "svg",
+          size: { height: model.height, width: model.width },
+          stats: modelTelemetryStats(model) ?? undefined,
+        });
+      } else {
+        svg = renderSvgString(model);
+      }
       clearHtmlFromShadowRoot(this.#root);
       if (usePatch) {
         patchSvgIntoShadowRoot(this.#root, svg);
