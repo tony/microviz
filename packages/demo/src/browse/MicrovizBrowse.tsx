@@ -44,6 +44,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { CodeEditor } from "../cdn-playground/CodeEditor";
 import { buildPaletteColors } from "../demoPalette";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import { RerollButton } from "../ui/RerollButton";
@@ -272,6 +273,123 @@ function extractUrlRefId(value: string | undefined): string | null {
 function resolveDefId(value: string | undefined): string | null {
   if (!value) return null;
   return extractUrlRefId(value) ?? value;
+}
+
+function toInlineJson(value: unknown): string {
+  return JSON.stringify(value);
+}
+
+function toPrettyJson(value: unknown): string {
+  return JSON.stringify(value, null, 2);
+}
+
+function buildSnippet(params: {
+  wrapper: Wrapper;
+  renderer: Renderer;
+  input: ComputeModelInput | undefined;
+}): { code: string; language: "html" | "javascript" } {
+  const { input, renderer, wrapper } = params;
+  if (!input) {
+    return {
+      code: "// Select a chart to preview its snippet.",
+      language: "javascript",
+    };
+  }
+
+  const inputJson = toPrettyJson(input);
+  const dataAttr = toInlineJson(input.data);
+  const specAttr = toInlineJson(input.spec);
+  const width = input.size?.width ?? 200;
+  const height = input.size?.height ?? 32;
+
+  if (wrapper === "elements") {
+    const rendererLine =
+      renderer === "html" || renderer === "html-svg"
+        ? '\n  renderer="html"'
+        : "";
+
+    return {
+      code: `<script type="module">
+  import "@microviz/elements";
+</script>
+
+<microviz-chart
+  style="width: ${width}px; height: ${height}px"
+  spec='${specAttr}'
+  data='${dataAttr}'${rendererLine}
+></microviz-chart>`,
+      language: "html",
+    };
+  }
+
+  if (wrapper === "react") {
+    const reactRenderer =
+      renderer === "canvas"
+        ? "canvas"
+        : renderer === "svg-string"
+          ? "svg-string"
+          : "svg";
+    const rendererProp =
+      reactRenderer === "svg" ? "" : ` renderer="${reactRenderer}"`;
+
+    return {
+      code: `import { MicrovizChart } from "@microviz/react";
+
+const input = ${inputJson};
+
+export function Example() {
+  return <MicrovizChart input={input}${rendererProp} />;
+}`,
+      language: "javascript",
+    };
+  }
+
+  if (renderer === "canvas") {
+    return {
+      code: `import { computeModel } from "@microviz/core";
+import { renderCanvas } from "@microviz/renderers";
+
+const input = ${inputJson};
+const model = computeModel(input);
+
+const canvas = document.querySelector("#chart");
+const ctx = canvas?.getContext("2d");
+if (ctx) {
+  canvas.width = model.width;
+  canvas.height = model.height;
+  renderCanvas(ctx, model, {});
+}`,
+      language: "javascript",
+    };
+  }
+
+  if (renderer === "html" || renderer === "html-svg") {
+    return {
+      code: `import { computeModel } from "@microviz/core";
+import { renderHtmlString } from "@microviz/renderers";
+
+const input = ${inputJson};
+const model = computeModel(input);
+const html = renderHtmlString(model);
+
+document.querySelector("#chart")?.replaceChildren();
+document.querySelector("#chart")?.insertAdjacentHTML("beforeend", html);`,
+      language: "javascript",
+    };
+  }
+
+  return {
+    code: `import { computeModel } from "@microviz/core";
+import { renderSvgString } from "@microviz/renderers";
+
+const input = ${inputJson};
+const model = computeModel(input);
+const svg = renderSvgString(model);
+
+document.querySelector("#chart")?.replaceChildren();
+document.querySelector("#chart")?.insertAdjacentHTML("beforeend", svg);`,
+    language: "javascript",
+  };
 }
 
 function isHtmlSafeMark(mark: Mark, defsById: Map<string, Def>): boolean {
@@ -2056,6 +2174,7 @@ export const MicrovizBrowse: FC<{
   const inspectorTabOptions = [
     "diagnostics",
     "model",
+    "code",
     "data",
     "a11y",
     "export",
@@ -2063,6 +2182,7 @@ export const MicrovizBrowse: FC<{
   type InspectorTab = (typeof inspectorTabOptions)[number];
   const inspectorTabLabels: Record<InspectorTab, string> = {
     a11y: "A11y",
+    code: "Code",
     data: "Data",
     diagnostics: "Diagnostics",
     export: "Export",
@@ -2070,6 +2190,7 @@ export const MicrovizBrowse: FC<{
   };
   const inspectorTabTitles: Record<InspectorTab, string> = {
     a11y: "Accessibility",
+    code: "Usage snippet",
     data: "Inputs",
     diagnostics: "Warnings",
     export: "Export assets",
@@ -2080,6 +2201,8 @@ export const MicrovizBrowse: FC<{
   const a11yCopyTimeoutRef = useRef<number | null>(null);
   const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
   const diagnosticsCopyTimeoutRef = useRef<number | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const codeCopyTimeoutRef = useRef<number | null>(null);
   const [exportingPng, setExportingPng] = useState(false);
   const [copyingPng, setCopyingPng] = useState(false);
   const selectedModel = getEffectiveModel(selectedChart);
@@ -2342,6 +2465,15 @@ export const MicrovizBrowse: FC<{
   }, [renderer, selectedModel]);
 
   const selectedInput = inputs[selectedChart];
+  const codeSnippet = useMemo(
+    () =>
+      buildSnippet({
+        input: selectedInput,
+        renderer,
+        wrapper,
+      }),
+    [renderer, selectedInput, wrapper],
+  );
 
   useEffect(() => {
     return () => {
@@ -2350,6 +2482,9 @@ export const MicrovizBrowse: FC<{
       }
       if (diagnosticsCopyTimeoutRef.current !== null) {
         window.clearTimeout(diagnosticsCopyTimeoutRef.current);
+      }
+      if (codeCopyTimeoutRef.current !== null) {
+        window.clearTimeout(codeCopyTimeoutRef.current);
       }
       if (exportNoticeTimeoutRef.current !== null) {
         window.clearTimeout(exportNoticeTimeoutRef.current);
@@ -2470,6 +2605,37 @@ export const MicrovizBrowse: FC<{
     selectedWarningSummary,
     selectedWarnings,
   ]);
+
+  const handleCopyCode = useCallback(() => {
+    const payload = codeSnippet.code;
+    const finish = () => {
+      setCodeCopied(true);
+      if (codeCopyTimeoutRef.current !== null) {
+        window.clearTimeout(codeCopyTimeoutRef.current);
+      }
+      codeCopyTimeoutRef.current = window.setTimeout(() => {
+        setCodeCopied(false);
+      }, 1200);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(payload).then(finish).catch(finish);
+      return;
+    }
+
+    if (typeof document === "undefined") return;
+    const textarea = document.createElement("textarea");
+    textarea.value = payload;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    finish();
+  }, [codeSnippet.code]);
   const mobileDrawerOpen =
     useDrawerLayout && (mobileSidebarOpen || mobileInspectorOpen);
 
@@ -3343,6 +3509,38 @@ export const MicrovizBrowse: FC<{
                       ))}
                     </ul>
                   )}
+                </div>
+              </div>
+            )}
+
+            {inspectorTab === "code" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>Snippet</span>
+                  <button
+                    className={tabButton({
+                      active: false,
+                      size: "xs",
+                      variant: "muted",
+                    })}
+                    onClick={handleCopyCode}
+                    type="button"
+                  >
+                    {codeCopied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <div className="h-64 overflow-hidden rounded border border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/40">
+                  <CodeEditor
+                    className="h-full"
+                    language={codeSnippet.language}
+                    onChange={() => {}}
+                    readOnly
+                    theme="dark"
+                    value={codeSnippet.code}
+                  />
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {wrapper} · {renderer}
                 </div>
               </div>
             )}
