@@ -18,11 +18,11 @@ permissions:
 
 jobs:
   publish:
-    # Block forks and require maintainer/member status for PRs
+    # Block forks and require owner for PRs
     if: |
       github.event_name != 'pull_request' || (
         github.event.pull_request.head.repo.full_name == github.repository &&
-        contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+        github.event.pull_request.author_association == 'OWNER'
       )
     runs-on: ubuntu-latest
     environment: cdn-preview
