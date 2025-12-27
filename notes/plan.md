@@ -602,7 +602,7 @@ Smooth animated transitions when chart data changes, across all three renderers 
 
 ```css
 /* packages/themes/base.css */
---mv-motion-duration: 160ms;
+--mv-motion-duration: 300ms;
 --mv-motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 
 @media (prefers-reduced-motion: reduce) {
@@ -622,7 +622,7 @@ Smooth animated transitions when chart data changes, across all three renderers 
 - Tier 1 tests: 13 animator tests in `packages/elements/test/animator.test.ts`
 - CSS fallback colors fixed (Shadow DOM compatibility)
 - HTML renderer CSS transitions added (`.mv-html-mark`)
- - SVG patching utility + render helper for consistent transitions
+- SVG patching utility + render helper for consistent transitions
 
 **Current Coverage: 67 of 67 elements have animation support**
 
@@ -669,7 +669,7 @@ render(): void {
 }
 ```
 
-### Execution Plan
+### Execution Plan (Completed Reference)
 
 | Batch | Elements | Est. Time | Priority |
 |-------|----------|-----------|----------|
@@ -677,4 +677,4 @@ render(): void {
 | 2 | Tier 2 (17 medium-value) | ~1.5 hours | MEDIUM |
 | 3 | Tier 3 (32 low-value) | ~2.5 hours | LOW/Optional |
 
-**Batch 1 is the next immediate task.**
+All batches above are completed; this table is retained for historical context.
