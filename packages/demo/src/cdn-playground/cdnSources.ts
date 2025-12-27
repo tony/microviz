@@ -4,6 +4,7 @@
  */
 
 export type CdnSourceType =
+  | "cdn-dev"
   | "local"
   | "jsdelivr"
   | "unpkg"
@@ -11,6 +12,7 @@ export type CdnSourceType =
   | "custom";
 
 export type CdnSource =
+  | { type: "cdn-dev" }
   | { type: "local" }
   | { type: "jsdelivr" }
   | { type: "unpkg" }
@@ -18,6 +20,7 @@ export type CdnSource =
   | { type: "custom"; url: string };
 
 export const CDN_SOURCE_LABELS: Record<CdnSourceType, string> = {
+  "cdn-dev": "cdn-dev.microviz.org",
   custom: "Custom URL",
   "esm-sh": "esm.sh",
   jsdelivr: "jsDelivr",
@@ -26,6 +29,7 @@ export const CDN_SOURCE_LABELS: Record<CdnSourceType, string> = {
 };
 
 export const CDN_SOURCE_DESCRIPTIONS: Record<CdnSourceType, string> = {
+  "cdn-dev": "Preview CDN (canary/next/latest)",
   custom: "Enter a custom URL",
   "esm-sh": "esm.sh (on-demand ESM)",
   jsdelivr: "cdn.jsdelivr.net (popular, fast)",
@@ -38,6 +42,8 @@ export const CDN_SOURCE_DESCRIPTIONS: Record<CdnSourceType, string> = {
  */
 export function getCdnUrl(source: CdnSource): string {
   switch (source.type) {
+    case "cdn-dev":
+      return "https://cdn-dev.microviz.org/canary/next/latest/@microviz/elements/cdn/microviz.js";
     case "local":
       return "/cdn/microviz.js";
     case "jsdelivr":
@@ -59,6 +65,7 @@ export function parseCdnSource(value: string): CdnSource {
     return { type: "custom", url: value.slice(7) };
   }
   if (
+    value === "cdn-dev" ||
     value === "local" ||
     value === "jsdelivr" ||
     value === "unpkg" ||
@@ -79,4 +86,4 @@ export function serializeCdnSource(source: CdnSource): string {
   return source.type;
 }
 
-export const DEFAULT_CDN_SOURCE: CdnSource = { type: "local" };
+export const DEFAULT_CDN_SOURCE: CdnSource = { type: "cdn-dev" };
