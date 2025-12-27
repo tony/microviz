@@ -38,7 +38,11 @@ function RootComponent() {
     select: (state) => state.location.pathname,
   });
 
-  const showGallery = pathname.startsWith("/gallery");
+  const currentTab = pathname.startsWith("/gallery")
+    ? "gallery"
+    : pathname.startsWith("/playground")
+      ? "playground"
+      : "browse";
 
   const [colorSchemePreference, setColorSchemePreference] =
     useState<ColorSchemePreference>(() => readColorSchemePreference());
@@ -113,14 +117,22 @@ function RootComponent() {
           <TabToggle
             label="Navigation"
             onChange={(v) =>
-              navigate({ to: v === "gallery" ? "/gallery" : "/" })
+              navigate({
+                to:
+                  v === "gallery"
+                    ? "/gallery"
+                    : v === "playground"
+                      ? "/playground"
+                      : "/",
+              })
             }
             options={[
+              { id: "browse", label: "Browse" },
               { id: "playground", label: "Playground" },
               { id: "gallery", label: "Gallery" },
             ]}
             size="sm"
-            value={showGallery ? "gallery" : "playground"}
+            value={currentTab}
           />
         </div>
 
