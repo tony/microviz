@@ -2557,12 +2557,18 @@ export const MicrovizPlayground: FC<{
                         value={seed}
                       />
                       <button
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                        onClick={() => randomizeSeed()}
-                        title="Random seed"
+                        className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm transition-all hover:from-indigo-600 hover:to-purple-600 active:scale-95 dark:from-indigo-400 dark:to-purple-400 animate-[bounce-pop_0.3s_ease-out]"
+                        key={rerollKey}
+                        onClick={() => {
+                          randomizeSeed();
+                          setRerollKey((k) => k + 1);
+                        }}
+                        title="Randomize seed"
                         type="button"
                       >
-                        Random
+                        <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
+                          🎲
+                        </span>
                       </button>
                     </div>
                   </label>
