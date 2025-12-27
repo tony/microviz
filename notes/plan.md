@@ -610,9 +610,9 @@ Smooth animated transitions when chart data changes, across all three renderers 
 }
 ```
 
-### Implementation Status (2025-12-26)
+### Implementation Status (2025-12-27)
 
-**✅ Phase 1-5 Complete:**
+**✅ Phase 1-6 Complete:**
 - Core interpolation module with easing, lerp, mark/model interpolation
 - Path morphing for SVG path command interpolation
 - Elements animator with RAF loop (300ms duration, easeOut)
@@ -622,72 +622,16 @@ Smooth animated transitions when chart data changes, across all three renderers 
 - Tier 1 tests: 13 animator tests in `packages/elements/test/animator.test.ts`
 - CSS fallback colors fixed (Shadow DOM compatibility)
 - HTML renderer CSS transitions added (`.mv-html-mark`)
+ - SVG patching utility + render helper for consistent transitions
 
-**Current Coverage: 5 of 67 elements have animation support**
+**Current Coverage: 67 of 67 elements have animation support**
 
-| Element | Animation | Notes |
-|---------|-----------|-------|
-| `chart.ts` | ✅ | Generic `<microviz-chart>` with full animation |
-| `donut.ts` | ✅ | Arc path morphing works |
-| `sparkline.ts` | ✅ | Line path morphing works |
-| `sparkline-bars.ts` | ✅ | Bar height transitions |
-| `model.ts` | ✅ | Generic `<microviz-model>` renderer |
-| 62 other elements | ❌ | Direct render, no animation |
+- All elements now use the animation mixin and patch rendering for smooth transitions.
+- `chart.ts` and `model.ts` continue to handle renderer-specific concerns (SVG/HTML).
 
-### Phase 6: Remaining Element Animation (NEXT UP)
+### Phase 6: Remaining Element Animation (COMPLETE)
 
-**62 elements need animation integration.** Pattern is established—mechanical work using existing mixin.
-
-#### Tier 1: High-Value (13 elements)
-Charts that commonly update with new data and benefit most from smooth transitions:
-
-```
-bar.ts              - bar height changes
-segmented-bar.ts    - segment width changes
-stacked-bar.ts      - segment proportions
-progress-pills.ts   - fill changes
-histogram.ts        - bin heights
-heatgrid.ts         - opacity/color
-equalizer.ts        - bar heights
-waveform.ts         - bar heights
-nano-ring.ts        - arc length
-segmented-ring.ts   - segment arcs
-bullet-gauge.ts     - marker position
-bullet-delta.ts     - arrow/dot position
-dumbbell.ts         - endpoint positions
-```
-
-#### Tier 2: Medium-Value (17 elements)
-Update less frequently but animation improves perceived quality:
-
-```
-range-band.ts              spark-area.ts
-step-line.ts               dot-matrix.ts
-pixel-grid.ts              barcode.ts
-pareto.ts                  lollipop.ts
-skyline.ts                 cascade-steps.ts
-ranked-lanes.ts            concentric-arcs.ts
-concentric-arcs-horiz.ts   radial-bars.ts
-orbital-dots.ts            two-tier.ts
-split-pareto.ts
-```
-
-#### Tier 3: Low-Value (32 elements)
-Mostly static patterns where animation adds minimal value:
-
-```
-bitfield.ts         gradient-fade.ts     stripe-density.ts
-perforated.ts       masked-wave.ts       pattern-tiles.ts
-code-minimap.ts     mosaic.ts            pixel-treemap.ts
-pixel-pill.ts       pixel-column.ts      chevron.ts
-pipeline.ts         tapered.ts           interlocking.ts
-dna-helix.ts        matryoshka.ts        layered-waves.ts
-hand-of-cards.ts    shadow-depth.ts      stepped-area.ts
-faded-pyramid.ts    variable-ribbon.ts   split-ribbon.ts
-micro-heatline.ts   vertical-stack.ts    radial-burst.ts
-stacked-chips.ts    segmented-pill.ts    shape-row.ts
-dot-row.ts          dot-cascade.ts
-```
+All remaining elements were migrated to the shared animation mixin. No gaps remain.
 
 ### Implementation Pattern
 

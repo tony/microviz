@@ -150,7 +150,7 @@ el?.addEventListener("microviz-telemetry", (event) => {
 
 Telemetry levels:
 
-- `telemetry` / `telemetry="basic"`: compute + render + DOM patch summaries
+- `telemetry` / `telemetry="basic"`: render + DOM patch summaries (compute timing for chart/model), plus warnings when present
 - `telemetry="verbose"`: includes per-frame animation events
 
 You can also enable telemetry globally:
