@@ -52,6 +52,7 @@ import {
   patchSvgIntoShadowRoot,
   renderHtmlIntoShadowRoot,
   renderSvgIntoShadowRoot,
+  renderSvgModelIntoShadowRoot,
 } from "./render";
 import { MicrovizSegmentedBar } from "./segmented-bar";
 import { MicrovizSegmentedPill } from "./segmented-pill";
@@ -83,6 +84,7 @@ export type {
   MicrovizWarningDetail,
   MicrovizWarningEvent,
 } from "./events";
+export type { RenderSvgModelOptions } from "./render";
 
 export {
   MicrovizBar,
@@ -439,6 +441,7 @@ export {
   patchHtmlIntoShadowRoot,
   patchSvgIntoShadowRoot,
   renderHtmlIntoShadowRoot,
+  renderSvgModelIntoShadowRoot,
   renderSvgIntoShadowRoot,
 };
 
