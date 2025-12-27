@@ -1064,6 +1064,7 @@ export const MicrovizBrowse: FC<{
     () => initialUrlState.paletteMode,
   );
   const [seed, setSeed] = useState(() => initialUrlState.seed);
+  const seedInputId = useId();
   const [seriesLength, setSeriesLength] = useState(
     () => initialUrlState.seriesLength,
   );
@@ -2769,20 +2770,24 @@ export const MicrovizBrowse: FC<{
                     </select>
                   </label>
 
-                  <label className="block text-sm">
-                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="block text-sm">
+                    <label
+                      className="mb-1 block text-xs text-slate-500 dark:text-slate-400"
+                      htmlFor={seedInputId}
+                    >
                       Seed
-                    </div>
+                    </label>
                     <div className="flex gap-2">
                       <input
                         className={inputField({ font: "mono" })}
+                        id={seedInputId}
                         onChange={(e) => setSeed(e.target.value)}
                         title="Seed"
                         value={seed}
                       />
                       <RerollButton onClick={randomizeSeed} />
                     </div>
-                  </label>
+                  </div>
 
                   <FieldRange
                     label="Series length"
