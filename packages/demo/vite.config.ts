@@ -3,9 +3,11 @@ import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { cdnBundlePlugin } from "./vite-plugin-cdn-bundle";
 
 export default defineConfig({
   plugins: [
+    cdnBundlePlugin(),
     TanStackRouterVite({
       autoCodeSplitting: true,
       generatedRouteTree: "./src/routeTree.gen.ts",
