@@ -2,7 +2,7 @@ import { computeModel, type RenderModel } from "@microviz/core";
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseBitfieldSegments, parseNumber } from "./parse";
-import { renderSvgIntoShadowRoot } from "./render";
+import { patchSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 
 export class MicrovizDonut extends HTMLElement {
@@ -49,7 +49,7 @@ export class MicrovizDonut extends HTMLElement {
     const model = this.#modelOverride ?? this.#computeFromAttributes();
     applyMicrovizA11y(this, this.#internals, model);
     const svg = renderSvgString(model);
-    renderSvgIntoShadowRoot(this.#root, svg);
+    patchSvgIntoShadowRoot(this.#root, svg);
   }
 
   #computeFromAttributes(): RenderModel {

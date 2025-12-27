@@ -6,7 +6,7 @@ import {
 import { renderSvgString } from "@microviz/renderers";
 import { applyMicrovizA11y } from "./a11y";
 import { parseNumber, parseNumberArray } from "./parse";
-import { renderSvgIntoShadowRoot } from "./render";
+import { patchSvgIntoShadowRoot } from "./render";
 import { applyMicrovizStyles } from "./styles";
 
 export class MicrovizSparkline extends HTMLElement {
@@ -48,7 +48,7 @@ export class MicrovizSparkline extends HTMLElement {
     if (this.#modelOverride) {
       applyMicrovizA11y(this, this.#internals, this.#modelOverride);
       const svg = renderSvgString(this.#modelOverride);
-      renderSvgIntoShadowRoot(this.#root, svg);
+      patchSvgIntoShadowRoot(this.#root, svg);
       return;
     }
 
@@ -118,6 +118,6 @@ export class MicrovizSparkline extends HTMLElement {
     applyMicrovizA11y(this, this.#internals, model);
 
     const svg = renderSvgString(model);
-    renderSvgIntoShadowRoot(this.#root, svg);
+    patchSvgIntoShadowRoot(this.#root, svg);
   }
 }
