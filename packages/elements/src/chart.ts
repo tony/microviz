@@ -512,6 +512,9 @@ export class MicrovizChart extends HTMLElement {
   render(): void {
     const telemetry = createTelemetry(this);
     const parseWarnings: DiagnosticWarning[] = [];
+    const parseStart = telemetry.enabled ? performance.now() : 0;
+    const rendererAttr = this.getAttribute("renderer");
+    const parseRenderMode = rendererAttr === "html" ? "html" : "svg";
 
     // Parse spec with error tracking
     const { spec, error: specError } = this.#resolveSpecWithError();
@@ -554,24 +557,29 @@ export class MicrovizChart extends HTMLElement {
             composed: true,
             detail: {
               element: this.tagName.toLowerCase(),
+              renderer: parseRenderMode,
+              specType: spec?.type,
               warnings: parseWarnings,
             },
           }),
         );
       }
     }
-    if (telemetry.enabled && parseWarnings.length > 0) {
+    if (telemetry.enabled) {
       telemetry.emit({
+        durationMs: performance.now() - parseStart,
         phase: "parse",
+        renderer: parseRenderMode,
         specType: spec?.type,
-        warningCodes: parseWarnings.map((warning) => warning.code),
-        warnings: parseWarnings,
+        warningCodes:
+          parseWarnings.length > 0
+            ? parseWarnings.map((warning) => warning.code)
+            : undefined,
+        warnings: parseWarnings.length > 0 ? parseWarnings : undefined,
       });
     }
 
     if (!spec || data === null) {
-      const renderer = this.getAttribute("renderer");
-      const renderMode = renderer === "html" ? "html" : "svg";
       // Clear warning key if no parse errors (e.g., missing data attribute)
       if (parseWarnings.length === 0) {
         this.#lastWarningKey = null;
@@ -607,7 +615,7 @@ export class MicrovizChart extends HTMLElement {
           operation: "clear",
           phase: "render",
           reason: "missing-input",
-          renderer: renderMode,
+          renderer: parseRenderMode,
           specType: spec?.type,
         });
       }
@@ -664,9 +672,11 @@ export class MicrovizChart extends HTMLElement {
     const renderMode = useHtml ? "html" : "svg";
 
     // Emit warning event if model has diagnostics (deduplicated)
-    const warnings = model.stats?.warnings;
-    const warningCodes = warnings?.map((warning) => warning.code) ?? [];
-    const rendererWarnings = useHtml ? getHtmlRendererWarnings(model) : null;
+    const warnings = model.stats?.warnings ?? [];
+    const warningCodes = warnings.map((warning) => warning.code);
+    const htmlWarnings =
+      telemetry.enabled || useHtml ? getHtmlRendererWarnings(model) : null;
+    const rendererWarnings = useHtml || telemetry.enabled ? htmlWarnings : null;
     const warningKeyParts: string[] = [];
     if (warningCodes.length > 0) {
       warningKeyParts.push(warningCodes.join(","));
@@ -685,39 +695,47 @@ export class MicrovizChart extends HTMLElement {
       warningKeyParts.length > 0 ? warningKeyParts.join("|") : null;
     if (warningKey && warningKey !== this.#lastWarningKey) {
       this.#lastWarningKey = warningKey;
+      const warningMeta =
+        modelMeta ?? (warningKey ? modelTelemetryMeta(model) : null);
       this.dispatchEvent(
         new CustomEvent("microviz-warning", {
           bubbles: true,
           composed: true,
           detail: {
             element: this.tagName.toLowerCase(),
+            modelHash: warningMeta?.hash,
+            renderer: renderMode,
             rendererWarnings: rendererWarnings ?? undefined,
+            size: warningMeta?.size,
+            specType: spec.type,
+            stats: warningMeta?.stats,
             warnings,
           },
         }),
       );
-      if (telemetry.enabled && useHtml) {
-        if (warnings && warnings.length > 0) {
+      if (telemetry.enabled) {
+        if (warnings.length > 0) {
           telemetry.emit({
             modelHash: modelMeta?.hash,
             phase: "warning",
             renderer: renderMode,
             specType: spec.type,
+            stats: modelMeta?.stats ?? undefined,
             warningCodes,
             warnings,
           });
         }
-        if (rendererWarnings) {
+        if (htmlWarnings) {
           telemetry.emit({
             modelHash: modelMeta?.hash,
             phase: "warning",
             reason: "renderer-unsupported",
-            renderer: renderMode,
+            renderer: "html",
             specType: spec.type,
             stats: modelMeta?.stats ?? undefined,
-            unsupportedDefs: rendererWarnings.unsupportedDefs,
-            unsupportedMarkEffects: rendererWarnings.unsupportedMarkEffects,
-            unsupportedMarkTypes: rendererWarnings.unsupportedMarkTypes,
+            unsupportedDefs: htmlWarnings.unsupportedDefs,
+            unsupportedMarkEffects: htmlWarnings.unsupportedMarkEffects,
+            unsupportedMarkTypes: htmlWarnings.unsupportedMarkTypes,
           });
         }
       }

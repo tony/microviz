@@ -409,9 +409,11 @@ export class MicrovizModel extends HTMLElement {
     const renderMode = useHtml ? "html" : "svg";
 
     // Emit warning event if model has diagnostics (deduplicated)
-    const warnings = model.stats?.warnings;
-    const warningCodes = warnings?.map((warning) => warning.code) ?? [];
-    const rendererWarnings = useHtml ? getHtmlRendererWarnings(model) : null;
+    const warnings = model.stats?.warnings ?? [];
+    const warningCodes = warnings.map((warning) => warning.code);
+    const htmlWarnings =
+      telemetry.enabled || useHtml ? getHtmlRendererWarnings(model) : null;
+    const rendererWarnings = useHtml || telemetry.enabled ? htmlWarnings : null;
     const warningKeyParts: string[] = [];
     if (warningCodes.length > 0) {
       warningKeyParts.push(warningCodes.join(","));
@@ -430,37 +432,44 @@ export class MicrovizModel extends HTMLElement {
       warningKeyParts.length > 0 ? warningKeyParts.join("|") : null;
     if (warningKey && warningKey !== this.#lastWarningKey) {
       this.#lastWarningKey = warningKey;
+      const warningMeta =
+        modelMeta ?? (warningKey ? modelTelemetryMeta(model) : null);
       this.dispatchEvent(
         new CustomEvent("microviz-warning", {
           bubbles: true,
           composed: true,
           detail: {
             element: this.tagName.toLowerCase(),
+            modelHash: warningMeta?.hash,
+            renderer: renderMode,
             rendererWarnings: rendererWarnings ?? undefined,
+            size: warningMeta?.size,
+            stats: warningMeta?.stats,
             warnings,
           },
         }),
       );
-      if (telemetry.enabled && useHtml) {
-        if (warnings && warnings.length > 0) {
+      if (telemetry.enabled) {
+        if (warnings.length > 0) {
           telemetry.emit({
             modelHash: modelMeta?.hash,
             phase: "warning",
             renderer: renderMode,
+            stats: modelMeta?.stats ?? undefined,
             warningCodes,
             warnings,
           });
         }
-        if (rendererWarnings) {
+        if (htmlWarnings) {
           telemetry.emit({
             modelHash: modelMeta?.hash,
             phase: "warning",
             reason: "renderer-unsupported",
-            renderer: renderMode,
+            renderer: "html",
             stats: modelMeta?.stats ?? undefined,
-            unsupportedDefs: rendererWarnings.unsupportedDefs,
-            unsupportedMarkEffects: rendererWarnings.unsupportedMarkEffects,
-            unsupportedMarkTypes: rendererWarnings.unsupportedMarkTypes,
+            unsupportedDefs: htmlWarnings.unsupportedDefs,
+            unsupportedMarkEffects: htmlWarnings.unsupportedMarkEffects,
+            unsupportedMarkTypes: htmlWarnings.unsupportedMarkTypes,
           });
         }
       }
