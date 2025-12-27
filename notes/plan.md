@@ -609,3 +609,90 @@ Smooth animated transitions when chart data changes, across all three renderers 
   --mv-motion-duration: 0ms;
 }
 ```
+
+### Implementation Status (2025-12-25)
+
+**✅ Phase 1-4 Complete:**
+- Core interpolation module with easing, lerp, mark/model interpolation
+- Path morphing for SVG path command interpolation
+- Elements animator with RAF loop
+- Integration into `chart.ts`, `donut.ts`, `sparkline.ts`
+- Tier 0 tests for interpolation (18 tests) and path morphing (22 tests)
+
+**Current Coverage: 3 of 68 elements have animation support**
+
+| Element | Animation | Notes |
+|---------|-----------|-------|
+| `MicrovizChart` | ✅ | Full support via `#previousModel` + `animate()` |
+| `MicrovizDonut` | ✅ | Full support |
+| `MicrovizSparkline` | ✅ | Full support |
+| `MicrovizModel` | ❌ | Generic renderer, no animation |
+| 64 other elements | ❌ | Direct render, no `#previousModel` tracking |
+
+### Next Steps: Full Transition Integration
+
+#### Phase 5: Animation Infrastructure (HIGH PRIORITY)
+
+**5a. Create animation mixin/helper** — Eliminate copy-paste across 65 elements:
+```typescript
+// packages/elements/src/transition/animatable.ts
+export function createAnimationState(): AnimationState;
+export function animateTransition(
+  state: AnimationState,
+  nextModel: RenderModel,
+  renderFrame: (model: RenderModel) => void,
+  options?: { skipAnimation?: boolean }
+): void;
+```
+
+**5b. Add CSS motion variables to styles.ts:**
+```css
+:host {
+  --mv-motion-duration: 160ms;
+  --mv-motion-easing: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :host { --mv-motion-duration: 0ms; }
+}
+```
+
+**5c. Add Tier 1 animator tests** with `vi.useFakeTimers()`:
+- Animation cancellation on data change
+- `shouldReduceMotion()` behavior
+- RAF cleanup on unmount
+- Rapid attribute changes mid-animation
+
+#### Phase 6: Element Integration (MEDIUM PRIORITY)
+
+**6a. Apply animation to `MicrovizModel`** — The generic element for arbitrary models
+
+**6b. Apply animation to high-value specialized elements:**
+- `sparkline-bars.ts` (bar chart transitions)
+- `bar.ts` (simple bar)
+- `segmented-bar.ts` (segment transitions)
+- `donut.ts` already done
+- `nano-ring.ts` (ring transitions)
+
+**6c. Batch integrate remaining elements** — Use mixin pattern for consistency
+
+#### Phase 7: HTML Renderer CSS Transitions (MEDIUM PRIORITY)
+
+Currently `chart.ts:568` skips JS animation for HTML renderer, assuming CSS handles it.
+But `styles.ts` has no transition rules.
+
+**Add CSS transitions for HTML marks:**
+```css
+.mv-mark {
+  transition:
+    transform var(--mv-motion-duration) var(--mv-motion-easing),
+    opacity var(--mv-motion-duration) var(--mv-motion-easing),
+    width var(--mv-motion-duration) var(--mv-motion-easing),
+    height var(--mv-motion-duration) var(--mv-motion-easing);
+}
+```
+
+#### Phase 8: Polish (LOW PRIORITY)
+
+- Document animation support per element
+- Canvas renderer animation if performance use case emerges
+- React wrapper integration if needed
