@@ -2174,7 +2174,6 @@ export const MicrovizBrowse: FC<{
   const inspectorTabOptions = [
     "diagnostics",
     "model",
-    "code",
     "data",
     "a11y",
     "export",
@@ -2182,7 +2181,6 @@ export const MicrovizBrowse: FC<{
   type InspectorTab = (typeof inspectorTabOptions)[number];
   const inspectorTabLabels: Record<InspectorTab, string> = {
     a11y: "A11y",
-    code: "Code",
     data: "Data",
     diagnostics: "Diagnostics",
     export: "Export",
@@ -2190,7 +2188,6 @@ export const MicrovizBrowse: FC<{
   };
   const inspectorTabTitles: Record<InspectorTab, string> = {
     a11y: "Accessibility",
-    code: "Usage snippet",
     data: "Inputs",
     diagnostics: "Warnings",
     export: "Export assets",
@@ -3513,38 +3510,6 @@ export const MicrovizBrowse: FC<{
               </div>
             )}
 
-            {inspectorTab === "code" && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <span>Snippet</span>
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    onClick={handleCopyCode}
-                    type="button"
-                  >
-                    {codeCopied ? "Copied" : "Copy"}
-                  </button>
-                </div>
-                <div className="h-64 overflow-hidden rounded border border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/40">
-                  <CodeEditor
-                    className="h-full"
-                    language={codeSnippet.language}
-                    onChange={() => {}}
-                    readOnly
-                    theme="dark"
-                    value={codeSnippet.code}
-                  />
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {wrapper} · {renderer}
-                </div>
-              </div>
-            )}
-
             {inspectorTab === "export" && (
               <div className="rounded border border-slate-200 bg-white/80 p-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -3608,6 +3573,35 @@ export const MicrovizBrowse: FC<{
                 )}
                 <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                   PNG export renders with the Canvas pipeline.
+                </div>
+                <div className="mt-3 border-t border-slate-200/70 pt-3 dark:border-slate-800/70">
+                  <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <span>Snippet</span>
+                    <button
+                      className={tabButton({
+                        active: false,
+                        size: "xs",
+                        variant: "muted",
+                      })}
+                      onClick={handleCopyCode}
+                      type="button"
+                    >
+                      {codeCopied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <div className="mt-2 h-64 overflow-hidden rounded border border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/40">
+                    <CodeEditor
+                      className="h-full"
+                      language={codeSnippet.language}
+                      onChange={() => {}}
+                      readOnly
+                      theme="dark"
+                      value={codeSnippet.code}
+                    />
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    {wrapper} · {renderer}
+                  </div>
                 </div>
               </div>
             )}
