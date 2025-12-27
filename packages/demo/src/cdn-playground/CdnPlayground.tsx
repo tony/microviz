@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ResizablePane } from "../playground/ResizablePane";
 import { CdnSourcePicker } from "./CdnSourcePicker";
 import { CodeEditor } from "./CodeEditor";
@@ -32,8 +32,7 @@ export function CdnPlayground({
   });
 
   // Watch for theme changes
-  useState(() => {
-    if (typeof window === "undefined") return;
+  useEffect(() => {
     const observer = new MutationObserver(() => {
       setTheme(
         document.documentElement.classList.contains("dark") ? "dark" : "light",
@@ -44,7 +43,7 @@ export function CdnPlayground({
       attributes: true,
     });
     return () => observer.disconnect();
-  });
+  }, []);
 
   const cdnUrl = useMemo(
     () => getCdnUrl(urlState.cdnSource),
