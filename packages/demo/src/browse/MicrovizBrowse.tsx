@@ -2258,18 +2258,16 @@ export const MicrovizBrowse: FC<{
     }
 
     if (renderer === "html-svg") {
-      const { htmlModel, svgModel } = splitHtmlSvgModel(model);
-      const html = renderHtmlString(htmlModel);
-      if (!showHtmlSvgOverlay || !svgModel) {
-        return <HtmlPreview html={html} />;
-      }
-      const svg = renderSvgString(svgModel);
-      return <HtmlSvgOverlayPreview html={html} svg={svg} />;
+      return (
+        <AnimatedHtmlSvgPreview
+          model={model}
+          showOverlay={showHtmlSvgOverlay}
+        />
+      );
     }
 
     if (renderer === "html") {
-      const html = renderHtmlString(model);
-      return <HtmlPreview html={html} />;
+      return <AnimatedHtmlPreview model={model} />;
     }
 
     if (renderer === "svg-dom") {
@@ -3648,6 +3646,26 @@ const AnimatedCanvasPreview: FC<{
 }> = ({ model, options }) => {
   const animatedModel = useAnimatedModel(model);
   return <CanvasPreview model={animatedModel} options={options} />;
+};
+
+const AnimatedHtmlPreview: FC<{ model: RenderModel }> = ({ model }) => {
+  const animatedModel = useAnimatedModel(model);
+  const html = renderHtmlString(animatedModel);
+  return <HtmlPreview html={html} />;
+};
+
+const AnimatedHtmlSvgPreview: FC<{
+  model: RenderModel;
+  showOverlay: boolean;
+}> = ({ model, showOverlay }) => {
+  const animatedModel = useAnimatedModel(model);
+  const { htmlModel, svgModel } = splitHtmlSvgModel(animatedModel);
+  const html = renderHtmlString(htmlModel);
+  if (!showOverlay || !svgModel) {
+    return <HtmlPreview html={html} />;
+  }
+  const svg = renderSvgString(svgModel);
+  return <HtmlSvgOverlayPreview html={html} svg={svg} />;
 };
 
 const SvgStringPreview: FC<{ svg: string }> = ({ svg }) => {
