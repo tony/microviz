@@ -1,18 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import { DemoSection } from "../../../ui/DemoSection";
+import { RerollButton } from "../../../ui/RerollButton";
 
 export const Route = createFileRoute("/demo/ux/button")({
   component: ButtonDemoRoute,
 });
 
 function ButtonDemoRoute() {
-  const [rerollKey, setRerollKey] = useState(0);
-
-  const handleReroll = () => {
-    setRerollKey((k) => k + 1);
-  };
-
   return (
     <div className="space-y-8 p-6">
       <div>
@@ -57,20 +51,8 @@ function ButtonDemoRoute() {
         title="Reroll Button (Icon Only)"
       >
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-1 text-xs font-bold text-white shadow-sm transition-all hover:from-indigo-600 hover:to-purple-600 active:scale-95 dark:from-indigo-400 dark:to-purple-400 animate-[bounce-pop_0.3s_ease-out]"
-            key={`icon-${rerollKey}`}
-            onClick={handleReroll}
-            title="Randomize seed"
-            type="button"
-          >
-            <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
-              🎲
-            </span>
-          </button>
-          <span className="text-xs text-slate-500">
-            Click to see animation (rerollKey: {rerollKey})
-          </span>
+          <RerollButton />
+          <span className="text-xs text-slate-500">Click to see animation</span>
         </div>
       </DemoSection>
 
@@ -80,18 +62,7 @@ function ButtonDemoRoute() {
         title="Reroll Button (Icon + Text)"
       >
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1.5 text-sm font-bold text-white shadow-md transition-all hover:from-indigo-600 hover:to-purple-600 hover:shadow-lg active:scale-95 dark:from-indigo-400 dark:to-purple-400 dark:shadow-indigo-500/20 animate-[bounce-pop_0.3s_ease-out]"
-            key={`text-${rerollKey}`}
-            onClick={handleReroll}
-            title="Randomize seed"
-            type="button"
-          >
-            <span className="inline-block animate-[spin-dice_0.3s_ease-out]">
-              🎲
-            </span>
-            Reroll
-          </button>
+          <RerollButton variant="full" />
           <span className="text-xs text-slate-500">Click to see animation</span>
         </div>
       </DemoSection>
