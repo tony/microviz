@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "pixel-treemap";
+
 export class MicrovizPixelTreemap extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -66,7 +68,9 @@ export class MicrovizPixelTreemap extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -96,7 +100,7 @@ export class MicrovizPixelTreemap extends HTMLElement {
         stroke,
         strokeOpacity,
         strokeWidth,
-        type: "pixel-treemap",
+        type: SPEC_TYPE,
       },
     });
   }

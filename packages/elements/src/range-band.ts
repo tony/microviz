@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "range-band";
+
 export class MicrovizRangeBand extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -66,7 +68,9 @@ export class MicrovizRangeBand extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -98,7 +102,7 @@ export class MicrovizRangeBand extends HTMLElement {
         dotRadius,
         pad,
         strokeWidth,
-        type: "range-band",
+        type: SPEC_TYPE,
       },
     });
   }

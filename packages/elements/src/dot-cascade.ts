@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "dot-cascade";
+
 export class MicrovizDotCascade extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -64,7 +66,9 @@ export class MicrovizDotCascade extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -84,7 +88,7 @@ export class MicrovizDotCascade extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { dotRadius, dots, pad, type: "dot-cascade" },
+      spec: { dotRadius, dots, pad, type: SPEC_TYPE },
     });
   }
 }

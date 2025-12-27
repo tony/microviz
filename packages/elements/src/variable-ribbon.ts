@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "variable-ribbon";
+
 export class MicrovizVariableRibbon extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizVariableRibbon extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -93,7 +97,7 @@ export class MicrovizVariableRibbon extends HTMLElement {
         minHeightPct,
         pad,
         stepDecrement,
-        type: "variable-ribbon",
+        type: SPEC_TYPE,
       },
     });
   }

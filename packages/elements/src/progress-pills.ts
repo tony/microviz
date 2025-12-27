@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "progress-pills";
+
 export class MicrovizProgressPills extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -64,7 +66,9 @@ export class MicrovizProgressPills extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -84,7 +88,7 @@ export class MicrovizProgressPills extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, pad, pillHeight, type: "progress-pills" },
+      spec: { gap, pad, pillHeight, type: SPEC_TYPE },
     });
   }
 }

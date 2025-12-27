@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "chevron";
+
 export class MicrovizChevron extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -63,7 +65,9 @@ export class MicrovizChevron extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -80,7 +84,7 @@ export class MicrovizChevron extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { overlap, pad, type: "chevron" },
+      spec: { overlap, pad, type: SPEC_TYPE },
     });
   }
 }

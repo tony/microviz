@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "nano-ring";
+
 export class MicrovizNanoRing extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -64,7 +66,9 @@ export class MicrovizNanoRing extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -84,7 +88,7 @@ export class MicrovizNanoRing extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gapSize, pad, strokeWidth, type: "nano-ring" },
+      spec: { gapSize, pad, strokeWidth, type: SPEC_TYPE },
     });
   }
 }

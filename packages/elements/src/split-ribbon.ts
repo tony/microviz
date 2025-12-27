@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "split-ribbon";
+
 export class MicrovizSplitRibbon extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizSplitRibbon extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizSplitRibbon extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, pad, ribbonGap, splitAt, type: "split-ribbon" },
+      spec: { gap, pad, ribbonGap, splitAt, type: SPEC_TYPE },
     });
   }
 }

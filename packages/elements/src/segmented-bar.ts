@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "segmented-bar";
+
 export class MicrovizSegmentedBar extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -63,7 +65,9 @@ export class MicrovizSegmentedBar extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -81,7 +85,7 @@ export class MicrovizSegmentedBar extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, pad, type: "segmented-bar" },
+      spec: { gap, pad, type: SPEC_TYPE },
     });
   }
 }

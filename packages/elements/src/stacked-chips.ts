@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "stacked-chips";
+
 export class MicrovizStackedChips extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -69,7 +71,9 @@ export class MicrovizStackedChips extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -113,7 +117,7 @@ export class MicrovizStackedChips extends HTMLElement {
         overlap,
         pad,
         strokeWidth,
-        type: "stacked-chips",
+        type: SPEC_TYPE,
       },
     });
   }

@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "waveform";
+
 export class MicrovizWaveform extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizWaveform extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizWaveform extends HTMLElement {
     return computeModel({
       data: series,
       size: { height, width },
-      spec: { barWidth, bins, gap, pad, type: "waveform" },
+      spec: { barWidth, bins, gap, pad, type: SPEC_TYPE },
     });
   }
 }

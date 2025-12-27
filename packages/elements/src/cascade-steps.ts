@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "cascade-steps";
+
 export class MicrovizCascadeSteps extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizCascadeSteps extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizCascadeSteps extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, minHeightPct, pad, stepDecrement, type: "cascade-steps" },
+      spec: { gap, minHeightPct, pad, stepDecrement, type: SPEC_TYPE },
     });
   }
 }

@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "concentric-arcs-horiz";
+
 export class MicrovizConcentricArcsHoriz extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizConcentricArcsHoriz extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizConcentricArcsHoriz extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { maxArcs, pad, step, strokeWidth, type: "concentric-arcs-horiz" },
+      spec: { maxArcs, pad, step, strokeWidth, type: SPEC_TYPE },
     });
   }
 }

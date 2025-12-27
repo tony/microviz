@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "bitfield";
+
 export class MicrovizBitfield extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -64,7 +66,9 @@ export class MicrovizBitfield extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -85,7 +89,7 @@ export class MicrovizBitfield extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { cellSize, dotRadius, pad, type: "bitfield" },
+      spec: { cellSize, dotRadius, pad, type: SPEC_TYPE },
     });
   }
 }

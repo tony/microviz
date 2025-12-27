@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "dot-matrix";
+
 export class MicrovizDotMatrix extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -66,7 +68,9 @@ export class MicrovizDotMatrix extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -93,7 +97,7 @@ export class MicrovizDotMatrix extends HTMLElement {
     return computeModel({
       data: { opacities, series },
       size: { height, width },
-      spec: { cols, dotRadius, maxDots, pad, type: "dot-matrix" },
+      spec: { cols, dotRadius, maxDots, pad, type: SPEC_TYPE },
     });
   }
 }

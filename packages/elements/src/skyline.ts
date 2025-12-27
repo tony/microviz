@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "skyline";
+
 export class MicrovizSkyline extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -64,7 +66,9 @@ export class MicrovizSkyline extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -84,7 +88,7 @@ export class MicrovizSkyline extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { gap, minHeightPct, pad, type: "skyline" },
+      spec: { gap, minHeightPct, pad, type: SPEC_TYPE },
     });
   }
 }

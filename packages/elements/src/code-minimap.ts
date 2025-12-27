@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "code-minimap";
+
 export class MicrovizCodeMinimap extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -63,7 +65,9 @@ export class MicrovizCodeMinimap extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -80,7 +84,7 @@ export class MicrovizCodeMinimap extends HTMLElement {
     return computeModel({
       data: series,
       size: { height, width },
-      spec: { lines, pad, type: "code-minimap" },
+      spec: { lines, pad, type: SPEC_TYPE },
     });
   }
 }

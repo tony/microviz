@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "pattern-tiles";
+
 export class MicrovizPatternTiles extends HTMLElement {
   static observedAttributes = ["animate", "data", "width", "height", "pad"];
 
@@ -56,7 +58,9 @@ export class MicrovizPatternTiles extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -70,7 +74,7 @@ export class MicrovizPatternTiles extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { pad, type: "pattern-tiles" },
+      spec: { pad, type: SPEC_TYPE },
     });
   }
 }

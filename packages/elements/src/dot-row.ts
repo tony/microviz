@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "dot-row";
+
 export class MicrovizDotRow extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizDotRow extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -88,7 +92,7 @@ export class MicrovizDotRow extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { dotRadius, dots, gap, pad, type: "dot-row" },
+      spec: { dotRadius, dots, gap, pad, type: SPEC_TYPE },
     });
   }
 }

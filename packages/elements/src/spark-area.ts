@@ -10,6 +10,8 @@ import {
   createAnimationState,
 } from "./transition";
 
+const SPEC_TYPE = "spark-area";
+
 export class MicrovizSparkArea extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -65,7 +67,9 @@ export class MicrovizSparkArea extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -93,7 +97,7 @@ export class MicrovizSparkArea extends HTMLElement {
         gradientTopOpacity,
         pad,
         strokeWidth,
-        type: "spark-area",
+        type: SPEC_TYPE,
       },
     });
   }

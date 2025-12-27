@@ -10,6 +10,8 @@ import {
   shouldReduceMotion,
 } from "./transition";
 
+const SPEC_TYPE = "donut";
+
 export class MicrovizDonut extends HTMLElement {
   static observedAttributes = [
     "animate",
@@ -93,7 +95,9 @@ export class MicrovizDonut extends HTMLElement {
   }
 
   #renderFrame(model: RenderModel): void {
-    renderSvgModelIntoShadowRoot(this.#root, model);
+    renderSvgModelIntoShadowRoot(this.#root, model, {
+      specType: SPEC_TYPE,
+    });
   }
 
   #computeFromAttributes(): RenderModel {
@@ -110,7 +114,7 @@ export class MicrovizDonut extends HTMLElement {
     return computeModel({
       data: segments,
       size: { height, width },
-      spec: { innerRadius, pad, type: "donut" },
+      spec: { innerRadius, pad, type: SPEC_TYPE },
     });
   }
 }
