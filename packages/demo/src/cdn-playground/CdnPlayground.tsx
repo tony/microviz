@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ResizablePane } from "../browse/ResizablePane";
+import { RerollButton } from "../ui/RerollButton";
 import { CdnSourcePicker } from "./CdnSourcePicker";
 import { CodeEditor } from "./CodeEditor";
 import { ConsoleOutput } from "./ConsoleOutput";
 import type { CdnPlaygroundState, CspMode } from "./cdnPlaygroundState";
 import { type CdnSource, getCdnUrl } from "./cdnSources";
 import { type ConsoleEntry, PreviewPane } from "./PreviewPane";
+import { applySeededData } from "./presetData";
 import { PRESETS } from "./presets";
 
 export type CdnPlaygroundProps = {
@@ -75,9 +77,10 @@ export function CdnPlayground({
     (presetId: string) => {
       const preset = PRESETS.find((p) => p.id === presetId);
       if (preset) {
+        const code = applySeededData(presetId, preset.code, urlState.seed);
         onUrlStateChange({
           ...urlState,
-          code: preset.code,
+          code,
           presetId,
         });
         setConsoleLogs([]);
@@ -85,6 +88,25 @@ export function CdnPlayground({
     },
     [urlState, onUrlStateChange],
   );
+
+  const handleReroll = useCallback(() => {
+    const newSeed = `mv-${Math.floor(Math.random() * 10_000)}`;
+    if (urlState.presetId) {
+      const preset = PRESETS.find((p) => p.id === urlState.presetId);
+      if (preset) {
+        const code = applySeededData(urlState.presetId, preset.code, newSeed);
+        onUrlStateChange({
+          ...urlState,
+          code,
+          seed: newSeed,
+        });
+        setConsoleLogs([]);
+        return;
+      }
+    }
+    // If no preset, just update the seed (won't affect custom code)
+    onUrlStateChange({ ...urlState, seed: newSeed });
+  }, [urlState, onUrlStateChange]);
 
   const handleConsoleMessage = useCallback((entry: ConsoleEntry) => {
     setConsoleLogs((prev) => [...prev.slice(-99), entry]); // Keep last 100
@@ -122,6 +144,9 @@ export function CdnPlayground({
             ))}
           </select>
         </label>
+
+        {/* Reroll button - only show when a preset is selected */}
+        {urlState.presetId && <RerollButton onClick={handleReroll} />}
 
         {/* CSP toggle */}
         <label className="flex items-center gap-2">
