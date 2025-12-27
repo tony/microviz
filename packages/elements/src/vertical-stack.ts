@@ -12,11 +12,11 @@ import {
 } from "./transition";
 
 export class MicrovizVerticalStack extends HTMLElement {
-  static observedAttributes = ["data", "width", "height", "pad"];
+  static observedAttributes = ["animate", "data", "width", "height", "pad"];
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {

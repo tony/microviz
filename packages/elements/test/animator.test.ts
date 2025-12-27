@@ -5,6 +5,8 @@ import {
   animateTransition,
   cleanupAnimation,
   createAnimationState,
+  getMotionConfig,
+  isAnimationEnabled,
   shouldReduceMotion,
 } from "../src/transition";
 
@@ -205,6 +207,31 @@ describe("shouldReduceMotion", () => {
   });
 });
 
+describe("isAnimationEnabled", () => {
+  it("defaults to true without animate attribute", () => {
+    const host = document.createElement("div");
+    expect(isAnimationEnabled(host)).toBe(true);
+  });
+
+  it("parses falsey animate attribute values", () => {
+    const host = document.createElement("div");
+    host.setAttribute("animate", "false");
+    expect(isAnimationEnabled(host)).toBe(false);
+    host.setAttribute("animate", "0");
+    expect(isAnimationEnabled(host)).toBe(false);
+    host.setAttribute("animate", "off");
+    expect(isAnimationEnabled(host)).toBe(false);
+  });
+});
+
+describe("getMotionConfig", () => {
+  it("reads duration from CSS custom property", () => {
+    const host = document.createElement("div");
+    host.style.setProperty("--mv-motion-duration", "120ms");
+    expect(getMotionConfig(host).duration).toBe(120);
+  });
+});
+
 describe("animateTransition", () => {
   beforeEach(() => {
     vi.useFakeTimers({
@@ -230,6 +257,44 @@ describe("animateTransition", () => {
     // Should render immediately without animation
     expect(frames.length).toBe(1);
     expect(state.previousModel).toBe(model);
+    expect(state.cancelAnimation).toBeNull();
+  });
+
+  it("skips animation when animate attribute is false", () => {
+    const host = document.createElement("div");
+    host.setAttribute("animate", "false");
+    const state = createAnimationState(host);
+    const frames: RenderModel[] = [];
+    const model1 = createModel([
+      { h: 20, id: "bar-1", type: "rect", w: 10, x: 0, y: 0 },
+    ]);
+    const model2 = createModel([
+      { h: 40, id: "bar-1", type: "rect", w: 10, x: 0, y: 0 },
+    ]);
+    state.previousModel = model1;
+
+    animateTransition(state, model2, (m) => frames.push(m));
+
+    expect(frames.length).toBe(1);
+    expect(state.cancelAnimation).toBeNull();
+  });
+
+  it("skips animation when motion duration is zero", () => {
+    const host = document.createElement("div");
+    host.style.setProperty("--mv-motion-duration", "0ms");
+    const state = createAnimationState(host);
+    const frames: RenderModel[] = [];
+    const model1 = createModel([
+      { h: 20, id: "bar-1", type: "rect", w: 10, x: 0, y: 0 },
+    ]);
+    const model2 = createModel([
+      { h: 40, id: "bar-1", type: "rect", w: 10, x: 0, y: 0 },
+    ]);
+    state.previousModel = model1;
+
+    animateTransition(state, model2, (m) => frames.push(m));
+
+    expect(frames.length).toBe(1);
     expect(state.cancelAnimation).toBeNull();
   });
 

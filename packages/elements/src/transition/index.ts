@@ -10,4 +10,10 @@ export {
   cleanupAnimation,
   createAnimationState,
 } from "./animatable";
-export { type AnimationConfig, animate, shouldReduceMotion } from "./animator";
+export {
+  type AnimationConfig,
+  animate,
+  getMotionConfig,
+  isAnimationEnabled,
+  shouldReduceMotion,
+} from "./animator";

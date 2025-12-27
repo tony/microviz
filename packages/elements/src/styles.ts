@@ -19,8 +19,22 @@ const stylesText = `
   color: var(--mv-fg, currentColor);
   font-family: var(--mv-font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
   /* Motion tokens for transitions */
-  --mv-motion-duration: var(--mv-motion-duration, 300ms);
   --mv-motion-easing: var(--mv-motion-ease, cubic-bezier(0.2, 0.7, 0.3, 1));
+}
+
+:host([animate="false" i]),
+:host([animate="0"]),
+:host([animate="no" i]),
+:host([animate="off" i]) {
+  --mv-motion-duration: 0ms;
+}
+
+:host([animate="false" i]) .mv-skeleton,
+:host([animate="0"]) .mv-skeleton,
+:host([animate="no" i]) .mv-skeleton,
+:host([animate="off" i]) .mv-skeleton {
+  animation: none;
+  opacity: 0.14;
 }
 
 :host(:focus-visible) {
@@ -74,13 +88,13 @@ svg {
 /* HTML renderer mark transitions */
 .mv-html-mark {
   transition:
-    left var(--mv-motion-duration) var(--mv-motion-easing),
-    top var(--mv-motion-duration) var(--mv-motion-easing),
-    width var(--mv-motion-duration) var(--mv-motion-easing),
-    height var(--mv-motion-duration) var(--mv-motion-easing),
-    transform var(--mv-motion-duration) var(--mv-motion-easing),
-    opacity var(--mv-motion-duration) var(--mv-motion-easing),
-    background var(--mv-motion-duration) var(--mv-motion-easing);
+    left var(--mv-motion-duration, 300ms) var(--mv-motion-easing),
+    top var(--mv-motion-duration, 300ms) var(--mv-motion-easing),
+    width var(--mv-motion-duration, 300ms) var(--mv-motion-easing),
+    height var(--mv-motion-duration, 300ms) var(--mv-motion-easing),
+    transform var(--mv-motion-duration, 300ms) var(--mv-motion-easing),
+    opacity var(--mv-motion-duration, 300ms) var(--mv-motion-easing),
+    background var(--mv-motion-duration, 300ms) var(--mv-motion-easing);
 }
 
 .mv-line {

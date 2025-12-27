@@ -13,6 +13,7 @@ import {
 
 export class MicrovizDumbbell extends HTMLElement {
   static observedAttributes = [
+    "animate",
     "current",
     "target",
     "max",
@@ -23,7 +24,7 @@ export class MicrovizDumbbell extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #modelOverride: RenderModel | null = null;
 
   constructor() {

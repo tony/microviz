@@ -6,12 +6,18 @@
  */
 
 import type { RenderModel } from "@microviz/core";
-import { animate, shouldReduceMotion } from "./animator";
+import {
+  animate,
+  getMotionConfig,
+  isAnimationEnabled,
+  shouldReduceMotion,
+} from "./animator";
 
 /**
  * Animation state to be stored in each element instance.
  */
 export type AnimationState = {
+  host: HTMLElement | null;
   previousModel: RenderModel | null;
   cancelAnimation: (() => void) | null;
   onCancel: (() => void) | null;
@@ -20,10 +26,15 @@ export type AnimationState = {
 /**
  * Create a new animation state object.
  * Call this once in your element's constructor or field initialization.
+ *
+ * @param host - Optional element used to read motion preferences.
  */
-export function createAnimationState(): AnimationState {
+export function createAnimationState(
+  host: HTMLElement | null = null,
+): AnimationState {
   return {
     cancelAnimation: null,
+    host,
     onCancel: null,
     previousModel: null,
   };
@@ -58,7 +69,7 @@ export type AnimateTransitionOptions = {
  * @example
  * ```typescript
  * class MyElement extends HTMLElement {
- *   #animState = createAnimationState();
+ *   #animState = createAnimationState(this);
  *
  *   render() {
  *     const model = computeModel(...);
@@ -87,10 +98,15 @@ export function animateTransition(
   state.onCancel = null;
 
   // Determine if we should animate
+  const motionConfig = getMotionConfig(state.host);
+  const duration = motionConfig.duration;
+  const durationDisabled = typeof duration === "number" && duration <= 0;
   const canAnimate =
     state.previousModel !== null &&
     !options.skipAnimation &&
-    !shouldReduceMotion();
+    isAnimationEnabled(state.host) &&
+    !shouldReduceMotion() &&
+    !durationDisabled;
 
   if (canAnimate && state.previousModel) {
     let frameCount = 0;
@@ -109,6 +125,7 @@ export function animateTransition(
         state.onCancel = null;
         options.onComplete?.({ frameCount });
       },
+      motionConfig,
     );
     state.onCancel = options.onCancel
       ? () => options.onCancel?.({ frameCount })

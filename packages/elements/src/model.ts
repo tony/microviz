@@ -29,6 +29,7 @@ type ClientPoint = { x: number; y: number };
 
 export class MicrovizModel extends HTMLElement {
   static observedAttributes = [
+    "animate",
     "interactive",
     "skeleton",
     "hit-slop",
@@ -37,7 +38,7 @@ export class MicrovizModel extends HTMLElement {
 
   readonly #internals: ElementInternals | null;
   readonly #root: ShadowRoot;
-  readonly #animState: AnimationState = createAnimationState();
+  readonly #animState: AnimationState = createAnimationState(this);
   #model: RenderModel | null = null;
   #renderModel: RenderModel | null = null;
   #wasSkeletonRender = false;

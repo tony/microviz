@@ -24,7 +24,12 @@ import {
   type TelemetryHandle,
   toTelemetryError,
 } from "./telemetry";
-import { animate, shouldReduceMotion } from "./transition";
+import {
+  animate,
+  getMotionConfig,
+  isAnimationEnabled,
+  shouldReduceMotion,
+} from "./transition";
 
 type Size = { width: number; height: number };
 type Point = { x: number; y: number };
@@ -60,6 +65,7 @@ function coerceSize(raw: Size): Size {
 
 export class MicrovizChart extends HTMLElement {
   static observedAttributes = [
+    "animate",
     "spec",
     "type",
     "data",
@@ -655,11 +661,16 @@ export class MicrovizChart extends HTMLElement {
     this.#cancelAnimation = null;
 
     // Determine if we should animate
+    const motionConfig = getMotionConfig(this);
+    const durationDisabled =
+      typeof motionConfig.duration === "number" && motionConfig.duration <= 0;
     const canAnimate =
       this.#previousModel &&
       !useHtml && // HTML renderer has CSS transitions
       !wantsSkeleton &&
-      !shouldReduceMotion();
+      isAnimationEnabled(this) &&
+      !shouldReduceMotion() &&
+      !durationDisabled;
 
     if (canAnimate && this.#previousModel) {
       const animationStart = telemetry.enabled ? performance.now() : 0;
@@ -699,6 +710,7 @@ export class MicrovizChart extends HTMLElement {
             });
           }
         },
+        motionConfig,
       );
       this.#cancelAnimation = () => {
         cancel();

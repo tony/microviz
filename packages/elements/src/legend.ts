@@ -94,7 +94,7 @@ function applyLegendStyles(root: ShadowRoot): void {
 }
 
 export class MicrovizLegend extends HTMLElement {
-  static observedAttributes = ["items"];
+  static observedAttributes = ["animate", "items"];
 
   readonly #root: ShadowRoot;
 
