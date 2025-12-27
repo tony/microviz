@@ -142,6 +142,19 @@ const telemetryModeOptions = [
 ] as const;
 
 type TelemetryMode = (typeof telemetryModeOptions)[number]["id"];
+const telemetryPhaseOptions = [
+  "all",
+  "animation",
+  "compute",
+  "dom",
+  "error",
+  "interaction",
+  "parse",
+  "render",
+  "warning",
+] as const;
+type TelemetryPhaseFilter = (typeof telemetryPhaseOptions)[number];
+type TelemetryRendererFilter = "all" | "svg" | "html";
 type TelemetryDetail = {
   at: number;
   element: string;
@@ -2237,6 +2250,13 @@ export const MicrovizBrowse: FC<{
   const [copyingPng, setCopyingPng] = useState(false);
   const [telemetryMode, setTelemetryMode] = useState<TelemetryMode>("off");
   const [telemetryEvents, setTelemetryEvents] = useState<TelemetryDetail[]>([]);
+  const [telemetryPhaseFilter, setTelemetryPhaseFilter] =
+    useState<TelemetryPhaseFilter>("all");
+  const [telemetryRendererFilter, setTelemetryRendererFilter] =
+    useState<TelemetryRendererFilter>("all");
+  const [telemetryQuery, setTelemetryQuery] = useState("");
+  const [telemetryCopied, setTelemetryCopied] = useState(false);
+  const telemetryCopyTimeoutRef = useRef<number | null>(null);
   const selectedModel = getEffectiveModel(selectedChart);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const exportNoticeTimeoutRef = useRef<number | null>(null);
@@ -2284,6 +2304,41 @@ export const MicrovizBrowse: FC<{
     document.addEventListener("microviz-telemetry", handler);
     return () => document.removeEventListener("microviz-telemetry", handler);
   }, [telemetryMode]);
+
+  const filteredTelemetryEvents = useMemo(() => {
+    const query = telemetryQuery.trim().toLowerCase();
+    return telemetryEvents.filter((event) => {
+      if (
+        telemetryPhaseFilter !== "all" &&
+        event.phase !== telemetryPhaseFilter
+      )
+        return false;
+      if (
+        telemetryRendererFilter !== "all" &&
+        event.renderer !== telemetryRendererFilter
+      )
+        return false;
+      if (!query) return true;
+      try {
+        return JSON.stringify(event).toLowerCase().includes(query);
+      } catch {
+        return false;
+      }
+    });
+  }, [
+    telemetryEvents,
+    telemetryPhaseFilter,
+    telemetryQuery,
+    telemetryRendererFilter,
+  ]);
+
+  const telemetryPhaseSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const event of filteredTelemetryEvents) {
+      counts.set(event.phase, (counts.get(event.phase) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([phase, count]) => ({ count, phase }));
+  }, [filteredTelemetryEvents]);
 
   const downloadBlob = useCallback((blob: Blob, filename: string) => {
     if (typeof document === "undefined") return;
@@ -2565,6 +2620,9 @@ export const MicrovizBrowse: FC<{
       if (codeCopyTimeoutRef.current !== null) {
         window.clearTimeout(codeCopyTimeoutRef.current);
       }
+      if (telemetryCopyTimeoutRef.current !== null) {
+        window.clearTimeout(telemetryCopyTimeoutRef.current);
+      }
       if (exportNoticeTimeoutRef.current !== null) {
         window.clearTimeout(exportNoticeTimeoutRef.current);
       }
@@ -2683,6 +2741,59 @@ export const MicrovizBrowse: FC<{
     selectedChart,
     selectedWarningSummary,
     selectedWarnings,
+  ]);
+
+  const handleCopyTelemetry = useCallback(() => {
+    const payload = JSON.stringify(
+      {
+        events: filteredTelemetryEvents,
+        filters: {
+          phase: telemetryPhaseFilter,
+          query: telemetryQuery,
+          renderer: telemetryRendererFilter,
+        },
+        summary: {
+          shown: filteredTelemetryEvents.length,
+          total: telemetryEvents.length,
+        },
+      },
+      null,
+      2,
+    );
+
+    const finish = () => {
+      setTelemetryCopied(true);
+      if (telemetryCopyTimeoutRef.current !== null) {
+        window.clearTimeout(telemetryCopyTimeoutRef.current);
+      }
+      telemetryCopyTimeoutRef.current = window.setTimeout(() => {
+        setTelemetryCopied(false);
+      }, 1200);
+    };
+
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(payload).then(finish).catch(finish);
+      return;
+    }
+
+    if (typeof document === "undefined") return;
+    const textarea = document.createElement("textarea");
+    textarea.value = payload;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    document.body.append(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    finish();
+  }, [
+    filteredTelemetryEvents,
+    telemetryEvents.length,
+    telemetryPhaseFilter,
+    telemetryQuery,
+    telemetryRendererFilter,
   ]);
 
   const handleCopyCode = useCallback(() => {
@@ -3567,17 +3678,31 @@ export const MicrovizBrowse: FC<{
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <span>Telemetry</span>
-                  <button
-                    className={tabButton({
-                      active: false,
-                      size: "xs",
-                      variant: "muted",
-                    })}
-                    onClick={() => setTelemetryEvents([])}
-                    type="button"
-                  >
-                    Clear
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={tabButton({
+                        active: false,
+                        size: "xs",
+                        variant: "muted",
+                      })}
+                      disabled={telemetryEvents.length === 0}
+                      onClick={handleCopyTelemetry}
+                      type="button"
+                    >
+                      {telemetryCopied ? "Copied" : "Copy"}
+                    </button>
+                    <button
+                      className={tabButton({
+                        active: false,
+                        size: "xs",
+                        variant: "muted",
+                      })}
+                      onClick={() => setTelemetryEvents([])}
+                      type="button"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
                 <ToggleGroup
                   columns={3}
@@ -3611,11 +3736,86 @@ export const MicrovizBrowse: FC<{
                       : "Basic captures render, compute, and warnings."}
                   </div>
                 )}
+                <div className="space-y-2 rounded border border-slate-200 bg-white/70 p-2 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide">
+                        Phase
+                      </span>
+                      <select
+                        className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-200"
+                        onChange={(event) =>
+                          setTelemetryPhaseFilter(
+                            event.target.value as TelemetryPhaseFilter,
+                          )
+                        }
+                        value={telemetryPhaseFilter}
+                      >
+                        {telemetryPhaseOptions.map((phase) => (
+                          <option key={phase} value={phase}>
+                            {phase === "all" ? "All" : phase}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide">
+                        Renderer
+                      </span>
+                      <select
+                        className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-200"
+                        onChange={(event) =>
+                          setTelemetryRendererFilter(
+                            event.target.value as TelemetryRendererFilter,
+                          )
+                        }
+                        value={telemetryRendererFilter}
+                      >
+                        <option value="all">All</option>
+                        <option value="svg">svg</option>
+                        <option value="html">html</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide">
+                      Search
+                    </span>
+                    <input
+                      className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-200"
+                      onChange={(event) =>
+                        setTelemetryQuery(event.target.value)
+                      }
+                      placeholder="Filter JSON (reason, code, renderer...)"
+                      value={telemetryQuery}
+                    />
+                  </label>
+                  <div>
+                    Showing {filteredTelemetryEvents.length} of{" "}
+                    {telemetryEvents.length} events
+                  </div>
+                  {telemetryPhaseSummary.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {telemetryPhaseSummary.map((summary) => (
+                        <span
+                          className="rounded bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 dark:bg-slate-800/60 dark:text-slate-300"
+                          key={summary.phase}
+                        >
+                          {summary.phase} ×{summary.count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="overflow-auto rounded bg-slate-950/5 p-2 dark:bg-slate-900/30">
-                  {telemetryEvents.length === 0 ? (
-                    <div className="text-sm">No telemetry events yet.</div>
+                  {filteredTelemetryEvents.length === 0 ? (
+                    <div className="text-sm">
+                      {telemetryEvents.length === 0
+                        ? "No telemetry events yet."
+                        : "No telemetry events match the current filters."}
+                    </div>
                   ) : (
-                    <JsonViewer data={telemetryEvents} />
+                    <JsonViewer data={filteredTelemetryEvents} />
                   )}
                 </div>
               </div>
