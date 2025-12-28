@@ -135,11 +135,17 @@ function isDonutSegmentMark(mark: PathMark): boolean {
   return mark.className.split(/\s+/).includes(DONUT_SEGMENT_CLASS);
 }
 
-function interpolateDonutPathMark(to: PathMark, t: number): PathMark {
-  const targetOpacity = to.opacity ?? 1;
+function interpolateDonutPathMark(
+  from: PathMark,
+  to: PathMark,
+  t: number,
+): PathMark {
   return {
     ...to,
-    opacity: lerp(0, targetOpacity, t),
+    fillOpacity: lerpOptional(from.fillOpacity, to.fillOpacity, t),
+    opacity: lerpOptional(from.opacity, to.opacity, t),
+    strokeOpacity: lerpOptional(from.strokeOpacity, to.strokeOpacity, t),
+    strokeWidth: lerpOptional(from.strokeWidth, to.strokeWidth, t),
   };
 }
 
@@ -162,11 +168,13 @@ export function interpolateMark(from: Mark, to: Mark, t: number): Mark {
       return interpolateLineMark(from, to as LineMark, t);
     case "text":
       return interpolateTextMark(from, to as TextMark, t);
-    case "path":
-      if (isDonutSegmentMark(from) || isDonutSegmentMark(to as PathMark)) {
-        return interpolateDonutPathMark(to as PathMark, t);
+    case "path": {
+      const toPath = to as PathMark;
+      if (isDonutSegmentMark(from) || isDonutSegmentMark(toPath)) {
+        return interpolateDonutPathMark(from, toPath, t);
       }
-      return interpolatePathMark(from, to as PathMark, t);
+      return interpolatePathMark(from, toPath, t);
+    }
     default:
       return to;
   }

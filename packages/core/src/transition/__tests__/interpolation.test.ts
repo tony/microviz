@@ -218,12 +218,14 @@ describe("interpolateMark", () => {
       className: "mv-donut-segment",
       d: "M0 0L1 1Z",
       id: "donut-segment-0",
+      opacity: 0,
       type: "path",
     };
     const to: PathMark = {
       className: "mv-donut-segment",
       d: "M0 0L2 2Z",
       id: "donut-segment-0",
+      opacity: 1,
       type: "path",
     };
 
