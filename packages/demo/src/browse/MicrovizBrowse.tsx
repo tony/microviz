@@ -121,6 +121,7 @@ type ChartCatalogEntry = {
 
 type ChartBlock =
   | { kind: "sectionHeader"; label: string }
+  | { kind: "microRow"; charts: ChartCatalogEntry[]; isLast: boolean }
   | { kind: "primitiveRow"; charts: ChartCatalogEntry[]; isLast: boolean }
   | { kind: "wideRow"; charts: ChartCatalogEntry[]; isLast: boolean }
   | { kind: "squareRow"; charts: ChartCatalogEntry[]; isLast: boolean }
@@ -243,10 +244,6 @@ const TOKEN_SPEC_OVERRIDES: Partial<Record<ChartId, Record<string, unknown>>> =
     "vertical-stack": { pad: 0 },
   };
 
-const TOKEN_CHART_IDS = new Set<ChartId>(
-  Object.keys(TOKEN_SIZE_MAP) as ChartId[],
-);
-
 function scaleTokenSize(size: TokenSize, scale: number): TokenSize {
   return {
     height: Math.max(1, Math.round(size.height * scale)),
@@ -278,11 +275,7 @@ function applyTokenOverrides(
     ChartId,
     ComputeModelInput,
   ][]) {
-    const sizeBase = TOKEN_SIZE_MAP[chartId];
-    if (!sizeBase) {
-      next[chartId] = input;
-      continue;
-    }
+    const sizeBase = getTokenBaseSize(chartId);
     const size = scaleTokenSize(sizeBase, scale);
     const override = TOKEN_SPEC_OVERRIDES[chartId];
     const spec = override
@@ -294,6 +287,15 @@ function applyTokenOverrides(
     next[chartId] = { ...input, size, spec };
   }
   return next as Record<ChartId, ComputeModelInput>;
+}
+
+function getTokenBaseSize(chartId: ChartId): TokenSize {
+  const mapped = TOKEN_SIZE_MAP[chartId];
+  if (mapped) return mapped;
+  const aspectRatio = getPreferredAspectRatio(chartId);
+  if (aspectRatio === "tall") return TOKEN_BASE_SIZES.tall;
+  if (aspectRatio === "square") return TOKEN_BASE_SIZES.square;
+  return TOKEN_BASE_SIZES.wide;
 }
 
 const telemetryModeOptions = [
@@ -2043,24 +2045,38 @@ export const MicrovizBrowse: FC<{
     sizeFor,
   ]);
 
-  const inputs = useMemo(
-    () =>
-      isTokenMode ? applyTokenOverrides(baseInputs, tokenScale) : baseInputs,
-    [baseInputs, isTokenMode, tokenScale],
+  const applyPreferredAspectRatio = useCallback(
+    (inputsToAdjust: Record<ChartId, ComputeModelInput>) => {
+      const next: Partial<Record<ChartId, ComputeModelInput>> = {};
+      for (const [chartId, input] of Object.entries(inputsToAdjust) as [
+        ChartId,
+        ComputeModelInput,
+      ][]) {
+        const aspectRatio = getPreferredAspectRatio(chartId);
+        if (
+          (aspectRatio === "square" || aspectRatio === "tall") &&
+          input.size === size
+        ) {
+          next[chartId] = { ...input, size: sizeFor(chartId) };
+        } else {
+          next[chartId] = input;
+        }
+      }
+      return next as Record<ChartId, ComputeModelInput>;
+    },
+    [size, sizeFor],
   );
 
-  const chartIds = useMemo(() => {
-    const ids = Object.keys(inputs) as ChartId[];
-    if (!isTokenMode) return ids;
-    return ids.filter((chartId) => TOKEN_CHART_IDS.has(chartId));
-  }, [inputs, isTokenMode]);
-  const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
+  const inputs = useMemo(
+    () =>
+      isTokenMode
+        ? applyTokenOverrides(baseInputs, tokenScale)
+        : applyPreferredAspectRatio(baseInputs),
+    [applyPreferredAspectRatio, baseInputs, isTokenMode, tokenScale],
+  );
 
-  useEffect(() => {
-    if (!isTokenMode) return;
-    if (TOKEN_CHART_IDS.has(selectedChart)) return;
-    setSelectedChart("nano-ring");
-  }, [isTokenMode, selectedChart]);
+  const chartIds = useMemo(() => Object.keys(inputs) as ChartId[], [inputs]);
+  const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
 
   const htmlFilterActive =
     htmlFilter !== "all" && (renderer === "html" || renderer === "html-svg");
@@ -2239,6 +2255,17 @@ export const MicrovizBrowse: FC<{
     );
   }, [chartListContentWidthPx]);
 
+  const microCols = useMemo(() => {
+    const minCardWidth = 120;
+    if (chartListContentWidthPx <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor(
+        (chartListContentWidthPx + gridGapPx) / (minCardWidth + gridGapPx),
+      ),
+    );
+  }, [chartListContentWidthPx]);
+
   const primitiveCols = useMemo(() => {
     const minCardWidth = 210; // 25% smaller than wide
     if (chartListContentWidthPx <= 0) return 1;
@@ -2252,6 +2279,21 @@ export const MicrovizBrowse: FC<{
 
   const chartBlocks = useMemo<ChartBlock[]>(() => {
     const blocks: ChartBlock[] = [];
+
+    if (isTokenMode) {
+      if (visibleCharts.length > 0) {
+        blocks.push({ kind: "sectionHeader", label: "Micro tokens" });
+        for (let i = 0; i < visibleCharts.length; i += microCols) {
+          const charts = visibleCharts.slice(i, i + microCols);
+          blocks.push({
+            charts,
+            isLast: i + microCols >= visibleCharts.length,
+            kind: "microRow",
+          });
+        }
+      }
+      return blocks;
+    }
 
     if (chartsByAspectRatio.wide.length > 0) {
       blocks.push({ kind: "sectionHeader", label: "Wide" });
@@ -2302,7 +2344,15 @@ export const MicrovizBrowse: FC<{
     }
 
     return blocks;
-  }, [chartsByAspectRatio, primitiveCols, squareCols, wideCols]);
+  }, [
+    chartsByAspectRatio,
+    isTokenMode,
+    microCols,
+    primitiveCols,
+    squareCols,
+    visibleCharts,
+    wideCols,
+  ]);
 
   const chartBlocksVirtualizer = useVirtualizer({
     count: chartBlocks.length,
@@ -2311,6 +2361,7 @@ export const MicrovizBrowse: FC<{
       if (!block) return 220;
 
       if (block.kind === "sectionHeader") return 22;
+      if (block.kind === "microRow") return 160;
       if (block.kind === "primitiveRow") return 190; // Slightly smaller than wide
       if (block.kind === "squareRow") return 170;
       if (block.kind === "tallBlock") return 160;
@@ -2663,19 +2714,47 @@ export const MicrovizBrowse: FC<{
   function renderSurface(chartId: ChartId): ReactNode {
     const model = getEffectiveModel(chartId);
     const input = inputs[chartId];
-    if (!model)
+    const tokenFrameSize =
+      isTokenMode && input?.size
+        ? Math.max(input.size.width, input.size.height)
+        : null;
+    const wrapTokenFrame = (node: ReactNode) => {
+      if (!tokenFrameSize) return node;
+      return (
+        <div className="flex items-center justify-center">
+          <div
+            className="flex items-center justify-center rounded bg-[var(--mv-bg)]"
+            style={{ height: tokenFrameSize, width: tokenFrameSize }}
+          >
+            {node}
+          </div>
+        </div>
+      );
+    };
+    if (!model) {
+      if (tokenFrameSize) {
+        return (
+          <div className="flex items-center justify-center">
+            <div
+              className="animate-pulse rounded bg-slate-200 dark:bg-slate-800"
+              style={{ height: tokenFrameSize, width: tokenFrameSize }}
+            />
+          </div>
+        );
+      }
       return (
         <div className="h-8 w-[200px] animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
       );
+    }
 
     if (wrapper === "elements") {
-      return (
+      return wrapTokenFrame(
         <ElementPreview
           chartId={chartId}
           model={model}
           showHoverTooltip={showHoverTooltip}
           telemetryMode={chartId === selectedChart ? telemetryMode : "off"}
-        />
+        />,
       );
     }
 
@@ -2690,70 +2769,72 @@ export const MicrovizBrowse: FC<{
 
     if (renderer === "svg-string") {
       if (wrapper === "react")
-        return (
+        return wrapTokenFrame(
           <AnimatedReactSvgString
             className="inline-block rounded bg-[var(--mv-bg)]"
             model={model}
-          />
+          />,
         );
-      return <AnimatedSvgStringPreview model={model} />;
+      return wrapTokenFrame(<AnimatedSvgStringPreview model={model} />);
     }
 
     if (shouldFallbackToSvg) {
       if (wrapper === "react")
-        return (
+        return wrapTokenFrame(
           <AnimatedReactSvgString
             className="inline-block rounded bg-[var(--mv-bg)]"
             model={model}
-          />
+          />,
         );
-      return <AnimatedSvgStringPreview model={model} />;
+      return wrapTokenFrame(<AnimatedSvgStringPreview model={model} />);
     }
 
     if (renderer === "html-svg") {
-      return (
+      return wrapTokenFrame(
         <AnimatedHtmlSvgPreview
           model={model}
           showOverlay={showHtmlSvgOverlay}
-        />
+        />,
       );
     }
 
     if (renderer === "html") {
-      return <AnimatedHtmlPreview model={model} />;
+      return wrapTokenFrame(<AnimatedHtmlPreview model={model} />);
     }
 
     if (renderer === "svg-dom") {
       if (wrapper === "react")
-        return (
+        return wrapTokenFrame(
           <div className="inline-block rounded bg-[var(--mv-bg)]">
             <AnimatedReactSvg className="block" model={model} />
-          </div>
+          </div>,
         );
-      return <AnimatedSvgDomPreview model={model} />;
+      return wrapTokenFrame(<AnimatedSvgDomPreview model={model} />);
     }
 
     if (renderer === "canvas") {
       if (wrapper === "react")
-        return (
+        return wrapTokenFrame(
           <AnimatedReactCanvas
             className="rounded bg-[var(--mv-bg)]"
             model={model}
             options={canvasOptions}
-          />
+          />,
         );
-      return <AnimatedCanvasPreview model={model} options={canvasOptions} />;
+      return wrapTokenFrame(
+        <AnimatedCanvasPreview model={model} options={canvasOptions} />,
+      );
     }
 
     if (renderer === "offscreen-canvas") {
-      return (
+      return wrapTokenFrame(
         <OffscreenCanvasPreview
           applyNoiseOverlay={applyNoiseOverlay}
           ensureWorkerClient={ensureWorkerClient}
           input={input}
           label={chartId}
           options={canvasOptions}
-        />
+        />,
       );
     }
 
@@ -2874,8 +2955,7 @@ export const MicrovizBrowse: FC<{
     if (!autoInference) return null;
     const chartId = autoInference.spec.type as ChartId;
     if (isTokenMode) {
-      const tokenSize = TOKEN_SIZE_MAP[chartId];
-      if (tokenSize) return scaleTokenSize(tokenSize, tokenScale);
+      return scaleTokenSize(getTokenBaseSize(chartId), tokenScale);
     }
     return sizeFor(chartId);
   }, [autoInference, isTokenMode, sizeFor, tokenScale]);
@@ -3677,6 +3757,48 @@ export const MicrovizBrowse: FC<{
                       {block.kind === "sectionHeader" ? (
                         <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           {block.label}
+                        </div>
+                      ) : block.kind === "microRow" ? (
+                        <div className={block.isLast ? "pb-6" : "pb-3"}>
+                          <div
+                            className="grid gap-3"
+                            style={{
+                              gridTemplateColumns: `repeat(${microCols}, minmax(120px, 1fr))`,
+                            }}
+                          >
+                            {block.charts.map((chart) => {
+                              const model = getEffectiveModel(chart.chartId);
+                              const hasWarnings = hasDiagnosticsWarnings(
+                                model,
+                                renderer,
+                                getCanvasUnsupportedFilters,
+                                getHtmlWarnings,
+                              );
+                              return (
+                                <ChartCard
+                                  active={selectedChart === chart.chartId}
+                                  centered
+                                  chartId={chart.chartId}
+                                  hasWarnings={hasWarnings}
+                                  htmlWarningTags={
+                                    renderer === "html" ||
+                                    renderer === "html-svg"
+                                      ? getHtmlWarningTags(model)
+                                      : undefined
+                                  }
+                                  key={chart.chartId}
+                                  model={model}
+                                  onSelect={setSelectedChart}
+                                  render={renderSurface(chart.chartId)}
+                                  showHtmlBrokenBadge={
+                                    renderer === "html" && hasWarnings
+                                  }
+                                  timingMs={timingsMs[chart.chartId]}
+                                  title={chart.title}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
                       ) : block.kind === "wideRow" ? (
                         <div className={block.isLast ? "pb-6" : "pb-3"}>
