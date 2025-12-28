@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { computeModel } from "../../compute";
 import type {
   CircleMark,
   LineMark,
@@ -213,25 +214,43 @@ describe("interpolateMark", () => {
     expect(mid.opacity).toBe(0.5);
   });
 
-  test("renders donut paths from a clean slate", () => {
-    const from: PathMark = {
-      className: "mv-donut-segment",
-      d: "M0 0L1 1Z",
-      id: "donut-segment-0",
-      opacity: 0,
-      type: "path",
-    };
-    const to: PathMark = {
-      className: "mv-donut-segment",
-      d: "M0 0L2 2Z",
-      id: "donut-segment-0",
-      opacity: 1,
-      type: "path",
-    };
+  test("interpolates donut geometry without path pinching", () => {
+    const fromModel = computeModel({
+      data: [
+        { color: "#6366f1", pct: 60 },
+        { color: "#22c55e", pct: 40 },
+      ],
+      size: { height: 120, width: 120 },
+      spec: { type: "donut" },
+    });
+    const toModel = computeModel({
+      data: [
+        { color: "#6366f1", pct: 35 },
+        { color: "#22c55e", pct: 45 },
+        { color: "#f59e0b", pct: 20 },
+      ],
+      size: { height: 120, width: 120 },
+      spec: { type: "donut" },
+    });
+
+    const from = fromModel.marks.find(
+      (mark): mark is PathMark =>
+        mark.type === "path" && mark.id === "donut-segment-0",
+    );
+    const to = toModel.marks.find(
+      (mark): mark is PathMark =>
+        mark.type === "path" && mark.id === "donut-segment-0",
+    );
+
+    expect(from).toBeTruthy();
+    expect(to).toBeTruthy();
+
+    if (!from || !to) return;
 
     const mid = interpolateMark(from, to, 0.5) as PathMark;
-    expect(mid.d).toBe(to.d);
-    expect(mid.opacity).toBeCloseTo(0.5);
+    expect(mid.d).not.toBe(from.d);
+    expect(mid.d).not.toBe(to.d);
+    expect(mid.d).toContain("A");
   });
 });
 

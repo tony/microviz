@@ -7,7 +7,7 @@ import type {
   RenderModel,
   TextMark,
 } from "../model";
-import { interpolatePathMark } from "./pathMorph";
+import { interpolatePathMark, parsePath } from "./pathMorph";
 
 /**
  * Easing functions for animation timing.
@@ -127,6 +127,7 @@ function interpolateTextMark(
   };
 }
 
+const TAU = Math.PI * 2;
 const DONUT_SEGMENT_CLASS = "mv-donut-segment";
 
 function isDonutSegmentMark(mark: PathMark): boolean {
@@ -135,13 +136,222 @@ function isDonutSegmentMark(mark: PathMark): boolean {
   return mark.className.split(/\s+/).includes(DONUT_SEGMENT_CLASS);
 }
 
+type DonutArcGeometry = {
+  cx: number;
+  cy: number;
+  outerR: number;
+  innerR: number;
+  startAngle: number;
+  endAngle: number;
+};
+
+type Point = { x: number; y: number };
+
+function normalizeSweep(sweep: number): number {
+  if (!Number.isFinite(sweep)) return 0;
+  let value = sweep;
+  while (value < 0) value += TAU;
+  while (value > TAU) value -= TAU;
+  return value;
+}
+
+function wrapAngle(angle: number): number {
+  let value = (angle + Math.PI) % TAU;
+  if (value < 0) value += TAU;
+  return value - Math.PI;
+}
+
+function lerpAngle(from: number, to: number, t: number): number {
+  const delta = wrapAngle(to - from);
+  return from + delta * t;
+}
+
+function arcToCenter(
+  start: Point,
+  end: Point,
+  radius: number,
+  largeArcFlag: boolean,
+  sweepFlag: boolean,
+): { cx: number; cy: number; startAngle: number; endAngle: number } | null {
+  if (!Number.isFinite(radius) || radius <= 0) return null;
+
+  const dx2 = (start.x - end.x) / 2;
+  const dy2 = (start.y - end.y) / 2;
+  const x1p = dx2;
+  const y1p = dy2;
+
+  const rSq = radius * radius;
+  const x1pSq = x1p * x1p;
+  const y1pSq = y1p * y1p;
+  const denom = x1pSq + y1pSq;
+  if (denom === 0) return null;
+
+  let radicant = (rSq - x1pSq - y1pSq) / denom;
+  radicant = Math.max(0, radicant);
+
+  const coef = (largeArcFlag === sweepFlag ? -1 : 1) * Math.sqrt(radicant);
+  const cxp = coef * y1p;
+  const cyp = coef * -x1p;
+
+  const cx = cxp + (start.x + end.x) / 2;
+  const cy = cyp + (start.y + end.y) / 2;
+
+  const startAngle = Math.atan2((y1p - cyp) / radius, (x1p - cxp) / radius);
+  const endAngleBase = Math.atan2((-y1p - cyp) / radius, (-x1p - cxp) / radius);
+  let delta = endAngleBase - startAngle;
+  if (!sweepFlag && delta > 0) delta -= TAU;
+  if (sweepFlag && delta < 0) delta += TAU;
+  const endAngle = startAngle + delta;
+
+  return { cx, cy, endAngle, startAngle };
+}
+
+function extractDonutGeometry(mark: PathMark): DonutArcGeometry | null {
+  const commands = parsePath(mark.d);
+  let outerStart: Point | null = null;
+  let outerArc: { args: number[] } | null = null;
+  let innerArc: { args: number[] } | null = null;
+
+  for (const cmd of commands) {
+    if (!outerStart && cmd.type === "M" && cmd.args.length >= 2) {
+      outerStart = { x: cmd.args[0] ?? 0, y: cmd.args[1] ?? 0 };
+      continue;
+    }
+    if (cmd.type === "A" && cmd.args.length >= 7) {
+      const sweepFlag = Number(cmd.args[4]) === 1;
+      if (sweepFlag && !outerArc) {
+        outerArc = cmd;
+      } else if (!sweepFlag && !innerArc) {
+        innerArc = cmd;
+      }
+    }
+  }
+
+  if (!outerStart || !outerArc || !innerArc) return null;
+
+  const outerR = Number(outerArc.args[0]);
+  const innerR = Number(innerArc.args[0]);
+  const outerEnd: Point = {
+    x: Number(outerArc.args[5]),
+    y: Number(outerArc.args[6]),
+  };
+  const largeArcFlag = Number(outerArc.args[3]) === 1;
+  const sweepFlag = Number(outerArc.args[4]) === 1;
+
+  const center = arcToCenter(
+    outerStart,
+    outerEnd,
+    outerR,
+    largeArcFlag,
+    sweepFlag,
+  );
+  if (!center) return null;
+
+  return {
+    cx: center.cx,
+    cy: center.cy,
+    endAngle: center.endAngle,
+    innerR,
+    outerR,
+    startAngle: center.startAngle,
+  };
+}
+
+function createArcPath(
+  cx: number,
+  cy: number,
+  outerR: number,
+  innerR: number,
+  startAngle: number,
+  endAngle: number,
+): string {
+  const isFullCircle = Math.abs(endAngle - startAngle) >= TAU - 0.001;
+
+  if (isFullCircle) {
+    const midAngle = startAngle + Math.PI;
+    return (
+      createHalfArcPath(cx, cy, outerR, innerR, startAngle, midAngle) +
+      " " +
+      createHalfArcPath(cx, cy, outerR, innerR, midAngle, endAngle)
+    );
+  }
+
+  const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
+  const outerEnd = polarToCartesian(cx, cy, outerR, endAngle);
+  const innerStart = polarToCartesian(cx, cy, innerR, startAngle);
+  const innerEnd = polarToCartesian(cx, cy, innerR, endAngle);
+
+  const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+
+  return [
+    `M ${outerStart.x.toFixed(2)} ${outerStart.y.toFixed(2)}`,
+    `A ${outerR.toFixed(2)} ${outerR.toFixed(2)} 0 ${largeArcFlag} 1 ${outerEnd.x.toFixed(2)} ${outerEnd.y.toFixed(2)}`,
+    `L ${innerEnd.x.toFixed(2)} ${innerEnd.y.toFixed(2)}`,
+    `A ${innerR.toFixed(2)} ${innerR.toFixed(2)} 0 ${largeArcFlag} 0 ${innerStart.x.toFixed(2)} ${innerStart.y.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
+
+function createHalfArcPath(
+  cx: number,
+  cy: number,
+  outerR: number,
+  innerR: number,
+  startAngle: number,
+  endAngle: number,
+): string {
+  const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
+  const outerEnd = polarToCartesian(cx, cy, outerR, endAngle);
+  const innerStart = polarToCartesian(cx, cy, innerR, startAngle);
+  const innerEnd = polarToCartesian(cx, cy, innerR, endAngle);
+
+  return [
+    `M ${outerStart.x.toFixed(2)} ${outerStart.y.toFixed(2)}`,
+    `A ${outerR.toFixed(2)} ${outerR.toFixed(2)} 0 0 1 ${outerEnd.x.toFixed(2)} ${outerEnd.y.toFixed(2)}`,
+    `L ${innerEnd.x.toFixed(2)} ${innerEnd.y.toFixed(2)}`,
+    `A ${innerR.toFixed(2)} ${innerR.toFixed(2)} 0 0 0 ${innerStart.x.toFixed(2)} ${innerStart.y.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
+
+function polarToCartesian(
+  cx: number,
+  cy: number,
+  radius: number,
+  angle: number,
+): Point {
+  return {
+    x: cx + radius * Math.cos(angle),
+    y: cy + radius * Math.sin(angle),
+  };
+}
+
 function interpolateDonutPathMark(
   from: PathMark,
   to: PathMark,
   t: number,
 ): PathMark {
+  const fromGeom = extractDonutGeometry(from);
+  const toGeom = extractDonutGeometry(to);
+  if (!fromGeom || !toGeom) {
+    return interpolatePathMark(from, to, t);
+  }
+
+  const startAngle = lerpAngle(fromGeom.startAngle, toGeom.startAngle, t);
+  const sweepFrom = normalizeSweep(fromGeom.endAngle - fromGeom.startAngle);
+  const sweepTo = normalizeSweep(toGeom.endAngle - toGeom.startAngle);
+  const sweep = lerp(sweepFrom, sweepTo, t);
+  const endAngle = startAngle + sweep;
+
+  const cx = lerp(fromGeom.cx, toGeom.cx, t);
+  const cy = lerp(fromGeom.cy, toGeom.cy, t);
+  const outerR = lerp(fromGeom.outerR, toGeom.outerR, t);
+  const innerR = lerp(fromGeom.innerR, toGeom.innerR, t);
+  const d = createArcPath(cx, cy, outerR, innerR, startAngle, endAngle);
+
   return {
     ...to,
+    d,
     fillOpacity: lerpOptional(from.fillOpacity, to.fillOpacity, t),
     opacity: lerpOptional(from.opacity, to.opacity, t),
     strokeOpacity: lerpOptional(from.strokeOpacity, to.strokeOpacity, t),
