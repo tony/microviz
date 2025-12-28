@@ -7,6 +7,7 @@ type Side = "left" | "right";
 type Props = {
   children: ReactNode;
   className?: string;
+  collapsed?: boolean;
   collapsible?: boolean;
   contentClassName?: string;
   defaultSize: number;
@@ -14,6 +15,7 @@ type Props = {
   minSize?: number;
   name: string;
   onCollapsedChange?: (collapsed: boolean) => void;
+  persistCollapsed?: boolean;
   side: Side;
 };
 
@@ -104,6 +106,7 @@ const ChevronRight: FC<{ className?: string }> = ({ className }) => (
 export const ResizablePane: FC<Props> = ({
   children,
   className,
+  collapsed: collapsedProp,
   collapsible = false,
   contentClassName,
   defaultSize,
@@ -111,6 +114,7 @@ export const ResizablePane: FC<Props> = ({
   minSize = 180,
   name,
   onCollapsedChange,
+  persistCollapsed = true,
   side,
 }) => {
   const storageKey = useMemo(() => `mv-pane:${name}:size`, [name]);
@@ -121,11 +125,13 @@ export const ResizablePane: FC<Props> = ({
     return readStoredSize(storageKey) ?? defaultSize;
   });
 
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
+  const [collapsedState, setCollapsedState] = useState<boolean>(() => {
     if (!collapsible) return false;
     if (typeof window === "undefined") return false;
+    if (!persistCollapsed) return false;
     return readStoredCollapsed(collapsedKey);
   });
+  const collapsed = collapsedProp ?? collapsedState;
 
   const dragRef = useRef<{
     pointerId: number;
@@ -133,13 +139,24 @@ export const ResizablePane: FC<Props> = ({
     startX: number;
   } | null>(null);
 
+  const setCollapsed = useCallback(
+    (next: boolean) => {
+      if (collapsedProp === undefined) {
+        setCollapsedState(next);
+      }
+      if (persistCollapsed) {
+        storeCollapsed(collapsedKey, next);
+      }
+      onCollapsedChange?.(next);
+    },
+    [collapsedKey, collapsedProp, onCollapsedChange, persistCollapsed],
+  );
+
   const toggleCollapse = useCallback(() => {
     if (forceExpanded) return;
     const next = !collapsed;
     setCollapsed(next);
-    storeCollapsed(collapsedKey, next);
-    onCollapsedChange?.(next);
-  }, [collapsed, collapsedKey, forceExpanded, onCollapsedChange]);
+  }, [collapsed, forceExpanded, setCollapsed]);
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {

@@ -411,6 +411,39 @@ function createRecordFromKeys<const K extends string, V>(
   return Object.fromEntries(keys.map((k) => [k, value])) as Record<K, V>;
 }
 
+const PANE_COLLAPSE_MAX_WIDTH = 1023;
+
+function isCompactViewport(): boolean {
+  if (typeof window === "undefined") return false;
+  if (typeof window.matchMedia === "function") {
+    return window.matchMedia(`(max-width: ${PANE_COLLAPSE_MAX_WIDTH}px)`)
+      .matches;
+  }
+  return window.innerWidth <= PANE_COLLAPSE_MAX_WIDTH;
+}
+
+function readPanePreference(name: string): boolean | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.localStorage.getItem(`mv-pane:${name}:collapsed`);
+    if (stored !== null) {
+      return stored === "true";
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function storePaneCollapsed(name: string, collapsed: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(`mv-pane:${name}:collapsed`, String(collapsed));
+  } catch {
+    // ignore
+  }
+}
+
 const HTML_SAFE_MARK_TYPES = new Set<Mark["type"]>([
   "rect",
   "circle",
@@ -422,7 +455,7 @@ const HTML_SUPPORTED_FILTER_PRIMITIVES = new Set([
   "gaussianBlur",
 ]);
 
-const ControlsIcon: FC<{ className?: string }> = ({ className }) => (
+const CloseIcon: FC<{ className?: string }> = ({ className }) => (
   <svg
     aria-hidden="true"
     className={className}
@@ -431,35 +464,12 @@ const ControlsIcon: FC<{ className?: string }> = ({ className }) => (
     stroke="currentColor"
     strokeLinecap="round"
     strokeLinejoin="round"
-    strokeWidth="1.5"
+    strokeWidth="1.6"
     viewBox="0 0 24 24"
     width="16"
   >
-    <path d="M4 6h10" />
-    <path d="M4 12h16" />
-    <path d="M4 18h7" />
-    <circle cx="18" cy="6" r="2" />
-    <circle cx="12" cy="12" r="2" />
-    <circle cx="11" cy="18" r="2" />
-  </svg>
-);
-
-const InspectorIcon: FC<{ className?: string }> = ({ className }) => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    height="16"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="1.5"
-    viewBox="0 0 24 24"
-    width="16"
-  >
-    <rect height="15" rx="2" width="16" x="4" y="4.5" />
-    <path d="M8 9h8" />
-    <path d="M8 13h5" />
+    <path d="m6 6 12 12" />
+    <path d="m18 6-12 12" />
   </svg>
 );
 
@@ -1300,45 +1310,81 @@ export const MicrovizBrowse: FC<{
   const [chartFilter, setChartFilter] = useState(
     () => initialUrlState.chartFilter,
   );
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
-  const [useDrawerLayout, setUseDrawerLayout] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const hoverMedia = window.matchMedia("(hover: none)");
-    const widthMedia = window.matchMedia("(max-width: 1023px)");
-    return hoverMedia.matches || widthMedia.matches;
-  });
+  const initialIsCompact = isCompactViewport();
+  const initialSidebarPreference = readPanePreference("sidebar");
+  const initialInspectorPreference = readPanePreference("inspector");
+
+  const [isCompact, setIsCompact] = useState(initialIsCompact);
+  const [sidebarPreference, setSidebarPreference] = useState(
+    initialSidebarPreference,
+  );
+  const [inspectorPreference, setInspectorPreference] = useState(
+    initialInspectorPreference,
+  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    initialIsCompact ? true : (initialSidebarPreference ?? false),
+  );
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(() =>
+    initialIsCompact ? true : (initialInspectorPreference ?? false),
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (typeof window.matchMedia !== "function") {
+      const onResize = () => setIsCompact(isCompactViewport());
+      window.addEventListener("resize", onResize);
+      onResize();
+      return () => window.removeEventListener("resize", onResize);
+    }
+    const media = window.matchMedia(
+      `(max-width: ${PANE_COLLAPSE_MAX_WIDTH}px)`,
+    );
+    const onChange = () => setIsCompact(media.matches);
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (isCompact) {
+      setSidebarCollapsed(true);
+      setInspectorCollapsed(true);
+      return;
+    }
+    setSidebarCollapsed(sidebarPreference ?? false);
+    setInspectorCollapsed(inspectorPreference ?? false);
+  }, [inspectorPreference, isCompact, sidebarPreference]);
+
+  const handleSidebarCollapsed = useCallback(
+    (collapsed: boolean) => {
+      if (isCompact) {
+        setSidebarCollapsed(collapsed);
+        return;
+      }
+      storePaneCollapsed("sidebar", collapsed);
+      setSidebarPreference(collapsed);
+      setSidebarCollapsed(collapsed);
+    },
+    [isCompact],
+  );
+
+  const handleInspectorCollapsed = useCallback(
+    (collapsed: boolean) => {
+      if (isCompact) {
+        setInspectorCollapsed(collapsed);
+        return;
+      }
+      storePaneCollapsed("inspector", collapsed);
+      setInspectorPreference(collapsed);
+      setInspectorCollapsed(collapsed);
+    },
+    [isCompact],
+  );
   const seriesPresetDisabled =
     dataPreset === "distribution" || dataPreset === "compare";
   const seriesPresetTooltip = seriesPresetDisabled
     ? `Series preset is ignored for the "${dataPreset}" data preset.`
     : "Series preset";
-  const closeMobilePanels = useCallback(() => {
-    setMobileSidebarOpen(false);
-    setMobileInspectorOpen(false);
-  }, []);
-  const toggleMobileSidebar = useCallback(() => {
-    setMobileInspectorOpen(false);
-    setMobileSidebarOpen((prev) => !prev);
-  }, []);
-  const toggleMobileInspector = useCallback(() => {
-    setMobileSidebarOpen(false);
-    setMobileInspectorOpen((prev) => !prev);
-  }, []);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hoverMedia = window.matchMedia("(hover: none)");
-    const widthMedia = window.matchMedia("(max-width: 1023px)");
-    const update = () =>
-      setUseDrawerLayout(hoverMedia.matches || widthMedia.matches);
-    update();
-    hoverMedia.addEventListener("change", update);
-    widthMedia.addEventListener("change", update);
-    return () => {
-      hoverMedia.removeEventListener("change", update);
-      widthMedia.removeEventListener("change", update);
-    };
-  }, []);
   const randomizeSeed = useCallback(() => {
     setSeed(`mv-${Math.floor(Math.random() * 10_000)}`);
   }, []);
@@ -1466,22 +1512,6 @@ export const MicrovizBrowse: FC<{
     width,
     wrapper,
   ]);
-
-  useEffect(() => {
-    if (!mobileSidebarOpen && !mobileInspectorOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeMobilePanels();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeMobilePanels, mobileInspectorOpen, mobileSidebarOpen]);
-  useEffect(() => {
-    if (useDrawerLayout) return;
-    setMobileSidebarOpen(false);
-    setMobileInspectorOpen(false);
-  }, [useDrawerLayout]);
 
   const workerClientRef = useRef<MicrovizWorkerClient | null>(null);
   const ensureWorkerClient = useMemo<EnsureWorkerClient>(
@@ -3189,46 +3219,45 @@ export const MicrovizBrowse: FC<{
     textarea.remove();
     finish();
   }, [codeSnippet.code]);
-  const mobileDrawerOpen =
-    useDrawerLayout && (mobileSidebarOpen || mobileInspectorOpen);
-
   return (
     <div className="relative flex h-full min-h-0 w-full">
-      {mobileDrawerOpen && (
-        <button
-          aria-label="Close panels"
-          className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-[1px]"
-          onClick={closeMobilePanels}
-          type="button"
-        />
-      )}
       <ResizablePane
-        className={`h-full border-r border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 left-0 z-40 shadow-xl transition-transform duration-200 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}` : "static shadow-none"}`}
+        className={`h-full border-r border-slate-200 bg-white/90 shadow-none dark:border-slate-800 dark:bg-slate-950/70 ${
+          sidebarCollapsed
+            ? ""
+            : inspectorCollapsed
+              ? "max-w-[70vw] lg:max-w-none"
+              : "max-w-[45vw] lg:max-w-none"
+        }`}
+        collapsed={sidebarCollapsed}
+        collapsible
         contentClassName="h-full w-full overflow-hidden"
         defaultSize={260}
         name="sidebar"
+        onCollapsedChange={handleSidebarCollapsed}
+        persistCollapsed={false}
         side="left"
       >
         <div className="flex h-full flex-col">
           <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <div className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Controls
               </div>
-              {useDrawerLayout && (
-                <button
-                  aria-label="Close controls"
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  onClick={() => setMobileSidebarOpen(false)}
-                  type="button"
-                >
-                  Close
-                </button>
-              )}
+              <button
+                aria-label="Close controls"
+                className={tabButton({
+                  active: false,
+                  size: "xs",
+                  variant: "muted",
+                })}
+                onClick={() => handleSidebarCollapsed(true)}
+                style={{ flexShrink: 0 }}
+                title="Close controls"
+                type="button"
+              >
+                <CloseIcon className="h-3.5 w-3.5" />
+              </button>
             </div>
             <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
               <TabToggle
@@ -3610,115 +3639,38 @@ export const MicrovizBrowse: FC<{
       </ResizablePane>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {useDrawerLayout && (
-          <div className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/80 px-2 py-0.5 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
-            <div className="relative h-9">
-              <button
-                aria-expanded={mobileSidebarOpen}
-                aria-label="Controls"
-                className={tabButton({
-                  active: mobileSidebarOpen,
-                  className:
-                    "absolute left-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center p-0",
-                  size: "xs",
-                  variant: "muted",
-                })}
-                onClick={toggleMobileSidebar}
-                title="Controls"
-                type="button"
-              >
-                <ControlsIcon className="h-6 w-6" />
-                <span className="sr-only">Controls</span>
-              </button>
-              <div className="flex h-full min-w-0 items-center justify-center gap-2 px-7">
-                <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <span>Filter</span>
-                  <select
-                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-                    onChange={(event) =>
-                      setChartSubtype(event.target.value as ChartSubtype)
-                    }
-                    title="Filter charts"
-                    value={chartSubtype}
-                  >
-                    {chartSubtypeOptions.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <RerollButton onClick={randomizeSeed} />
-                <div
-                  className="min-w-0 max-w-[45vw] truncate text-[10px] text-slate-500 dark:text-slate-400"
-                  title={`${wrapper} · ${renderer} · ${computeModeEffective}`}
-                >
-                  {wrapper} · {renderer}
-                  {warningCount > 0 && (
-                    <span className="font-semibold text-amber-600 dark:text-amber-300">
-                      {" "}
-                      · {warningCount} warning{warningCount === 1 ? "" : "s"}
-                    </span>
-                  )}{" "}
-                  · {computeModeEffective}
-                </div>
-              </div>
-              <button
-                aria-expanded={mobileInspectorOpen}
-                aria-label="Inspector"
-                className={tabButton({
-                  active: mobileInspectorOpen,
-                  className:
-                    "absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center p-0",
-                  size: "xs",
-                  variant: "muted",
-                })}
-                onClick={toggleMobileInspector}
-                title="Inspector"
-                type="button"
-              >
-                <InspectorIcon className="h-6 w-6" />
-                <span className="sr-only">Inspector</span>
-              </button>
-            </div>
-          </div>
-        )}
         <div className="px-4 py-2">
           <div className="flex items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
-            {!useDrawerLayout && (
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <TabToggle
-                  container="bordered"
-                  label="Chart subtype filter"
-                  onChange={setChartSubtype}
-                  options={chartSubtypeOptions.map((o) => ({
-                    ...o,
-                    title: `Filter: ${o.label}`,
-                  }))}
-                  size="xs"
-                  value={chartSubtype}
-                  variant="muted"
-                />
-                <RerollButton onClick={randomizeSeed} variant="full" />
-              </div>
-            )}
-            {!useDrawerLayout && (
-              <div className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                <span
-                  title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
-                >
-                  {visibleCharts.length} charts ·{" "}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <TabToggle
+                container="bordered"
+                label="Chart subtype filter"
+                onChange={setChartSubtype}
+                options={chartSubtypeOptions.map((o) => ({
+                  ...o,
+                  title: `Filter: ${o.label}`,
+                }))}
+                size="xs"
+                value={chartSubtype}
+                variant="muted"
+              />
+              <RerollButton onClick={randomizeSeed} variant="full" />
+            </div>
+            <div className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              <span
+                title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
+              >
+                {visibleCharts.length} charts ·{" "}
+              </span>
+              {wrapper} · {renderer}
+              {warningCount > 0 && (
+                <span className="font-semibold text-amber-600 dark:text-amber-300">
+                  {" "}
+                  · {warningCount} warning{warningCount === 1 ? "" : "s"}
                 </span>
-                {wrapper} · {renderer}
-                {warningCount > 0 && (
-                  <span className="font-semibold text-amber-600 dark:text-amber-300">
-                    {" "}
-                    · {warningCount} warning{warningCount === 1 ? "" : "s"}
-                  </span>
-                )}{" "}
-                · {computeModeEffective}
-              </div>
-            )}
+              )}{" "}
+              · {computeModeEffective}
+            </div>
           </div>
         </div>
 
@@ -3966,34 +3918,42 @@ export const MicrovizBrowse: FC<{
       </div>
 
       <ResizablePane
-        className={`h-full border-l border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/70 ${useDrawerLayout ? `fixed inset-y-0 right-0 z-40 shadow-xl transition-transform duration-200 ${mobileInspectorOpen ? "translate-x-0" : "translate-x-full"}` : "static shadow-none"}`}
+        className={`h-full border-l border-slate-200 bg-white/90 shadow-none dark:border-slate-800 dark:bg-slate-950/70 ${
+          inspectorCollapsed
+            ? ""
+            : sidebarCollapsed
+              ? "max-w-[70vw] lg:max-w-none"
+              : "max-w-[45vw] lg:max-w-none"
+        }`}
+        collapsed={inspectorCollapsed}
         collapsible
         contentClassName="h-full w-full overflow-hidden"
         defaultSize={340}
-        forceExpanded={useDrawerLayout && mobileInspectorOpen}
         name="inspector"
+        onCollapsedChange={handleInspectorCollapsed}
+        persistCollapsed={false}
         side="right"
       >
         <div className="flex h-full flex-col">
           <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-4 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <div className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Inspector
               </div>
-              {useDrawerLayout && (
-                <button
-                  aria-label="Close inspector"
-                  className={tabButton({
-                    active: false,
-                    size: "xs",
-                    variant: "muted",
-                  })}
-                  onClick={() => setMobileInspectorOpen(false)}
-                  type="button"
-                >
-                  Close
-                </button>
-              )}
+              <button
+                aria-label="Close inspector"
+                className={tabButton({
+                  active: false,
+                  size: "xs",
+                  variant: "muted",
+                })}
+                onClick={() => handleInspectorCollapsed(true)}
+                style={{ flexShrink: 0 }}
+                title="Close inspector"
+                type="button"
+              >
+                <CloseIcon className="h-3.5 w-3.5" />
+              </button>
             </div>
             <div className="flex min-w-0 items-center gap-2">
               <div className="min-w-0 flex-1">
