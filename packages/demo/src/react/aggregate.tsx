@@ -187,12 +187,12 @@ export const DotMatrix: FC<{ slices: PieSlice[] }> = ({ slices }) => {
 
   const model = computeModel({
     data: segments,
-    size: { height: 26, width: 26 },
+    size: { height: 32, width: 32 },
     spec: {
       className: "transition-all duration-500 ease-out",
       cols: 4,
       gap: 2,
-      pad: 0,
+      pad: 3,
       rows: 4,
       type: "pixel-grid",
     },
@@ -275,12 +275,12 @@ export const MosaicGrid: FC<{ slices: PieSlice[] }> = ({ slices }) => {
 
   const model = computeModel({
     data: segments,
-    size: { height: 30, width: 30 },
+    size: { height: 32, width: 32 },
     spec: {
       className: "transition-all duration-500 ease-out",
       cols: 4,
       gap: 1,
-      pad: 0,
+      pad: 1,
       rows: 4,
       type: "pixel-grid",
     },
@@ -1200,10 +1200,10 @@ export const MicroVizAggregateDemo: FC<{
     },
     {
       cards: [
-        <VizCard footprint="26×26px" key="dot-matrix" title="Dot Matrix">
+        <VizCard footprint="32×32px" key="dot-matrix" title="Dot Matrix">
           <DotMatrix slices={slices} />
         </VizCard>,
-        <VizCard footprint="30×30px" key="mosaic-grid" title="Mosaic Grid">
+        <VizCard footprint="32×32px" key="mosaic-grid" title="Mosaic Grid">
           <MosaicGrid slices={slices} />
         </VizCard>,
         <VizCard footprint="32×32px" key="bit-grid" title="Bit Grid">
