@@ -37,6 +37,10 @@ jobs:
       - name: Build demo
         run: pnpm --filter @microviz/demo build
 
+      - name: Set CloudFront invalidation paths
+        run: |
+          echo "AWS_CLOUDFRONT_INVALIDATION_PATHS=/ /index.html" >> $GITHUB_ENV
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -53,4 +57,4 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.MICROVIZ_SITE_DISTRIBUTION }}" \
-            --paths "/*"
+            --paths ${{ env.AWS_CLOUDFRONT_INVALIDATION_PATHS }}
