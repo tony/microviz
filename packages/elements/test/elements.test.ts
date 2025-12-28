@@ -20,6 +20,45 @@ describe("@microviz/elements", () => {
     expect(() => registerMicrovizElements()).not.toThrow();
   });
 
+  it("infers chart type from data (microviz-auto)", () => {
+    const el = document.createElement("microviz-auto");
+    el.setAttribute("data", "1, 2, 3");
+    document.body.append(el);
+
+    expect(el.getAttribute("data-inferred-type")).toBe("sparkline");
+    expect(el.getAttribute("data-inferred-reason")).toBe("number-array");
+
+    const chart = el.shadowRoot?.querySelector("microviz-chart");
+    const spec = JSON.parse(chart?.getAttribute("spec") ?? "{}");
+    expect(spec.type).toBe("sparkline");
+  });
+
+  it("respects explicit type overrides (microviz-auto)", () => {
+    const el = document.createElement("microviz-auto");
+    el.setAttribute("type", "bar");
+    el.setAttribute("data", "1, 2, 3");
+    document.body.append(el);
+
+    expect(el.getAttribute("data-inferred-type")).toBe("bar");
+    expect(el.getAttribute("data-inferred-reason")).toBe("explicit");
+  });
+
+  it("emits warnings for invalid JSON (microviz-auto)", () => {
+    const el = document.createElement("microviz-auto");
+    let warningCodes: string[] = [];
+    el.addEventListener("microviz-warning", (event) => {
+      const detail = (event as CustomEvent).detail as {
+        warnings?: { code?: string }[];
+      };
+      warningCodes =
+        detail.warnings?.map((warning) => warning.code ?? "") ?? [];
+    });
+    el.setAttribute("data", "{");
+    document.body.append(el);
+
+    expect(warningCodes).toContain("INVALID_JSON");
+  });
+
   it("renders and updates from attributes (microviz-bar)", () => {
     const el = document.createElement("microviz-bar");
     el.setAttribute("width", "80");

@@ -1,3 +1,4 @@
+import { MicrovizAuto } from "./auto";
 import { MicrovizBar } from "./bar";
 import { MicrovizBarcode } from "./barcode";
 import { MicrovizBitfield } from "./bitfield";
@@ -91,6 +92,7 @@ export {
   MicrovizBulletDelta,
   MicrovizBulletGauge,
   MicrovizCascadeSteps,
+  MicrovizAuto,
   MicrovizBarcode,
   MicrovizBitfield,
   MicrovizChart,
@@ -160,6 +162,10 @@ export {
 export function registerMicrovizElements(): void {
   if (!customElements.get("microviz-chart")) {
     customElements.define("microviz-chart", MicrovizChart);
+  }
+
+  if (!customElements.get("microviz-auto")) {
+    customElements.define("microviz-auto", MicrovizAuto);
   }
 
   if (!customElements.get("microviz-legend")) {

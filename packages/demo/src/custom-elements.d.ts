@@ -22,6 +22,16 @@ type MicrovizChartProps = BaseProps & {
   telemetry?: TelemetryAttribute;
 };
 
+type MicrovizAutoProps = BaseProps & {
+  autosize?: boolean;
+  data?: string;
+  interactive?: boolean;
+  pad?: string | number;
+  renderer?: "html" | "svg";
+  telemetry?: TelemetryAttribute;
+  type?: string;
+};
+
 type MicrovizModelProps = BaseProps & {
   interactive?: boolean;
   renderer?: "html" | "svg";
@@ -35,6 +45,7 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
+      "microviz-auto": MicrovizAutoProps;
       "microviz-bar": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
