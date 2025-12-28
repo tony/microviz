@@ -755,7 +755,6 @@ function useModels(
 
   const computeModeRef = useRef(computeMode);
   const inputsRef = useRef(inputs);
-  const requestedChartIdsRef = useRef(requestedChartIds);
   const computedRunIdsRef = useRef<Record<ChartId, number>>(
     createRecordFromKeys<ChartId, number>(initialChartIds, -1),
   );
@@ -775,7 +774,6 @@ function useModels(
 
   computeModeRef.current = computeMode;
   inputsRef.current = inputs;
-  requestedChartIdsRef.current = requestedChartIds;
 
   useLayoutEffect(() => {
     runIdRef.current += 1;
@@ -804,12 +802,8 @@ function useModels(
     const runId = runIdRef.current;
     const nextModels: Partial<Record<ChartId, RenderModel | null>> = {};
     const nextTimings: Partial<Record<ChartId, number | null>> = {};
-    const prepaintIds =
-      requestedChartIdsRef.current.length > 0
-        ? requestedChartIdsRef.current
-        : chartIds;
 
-    for (const chartId of prepaintIds) {
+    for (const chartId of chartIds) {
       const input = inputsRef.current[chartId];
       if (!input) continue;
 
