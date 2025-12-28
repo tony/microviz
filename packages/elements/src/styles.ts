@@ -16,6 +16,8 @@ const FALLBACK_MUTED = "#94a3b8";
 const stylesText = `
 :host {
   display: inline-block;
+  line-height: 0;
+  vertical-align: top;
   color: var(--mv-fg, currentColor);
   font-family: var(--mv-font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
   /* Motion tokens for transitions */
