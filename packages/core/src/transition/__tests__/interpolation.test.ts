@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type {
   CircleMark,
   LineMark,
+  PathMark,
   RectMark,
   RenderModel,
   TextMark,
@@ -210,6 +211,25 @@ describe("interpolateMark", () => {
 
     const mid = interpolateMark(from, to, 0.5) as RectMark;
     expect(mid.opacity).toBe(0.5);
+  });
+
+  test("renders donut paths from a clean slate", () => {
+    const from: PathMark = {
+      className: "mv-donut-segment",
+      d: "M0 0L1 1Z",
+      id: "donut-segment-0",
+      type: "path",
+    };
+    const to: PathMark = {
+      className: "mv-donut-segment",
+      d: "M0 0L2 2Z",
+      id: "donut-segment-0",
+      type: "path",
+    };
+
+    const mid = interpolateMark(from, to, 0.5) as PathMark;
+    expect(mid.d).toBe(to.d);
+    expect(mid.opacity).toBeCloseTo(0.5);
   });
 });
 

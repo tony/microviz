@@ -127,6 +127,22 @@ function interpolateTextMark(
   };
 }
 
+const DONUT_SEGMENT_CLASS = "mv-donut-segment";
+
+function isDonutSegmentMark(mark: PathMark): boolean {
+  if (mark.id.startsWith("donut-segment-")) return true;
+  if (!mark.className) return false;
+  return mark.className.split(/\s+/).includes(DONUT_SEGMENT_CLASS);
+}
+
+function interpolateDonutPathMark(to: PathMark, t: number): PathMark {
+  const targetOpacity = to.opacity ?? 1;
+  return {
+    ...to,
+    opacity: lerp(0, targetOpacity, t),
+  };
+}
+
 /**
  * Interpolate a single mark between two states.
  * If mark types differ, returns the target immediately.
@@ -147,6 +163,9 @@ export function interpolateMark(from: Mark, to: Mark, t: number): Mark {
     case "text":
       return interpolateTextMark(from, to as TextMark, t);
     case "path":
+      if (isDonutSegmentMark(from) || isDonutSegmentMark(to as PathMark)) {
+        return interpolateDonutPathMark(to as PathMark, t);
+      }
       return interpolatePathMark(from, to as PathMark, t);
     default:
       return to;
