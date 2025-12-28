@@ -17,9 +17,13 @@ import {
   type ReactNode,
   type SVGProps,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
+
+const useLayoutEffectSafe =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function urlRef(id: string | undefined): string | undefined {
   return id ? `url(#${id})` : undefined;
@@ -446,7 +450,7 @@ export function MicrovizSvgString({
   const svg = useMemo(() => renderSvgString(model, { title }), [model, title]);
   const hostRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     const host = hostRef.current;
     if (!host) return;
     if (!svg) {
@@ -502,7 +506,7 @@ export function MicrovizCanvas({
 
   const ref = useRef<HTMLCanvasElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffectSafe(() => {
     if (shouldFallbackToSvg) return;
     const canvas = ref.current;
     if (!canvas) return;
