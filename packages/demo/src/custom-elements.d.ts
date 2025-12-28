@@ -25,11 +25,13 @@ type MicrovizChartProps = BaseProps & {
 type MicrovizAutoProps = BaseProps & {
   autosize?: boolean;
   data?: string;
+  height?: number | string;
   interactive?: boolean;
   pad?: string | number;
   renderer?: "html" | "svg";
   telemetry?: TelemetryAttribute;
   type?: string;
+  width?: number | string;
 };
 
 type MicrovizModelProps = BaseProps & {

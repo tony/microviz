@@ -8,6 +8,7 @@ import {
   easings,
   getAllChartMeta,
   getPreferredAspectRatio,
+  inferSpec,
   interpolateModel,
   type Mark,
   type RenderModel,
@@ -317,6 +318,16 @@ function toInlineJson(value: unknown): string {
 
 function toPrettyJson(value: unknown): string {
   return JSON.stringify(value, null, 2);
+}
+
+function toAutoData(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
 }
 
 function buildSnippet(params: {
@@ -2552,6 +2563,65 @@ export const MicrovizBrowse: FC<{
     return null;
   }
 
+  function renderAutoModelPreview(model: RenderModel): ReactNode {
+    const canvasUnsupportedFilters =
+      renderer === "canvas" || renderer === "offscreen-canvas"
+        ? getCanvasUnsupportedFilters(model)
+        : [];
+    const shouldFallbackToSvg =
+      fallbackSvgWhenCanvasUnsupported &&
+      canvasUnsupportedFilters.length > 0 &&
+      (renderer === "canvas" || renderer === "offscreen-canvas");
+
+    if (renderer === "svg-string" || shouldFallbackToSvg) {
+      if (wrapper === "react") {
+        return (
+          <AnimatedReactSvgString
+            className="inline-block rounded bg-[var(--mv-bg)]"
+            model={model}
+          />
+        );
+      }
+      return <AnimatedSvgStringPreview model={model} />;
+    }
+
+    if (renderer === "html-svg") {
+      return (
+        <AnimatedHtmlSvgPreview
+          model={model}
+          showOverlay={showHtmlSvgOverlay}
+        />
+      );
+    }
+
+    if (renderer === "html") {
+      return <AnimatedHtmlPreview model={model} />;
+    }
+
+    if (renderer === "svg-dom") {
+      if (wrapper === "react") {
+        return (
+          <div className="inline-block rounded bg-[var(--mv-bg)]">
+            <AnimatedReactSvg className="block" model={model} />
+          </div>
+        );
+      }
+      return <AnimatedSvgDomPreview model={model} />;
+    }
+
+    if (wrapper === "react") {
+      return (
+        <AnimatedReactCanvas
+          className="rounded bg-[var(--mv-bg)]"
+          model={model}
+          options={canvasOptions}
+        />
+      );
+    }
+
+    return <AnimatedCanvasPreview model={model} options={canvasOptions} />;
+  }
+
   const selectedWarnings = getDiagnosticsWarnings(
     selectedModel,
     renderer,
@@ -2595,6 +2665,27 @@ export const MicrovizBrowse: FC<{
   }, [renderer, selectedModel]);
 
   const selectedInput = inputs[selectedChart];
+  const autoDataText = useMemo(
+    () => toAutoData(selectedInput?.data),
+    [selectedInput],
+  );
+  const autoInference = useMemo(
+    () => (selectedInput?.data ? inferSpec(selectedInput.data) : null),
+    [selectedInput],
+  );
+  const autoSize = useMemo(() => {
+    if (!autoInference) return null;
+    return sizeFor(autoInference.spec.type as ChartId);
+  }, [autoInference, sizeFor]);
+  const autoModel = useMemo(() => {
+    if (!autoInference || !autoSize) return null;
+    return computeModel({
+      data: autoInference.data as ComputeModelInput["data"],
+      size: autoSize,
+      spec: autoInference.spec,
+    });
+  }, [autoInference, autoSize]);
+
   const codeSnippet = useMemo(
     () =>
       buildSnippet({
@@ -3174,6 +3265,44 @@ export const MicrovizBrowse: FC<{
                         Only applies when using Canvas renderers.
                       </div>
                     )}
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Auto inference preview
+                  </div>
+                  {autoInference && autoModel && autoSize ? (
+                    <div className="rounded-lg border border-slate-200/70 bg-white/70 p-3 text-sm text-slate-700 shadow-sm dark:border-slate-800/70 dark:bg-slate-950/50 dark:text-slate-200">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span>
+                          Inferred{" "}
+                          <span className="font-semibold text-slate-700 dark:text-slate-200">
+                            {autoInference.spec.type}
+                          </span>{" "}
+                          · {autoInference.reason}
+                        </span>
+                        {autoDataText && (
+                          <span>{autoDataText.length} chars</span>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        {wrapper === "elements" ? (
+                          <AutoElementPreview
+                            data={autoDataText}
+                            showHoverTooltip={showHoverTooltip}
+                            size={autoSize}
+                            telemetryMode={telemetryMode}
+                          />
+                        ) : (
+                          renderAutoModelPreview(autoModel)
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      No inference match for the current data.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -4359,6 +4488,85 @@ const ElementPreview: FC<{
         interactive={showHoverTooltip}
         ref={setRef}
         telemetry={telemetryMode === "off" ? undefined : telemetryMode}
+      />
+      {showHoverTooltip && hovered && (
+        <div
+          className="pointer-events-none absolute z-10 rounded-md bg-slate-900/90 px-2 py-1 text-xs text-slate-50 shadow-sm"
+          style={{ left: hovered.x + 8, top: hovered.y + 8 }}
+        >
+          <div className="max-w-[180px] truncate">
+            {hovered.hit.markType} · {hovered.hit.markId}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AutoElementPreview: FC<{
+  data: string | null;
+  size: { height: number; width: number };
+  showHoverTooltip: boolean;
+  telemetryMode: TelemetryMode;
+}> = ({ data, size, showHoverTooltip, telemetryMode }) => {
+  const ref = useRef<HTMLElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [hovered, setHovered] = useState<{
+    hit: { markId: string; markType: string };
+    x: number;
+    y: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!showHoverTooltip) return;
+
+    const onHit = (event: Event) => {
+      const detail = (event as CustomEvent).detail as
+        | {
+            client?: { x: number; y: number };
+            hit: { markId: string; markType: string } | null;
+          }
+        | undefined;
+
+      if (!detail?.hit || !detail.client) {
+        setHovered(null);
+        return;
+      }
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      setHovered({
+        hit: detail.hit,
+        x: detail.client.x - rect.left,
+        y: detail.client.y - rect.top,
+      });
+    };
+
+    el.addEventListener("microviz-hit", onHit);
+    return () => el.removeEventListener("microviz-hit", onHit);
+  }, [showHoverTooltip]);
+
+  useEffect(() => {
+    if (!showHoverTooltip) setHovered(null);
+  }, [showHoverTooltip]);
+
+  const setRef = (node: HTMLElement | null) => {
+    ref.current = node;
+  };
+
+  return (
+    <div className="relative inline-block" ref={containerRef}>
+      <microviz-auto
+        data={data ?? undefined}
+        height={size.height}
+        interactive={showHoverTooltip}
+        ref={setRef}
+        style={{ height: size.height, width: size.width }}
+        telemetry={telemetryMode === "off" ? undefined : telemetryMode}
+        width={size.width}
       />
       {showHoverTooltip && hovered && (
         <div
