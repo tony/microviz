@@ -440,6 +440,95 @@ export function registerMicrovizElements(): void {
   }
 }
 
+export type QuickElementOptions = {
+  animate?: boolean;
+  autosize?: boolean;
+  className?: string;
+  height?: number;
+  id?: string;
+  interactive?: boolean;
+  pad?: number;
+  renderer?: "html" | "svg";
+  skeleton?: boolean;
+  telemetry?: "off" | "basic" | "verbose" | "frames" | boolean;
+  width?: number;
+};
+
+export type QuickAutoOptions = QuickElementOptions & {
+  type?: string;
+};
+
+function resolveDataAttribute(data: unknown): string | null {
+  if (data === null || data === undefined) return null;
+  if (typeof data === "string") return data;
+  return JSON.stringify(data);
+}
+
+function applyQuickOptions(
+  element: HTMLElement,
+  options: QuickElementOptions,
+): void {
+  if (options.id) element.id = options.id;
+  if (options.className) element.className = options.className;
+  if (options.width !== undefined)
+    element.setAttribute("width", String(options.width));
+  if (options.height !== undefined)
+    element.setAttribute("height", String(options.height));
+  if (options.pad !== undefined)
+    element.setAttribute("pad", String(options.pad));
+  if (options.renderer)
+    element.setAttribute("renderer", String(options.renderer));
+
+  if (options.autosize !== undefined) {
+    if (options.autosize) element.setAttribute("autosize", "");
+    else element.removeAttribute("autosize");
+  }
+
+  if (options.interactive !== undefined) {
+    if (options.interactive) element.setAttribute("interactive", "");
+    else element.removeAttribute("interactive");
+  }
+
+  if (options.skeleton !== undefined) {
+    if (options.skeleton) element.setAttribute("skeleton", "");
+    else element.removeAttribute("skeleton");
+  }
+
+  if (options.animate !== undefined) {
+    element.setAttribute("animate", options.animate ? "true" : "false");
+  }
+
+  if (options.telemetry !== undefined) {
+    if (options.telemetry === true) element.setAttribute("telemetry", "");
+    else if (options.telemetry === false)
+      element.setAttribute("telemetry", "off");
+    else element.setAttribute("telemetry", String(options.telemetry));
+  }
+}
+
+export function auto(
+  data: unknown,
+  options: QuickAutoOptions = {},
+): HTMLElement {
+  const element = document.createElement("microviz-auto");
+  const dataAttribute = resolveDataAttribute(data);
+  if (dataAttribute !== null) element.setAttribute("data", dataAttribute);
+  if (options.type) element.setAttribute("type", options.type);
+  applyQuickOptions(element, options);
+  return element;
+}
+
+export function sparkline(
+  data: unknown,
+  options: QuickElementOptions = {},
+): HTMLElement {
+  const element = document.createElement("microviz-sparkline");
+  const dataAttribute = resolveDataAttribute(data);
+  if (dataAttribute !== null) element.setAttribute("data", dataAttribute);
+  applyQuickOptions(element, options);
+  return element;
+}
+
 export {
   applyMicrovizStyles,
   clearHtmlFromShadowRoot,
