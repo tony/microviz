@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm --filter @microviz/core build && pnpm --filter @microviz/renderers build && pnpm --filter @microviz/elements build && pnpm --filter @microviz/react build",
+    "build:cdn:analyze": "ANALYZE=1 pnpm --filter @microviz/elements build:cdn",
     "build:watch": "pnpm run --recursive build:watch",
     "clean": "pnpm run --recursive clean",
     "distclean": "pnpm run --recursive distclean",
@@ -19,6 +20,7 @@
     "test": "pnpm run --recursive test",
     "test:core": "pnpm --filter @microviz/core test",
     "test:core:watch": "pnpm --filter @microviz/core test:watch",
+    "test:reports": "pnpm -r run test -- --reporter=default --reporter=json --reporter=junit --outputFile.json=reports/vitest.json --outputFile.junit=reports/vitest.junit.xml",
     "test:watch": "pnpm run --recursive test:watch",
     "type-check": "pnpm -r run check",
     "update": "pnpm run --recursive update",
