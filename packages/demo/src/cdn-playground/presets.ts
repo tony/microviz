@@ -16,6 +16,111 @@ export const PRESETS: Preset[] = [
 <html>
 <head>
   <meta charset="utf-8">
+  <title>Microviz Auto Inference</title>
+  <script type="module">
+    import "{{CDN_URL}}";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    h2 { font-size: 0.875rem; margin: 0 0 0.5rem; color: #64748b; }
+    .grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      background: #fff;
+    }
+    .note { font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Auto Inference (Basics)</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>Series → Sparkline</h2>
+      <microviz-auto data-kind="series" data="10, 25, 15, 30, 20" width="200" height="32"></microviz-auto>
+    </div>
+    <div class="card">
+      <h2>Delta → Bullet</h2>
+      <microviz-auto data-kind="delta" data='{"current":12,"previous":9,"max":20}' width="220" height="40"></microviz-auto>
+    </div>
+    <div class="card">
+      <h2>Segments → Donut</h2>
+      <microviz-auto data-kind="segments" data='[{"pct":62,"color":"#6366f1","name":"Desktop"},{"pct":28,"color":"#22c55e","name":"Mobile"},{"pct":10,"color":"#f59e0b","name":"Tablet"}]' width="140" height="140"></microviz-auto>
+    </div>
+    <div class="card">
+      <h2>Value → Bar</h2>
+      <microviz-auto data-kind="value" data='{"value":12,"max":20}' width="220" height="32"></microviz-auto>
+      <div class="note">Auto picks the bar renderer from a value object.</div>
+    </div>
+  </div>
+</body>
+</html>`,
+    description: "Auto chart inference for common data shapes",
+    id: "auto-inference",
+    name: "Auto Inference (Basics)",
+  },
+  {
+    code: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz Auto Inference (CSV)</title>
+  <script type="module">
+    import "{{CDN_URL}}";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    p { color: #64748b; margin-bottom: 1rem; font-size: 0.875rem; }
+    pre { background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>Auto Inference (CSV)</h1>
+  <p>CSV with pct/color fields infers a donut.</p>
+  <microviz-auto data-kind="csv" data="pct,color,name\n62,#6366f1,Desktop\n28,#22c55e,Mobile\n10,#f59e0b,Tablet" width="160" height="160"></microviz-auto>
+  <pre>pct,color,name
+62,#6366f1,Desktop
+28,#22c55e,Mobile
+10,#f59e0b,Tablet</pre>
+</body>
+</html>`,
+    description: "CSV pct/color parsing for auto donut inference",
+    id: "auto-csv",
+    name: "Auto Inference (CSV)",
+  },
+  {
+    code: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz Auto Override</title>
+  <script type="module">
+    import "{{CDN_URL}}";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    p { color: #64748b; margin-bottom: 1rem; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <h1>Auto Inference Override</h1>
+  <p>Segments normally infer a donut, but <code>type="bullet-gauge"</code> forces a different chart.</p>
+  <microviz-auto data-kind="override" type="bullet-gauge" data='[{"pct":55,"color":"#6366f1","name":"Desktop"},{"pct":30,"color":"#22c55e","name":"Mobile"},{"pct":15,"color":"#f59e0b","name":"Tablet"}]' width="240" height="60"></microviz-auto>
+</body>
+</html>`,
+    description: "Override inference with an explicit chart type",
+    id: "auto-override",
+    name: "Auto Override",
+  },
+  {
+    code: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
   <title>Microviz Sparkline</title>
   <script type="module">
     import "{{CDN_URL}}";
