@@ -15,6 +15,7 @@ export type ChartSubtype = "all" | "bars" | "dots" | "grids" | "lines";
 export type SidebarTab = "browse" | "debug" | "settings";
 export type PaletteMode = "value" | "random" | "chunks";
 export type HtmlFilter = "all" | "safe" | "broken";
+export type SizePreset = "custom" | "token";
 
 export type BrowseState = {
   applyNoiseOverlay: boolean;
@@ -35,6 +36,8 @@ export type BrowseState = {
   showHtmlSvgOverlay: boolean;
   showHoverTooltip: boolean;
   sidebarTab: SidebarTab;
+  sizePreset: SizePreset;
+  tokenScale: number;
   width: number;
   wrapper: Wrapper;
 };
@@ -52,12 +55,14 @@ export const DEFAULT_BROWSE_STATE: BrowseState = {
   renderer: "svg-string",
   seed: "mv-1",
   segmentCount: 5,
-  selectedChart: "sparkline",
+  selectedChart: "nano-ring",
   seriesLength: 16,
   seriesPreset: "trend",
   showHoverTooltip: false,
   showHtmlSvgOverlay: true,
   sidebarTab: "settings",
+  sizePreset: "token",
+  tokenScale: 1,
   width: 200,
   wrapper: "elements",
 };
@@ -101,6 +106,10 @@ type BrowseSerializedState = {
   ht?: 1;
   /** sidebarTab */
   tb?: SidebarTab;
+  /** sizePreset */
+  sz?: SizePreset;
+  /** tokenScale */
+  ts?: number;
   /** width */
   w?: number;
   /** wrapper */
@@ -191,6 +200,10 @@ function isSidebarTab(value: unknown): value is SidebarTab {
   return value === "browse" || value === "settings" || value === "debug";
 }
 
+function isSizePreset(value: unknown): value is SizePreset {
+  return value === "custom" || value === "token";
+}
+
 function normalizeBrowseState(state: BrowseState): BrowseState {
   const next: BrowseState = { ...state };
 
@@ -204,6 +217,12 @@ function normalizeBrowseState(state: BrowseState): BrowseState {
 
   if (next.wrapper !== "elements") {
     next.showHoverTooltip = false;
+  }
+
+  if (!Number.isFinite(next.tokenScale)) {
+    next.tokenScale = DEFAULT_BROWSE_STATE.tokenScale;
+  } else {
+    next.tokenScale = clamp(Math.round(next.tokenScale), 1, 6);
   }
 
   return next;
@@ -243,6 +262,10 @@ function serializeBrowseState(input: BrowseState): BrowseSerializedState {
   if (state.height !== DEFAULT_BROWSE_STATE.height) s.h = state.height;
   if (state.sidebarTab !== DEFAULT_BROWSE_STATE.sidebarTab)
     s.tb = state.sidebarTab;
+  if (state.sizePreset !== DEFAULT_BROWSE_STATE.sizePreset)
+    s.sz = state.sizePreset;
+  if (state.tokenScale !== DEFAULT_BROWSE_STATE.tokenScale)
+    s.ts = state.tokenScale;
 
   if (state.applyNoiseOverlay) s.n = 1;
   if (state.fallbackSvgWhenCanvasUnsupported) s.fb = 1;
@@ -313,6 +336,13 @@ function deserializeBrowseState(
     sidebarTab: isSidebarTab(serialized.tb)
       ? serialized.tb
       : DEFAULT_BROWSE_STATE.sidebarTab,
+    sizePreset: isSizePreset(serialized.sz)
+      ? serialized.sz
+      : DEFAULT_BROWSE_STATE.sizePreset,
+    tokenScale:
+      typeof serialized.ts === "number" && Number.isFinite(serialized.ts)
+        ? clamp(Math.round(serialized.ts), 1, 6)
+        : DEFAULT_BROWSE_STATE.tokenScale,
     width:
       typeof serialized.w === "number" && Number.isFinite(serialized.w)
         ? clamp(Math.round(serialized.w), 80, 520)

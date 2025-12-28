@@ -74,6 +74,7 @@ import {
   type PaletteMode,
   type Renderer,
   type SidebarTab,
+  type SizePreset,
   type Wrapper,
 } from "./browseUrlState";
 import { JsonViewer } from "./JsonViewer";
@@ -135,6 +136,165 @@ const useLayoutEffectSafe =
 
 const DEFAULT_ANIMATION_MS = 300;
 const TELEMETRY_LIMIT = 200;
+
+type TokenSize = { height: number; width: number };
+
+const TOKEN_BASE_SIZES = {
+  chips: { height: 12, width: 32 },
+  dotRow: { height: 4, width: 32 },
+  square: { height: 32, width: 32 },
+  tall: { height: 32, width: 8 },
+  wide: { height: 8, width: 32 },
+} satisfies Record<string, TokenSize>;
+
+const TOKEN_SCALE_KEYS = new Set([
+  "barRadius",
+  "barWidth",
+  "cellSize",
+  "cornerRadius",
+  "dotRadius",
+  "gap",
+  "gapSize",
+  "insetX",
+  "insetY",
+  "lineHeight",
+  "lineRadius",
+  "gapY",
+  "maxChipWidth",
+  "maxDotRadius",
+  "maxLength",
+  "minChipWidth",
+  "minDotRadius",
+  "minLength",
+  "overlap",
+  "pad",
+  "pillHeight",
+  "radius",
+  "ringGap",
+  "ringStrokeWidth",
+  "strokeWidth",
+]);
+
+const TOKEN_SIZE_MAP: Partial<Record<ChartId, TokenSize>> = {
+  barcode: TOKEN_BASE_SIZES.wide,
+  bitfield: TOKEN_BASE_SIZES.square,
+  "code-minimap": TOKEN_BASE_SIZES.square,
+  "concentric-arcs": TOKEN_BASE_SIZES.square,
+  donut: TOKEN_BASE_SIZES.square,
+  "dot-row": TOKEN_BASE_SIZES.dotRow,
+  equalizer: TOKEN_BASE_SIZES.square,
+  "nano-ring": TOKEN_BASE_SIZES.square,
+  "orbital-dots": TOKEN_BASE_SIZES.square,
+  "pattern-tiles": TOKEN_BASE_SIZES.wide,
+  "pixel-column": TOKEN_BASE_SIZES.tall,
+  "pixel-grid": TOKEN_BASE_SIZES.square,
+  "pixel-pill": TOKEN_BASE_SIZES.wide,
+  "pixel-treemap": TOKEN_BASE_SIZES.square,
+  "progress-pills": TOKEN_BASE_SIZES.wide,
+  "radial-bars": TOKEN_BASE_SIZES.square,
+  "segmented-bar": TOKEN_BASE_SIZES.wide,
+  "segmented-pill": TOKEN_BASE_SIZES.wide,
+  "segmented-ring": TOKEN_BASE_SIZES.square,
+  "shape-row": TOKEN_BASE_SIZES.wide,
+  "sparkline-bars": TOKEN_BASE_SIZES.square,
+  "stacked-bar": TOKEN_BASE_SIZES.wide,
+  "stacked-chips": TOKEN_BASE_SIZES.chips,
+  "vertical-stack": TOKEN_BASE_SIZES.tall,
+};
+
+const TOKEN_SPEC_OVERRIDES: Partial<Record<ChartId, Record<string, unknown>>> =
+  {
+    barcode: { bins: 32, gap: 0, interleave: true, pad: 0 },
+    bitfield: { cellSize: 4, dotRadius: 1.6 },
+    "code-minimap": { lines: 8, pad: 0 },
+    "concentric-arcs": { ringGap: 1, rings: 4, strokeWidth: 2.5 },
+    donut: { innerRadius: 0.45, pad: 0 },
+    "dot-row": { dots: 8, gap: 0, pad: 0 },
+    equalizer: { barWidth: 4, bins: 6, gap: 1, pad: 1 },
+    "nano-ring": { gapSize: 2, pad: 0, strokeWidth: 4 },
+    "orbital-dots": {
+      maxDotRadius: 6,
+      minDotRadius: 2,
+      pad: 0,
+      radius: 10,
+      ringStrokeWidth: 1,
+    },
+    "pattern-tiles": { pad: 0 },
+    "pixel-column": { gap: 1, minPx: 1, pad: 0 },
+    "pixel-grid": { cols: 4, gap: 1, pad: 1, rows: 4 },
+    "pixel-pill": { gap: 1, minPx: 1, pad: 0 },
+    "pixel-treemap": { cornerRadius: 6, pad: 0 },
+    "progress-pills": { gap: 2, pad: 0 },
+    "radial-bars": { maxLength: 12, minLength: 3, pad: 0, strokeWidth: 2.5 },
+    "segmented-bar": { gap: 1, pad: 0 },
+    "segmented-pill": { pad: 0 },
+    "segmented-ring": { gapSize: 4, pad: 2, strokeWidth: 3 },
+    "shape-row": { maxShapes: 4, pad: 0 },
+    "sparkline-bars": { barRadius: 1, gap: 1, pad: 0 },
+    "stacked-bar": { pad: 0 },
+    "stacked-chips": {
+      maxChips: 4,
+      maxChipWidth: 24,
+      minChipWidth: 12,
+      overlap: 4,
+      pad: 0,
+      strokeWidth: 2,
+    },
+    "vertical-stack": { pad: 0 },
+  };
+
+const TOKEN_CHART_IDS = new Set<ChartId>(
+  Object.keys(TOKEN_SIZE_MAP) as ChartId[],
+);
+
+function scaleTokenSize(size: TokenSize, scale: number): TokenSize {
+  return {
+    height: Math.max(1, Math.round(size.height * scale)),
+    width: Math.max(1, Math.round(size.width * scale)),
+  };
+}
+
+function scaleTokenSpec(
+  spec: Record<string, unknown>,
+  scale: number,
+): Record<string, unknown> {
+  if (scale === 1) return spec;
+  return Object.fromEntries(
+    Object.entries(spec).map(([key, value]) => {
+      if (typeof value === "number" && TOKEN_SCALE_KEYS.has(key)) {
+        return [key, value * scale];
+      }
+      return [key, value];
+    }),
+  );
+}
+
+function applyTokenOverrides(
+  inputs: Record<ChartId, ComputeModelInput>,
+  scale: number,
+): Record<ChartId, ComputeModelInput> {
+  const next: Partial<Record<ChartId, ComputeModelInput>> = {};
+  for (const [chartId, input] of Object.entries(inputs) as [
+    ChartId,
+    ComputeModelInput,
+  ][]) {
+    const sizeBase = TOKEN_SIZE_MAP[chartId];
+    if (!sizeBase) {
+      next[chartId] = input;
+      continue;
+    }
+    const size = scaleTokenSize(sizeBase, scale);
+    const override = TOKEN_SPEC_OVERRIDES[chartId];
+    const spec = override
+      ? ({
+          ...input.spec,
+          ...scaleTokenSpec(override, scale),
+        } as ComputeModelInput["spec"])
+      : input.spec;
+    next[chartId] = { ...input, size, spec };
+  }
+  return next as Record<ChartId, ComputeModelInput>;
+}
 
 const telemetryModeOptions = [
   { id: "off", label: "Off" },
@@ -1132,6 +1292,12 @@ export const MicrovizBrowse: FC<{
   );
   const [width, setWidth] = useState(() => initialUrlState.width);
   const [height, setHeight] = useState(() => initialUrlState.height);
+  const [sizePreset, setSizePreset] = useState<SizePreset>(
+    () => initialUrlState.sizePreset,
+  );
+  const [tokenScale, setTokenScale] = useState(
+    () => initialUrlState.tokenScale,
+  );
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>(
     () => initialUrlState.sidebarTab,
   );
@@ -1239,6 +1405,12 @@ export const MicrovizBrowse: FC<{
     );
     setWidth((prev) => (prev === urlState.width ? prev : urlState.width));
     setHeight((prev) => (prev === urlState.height ? prev : urlState.height));
+    setSizePreset((prev) =>
+      prev === urlState.sizePreset ? prev : urlState.sizePreset,
+    );
+    setTokenScale((prev) =>
+      prev === urlState.tokenScale ? prev : urlState.tokenScale,
+    );
     setSidebarTab((prev) =>
       prev === urlState.sidebarTab ? prev : urlState.sidebarTab,
     );
@@ -1268,6 +1440,8 @@ export const MicrovizBrowse: FC<{
       showHoverTooltip,
       showHtmlSvgOverlay,
       sidebarTab,
+      sizePreset,
+      tokenScale,
       width,
       wrapper,
     });
@@ -1291,6 +1465,8 @@ export const MicrovizBrowse: FC<{
     selectedChart,
     showHoverTooltip,
     sidebarTab,
+    sizePreset,
+    tokenScale,
     width,
     wrapper,
   ]);
@@ -1330,6 +1506,7 @@ export const MicrovizBrowse: FC<{
   }, []);
 
   const size = useMemo(() => ({ height, width }), [height, width]);
+  const isTokenMode = sizePreset === "token";
 
   // Helper to compute size based on chart's preferred aspect ratio
   const sizeFor = useMemo(
@@ -1383,7 +1560,7 @@ export const MicrovizBrowse: FC<{
     [seed],
   );
 
-  const inputs: Record<ChartId, ComputeModelInput> = useMemo(() => {
+  const baseInputs: Record<ChartId, ComputeModelInput> = useMemo(() => {
     const palette = segments.map((segment) => segment.color);
     const waveformColors = buildPaletteColors({
       count: 24,
@@ -1866,14 +2043,32 @@ export const MicrovizBrowse: FC<{
     sizeFor,
   ]);
 
-  const chartIds = useMemo(() => Object.keys(inputs) as ChartId[], [inputs]);
+  const inputs = useMemo(
+    () =>
+      isTokenMode ? applyTokenOverrides(baseInputs, tokenScale) : baseInputs,
+    [baseInputs, isTokenMode, tokenScale],
+  );
+
+  const chartIds = useMemo(() => {
+    const ids = Object.keys(inputs) as ChartId[];
+    if (!isTokenMode) return ids;
+    return ids.filter((chartId) => TOKEN_CHART_IDS.has(chartId));
+  }, [inputs, isTokenMode]);
   const chartCatalog = useMemo(() => buildChartCatalog(chartIds), [chartIds]);
+
+  useEffect(() => {
+    if (!isTokenMode) return;
+    if (TOKEN_CHART_IDS.has(selectedChart)) return;
+    setSelectedChart("nano-ring");
+  }, [isTokenMode, selectedChart]);
 
   const htmlFilterActive =
     htmlFilter !== "all" && (renderer === "html" || renderer === "html-svg");
   const htmlSafetyCacheRef = useRef(new Map<string, Map<ChartId, boolean>>());
   const htmlSafetyCacheKey = useMemo(() => {
     if (!htmlFilterActive) return null;
+    const sizeKey =
+      sizePreset === "token" ? `token:${tokenScale}` : `${width}x${height}`;
     return [
       applyNoiseOverlay ? "noise:1" : "noise:0",
       `data:${dataPreset}`,
@@ -1882,7 +2077,7 @@ export const MicrovizBrowse: FC<{
       `series:${seriesLength}`,
       `segments:${segmentCount}`,
       `preset:${seriesPreset}`,
-      `size:${width}x${height}`,
+      `size:${sizeKey}`,
     ].join("|");
   }, [
     applyNoiseOverlay,
@@ -1894,6 +2089,8 @@ export const MicrovizBrowse: FC<{
     segmentCount,
     seriesLength,
     seriesPreset,
+    sizePreset,
+    tokenScale,
     width,
   ]);
   const htmlSafetyMap = useMemo(() => {
@@ -2675,8 +2872,13 @@ export const MicrovizBrowse: FC<{
   );
   const autoSize = useMemo(() => {
     if (!autoInference) return null;
-    return sizeFor(autoInference.spec.type as ChartId);
-  }, [autoInference, sizeFor]);
+    const chartId = autoInference.spec.type as ChartId;
+    if (isTokenMode) {
+      const tokenSize = TOKEN_SIZE_MAP[chartId];
+      if (tokenSize) return scaleTokenSize(tokenSize, tokenScale);
+    }
+    return sizeFor(chartId);
+  }, [autoInference, isTokenMode, sizeFor, tokenScale]);
   const autoModel = useMemo(() => {
     if (!autoInference || !autoSize) return null;
     return computeModel({
@@ -3166,22 +3368,45 @@ export const MicrovizBrowse: FC<{
                     value={computeModeEffective}
                   />
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <ToggleGroup<SizePreset>
+                    columns={2}
+                    label="Size preset"
+                    onChange={setSizePreset}
+                    options={[
+                      { id: "token", label: "Data tokens" },
+                      { id: "custom", label: "Custom" },
+                    ]}
+                    value={sizePreset}
+                  />
+
+                  {sizePreset === "token" ? (
                     <FieldNumberWithRange
-                      label="Width"
-                      max={520}
-                      min={80}
-                      onChange={setWidth}
-                      value={width}
+                      label="Token scale"
+                      max={6}
+                      min={1}
+                      onChange={(value) =>
+                        setTokenScale(Math.max(1, Math.round(value)))
+                      }
+                      value={tokenScale}
                     />
-                    <FieldNumberWithRange
-                      label="Height"
-                      max={140}
-                      min={16}
-                      onChange={setHeight}
-                      value={height}
-                    />
-                  </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <FieldNumberWithRange
+                        label="Width"
+                        max={520}
+                        min={80}
+                        onChange={setWidth}
+                        value={width}
+                      />
+                      <FieldNumberWithRange
+                        label="Height"
+                        max={140}
+                        min={16}
+                        onChange={setHeight}
+                        value={height}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
