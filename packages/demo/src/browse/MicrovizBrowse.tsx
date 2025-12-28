@@ -3370,11 +3370,11 @@ export const MicrovizBrowse: FC<{
 
                   <ToggleGroup<SizePreset>
                     columns={2}
-                    label="Size preset"
+                    label="Layout"
                     onChange={setSizePreset}
                     options={[
-                      { id: "token", label: "Data tokens" },
-                      { id: "custom", label: "Custom" },
+                      { id: "custom", label: "Standard" },
+                      { id: "token", label: "Micro tokens" },
                     ]}
                     value={sizePreset}
                   />
