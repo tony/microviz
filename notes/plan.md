@@ -465,10 +465,10 @@ Expert synthesis from 5 independent assessments on making microviz more friendly
 
 | Principle | Expert Consensus | Microviz Status | Gap |
 |-----------|------------------|-----------------|-----|
-| **Bundle size** | ~50KB gzip target | ~80-100KB gzip | 🟡 Investigate |
-| **Progressive API** | One-liner → Config → Full spec | Web Components only | 🔴 Need inference API |
+| **Bundle size** | ~50KB gzip target | ~54KB gzip (CDN build) | 🟢 On target |
+| **Progressive API** | One-liner → Config → Full spec | ✅ Auto element + quick helpers | 🟢 Done (2025-12-27) |
 | **Data flexibility** | Accept CSV, arrays, objects | ✅ Lenient parsing | Done (2025-12-19) |
-| **Smart defaults** | Infer chart type from data | Manual type selection | 🔴 Need inference engine |
+| **Smart defaults** | Infer chart type from data | ✅ Inference engine + CSV | 🟢 Done (2025-12-27) |
 | **Zero-config styling** | "Looks good" without CSS | ✅ Fallback styles | Done (2025-12-19) |
 | **CDN drop-in** | Single script, no import maps | ESM via esm.sh works | ✅ Verified |
 | **AI/LLM friendly** | `llms.txt`, strings over functions | ✅ llms.txt exists | Done (2025-12-19) |
@@ -483,13 +483,13 @@ Expert synthesis from 5 independent assessments on making microviz more friendly
 - [x] **Inline fallback styles**: `packages/elements/src/styles.ts:8-189` (Tableau 10)
 - [x] **Create `llms.txt`**: `packages/site/public/llms.txt` (5821 bytes)
 
-#### Phase 2: Inference & Progressive API (v1.1)
-- [ ] Type inference helpers in core (temporal/quantitative/nominal detection)
-- [ ] `<microviz-auto>` element that guesses chart type
-- [ ] Quick function API: `sparkline([1,2,3])` returns element
+#### Phase 2: Inference & Progressive API (v1.1) — ✅ COMPLETE (2025-12-27)
+- [x] Type inference helpers in core (temporal/quantitative/nominal detection)
+- [x] `<microviz-auto>` element that guesses chart type
+- [x] Quick function API: `sparkline([1,2,3])` returns element
 
 #### Phase 3: Data Ecosystem (v1.2+)
-- [ ] CSV string parsing in core
+- [x] CSV string parsing in core (2025-12-27)
 - [ ] Arrow/DataFrame support (optional module)
 
 ### CDN Distribution — ✅ IMPLEMENTED (2025-12-20)
