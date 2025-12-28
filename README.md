@@ -82,6 +82,22 @@ If you want a single tag that can render any `spec.type` and auto-size via `Resi
 ></microviz-chart>
 ```
 
+### Auto chart element (type inference)
+
+If you want a one-liner that infers the chart type from the data:
+
+```html
+<microviz-auto data="1,2,3,4,5"></microviz-auto>
+<microviz-auto data='{"current":12,"previous":9}'></microviz-auto>
+<microviz-auto data="label,value\nA,10\nB,14\nC,8"></microviz-auto>
+```
+
+You can still force a type when needed:
+
+```html
+<microviz-auto type="bar" data="3, 6, 2"></microviz-auto>
+```
+
 ### Tailwind v4 harmony (CSS-first)
 
 ```css
@@ -99,6 +115,20 @@ If you want a single tag that can render any `spec.type` and auto-size via `Resi
 
 ```html
 <microviz-sparkline class="rounded-md bg-gray-50 p-2" data="[1,2,3,4,5]"></microviz-sparkline>
+```
+
+### Quick JS API (optional)
+
+For programmatic usage, helper functions create elements with sane defaults:
+
+```ts
+import { auto, sparkline } from "@microviz/elements";
+
+const chart = auto("1,2,3,4,5");
+document.body.append(chart);
+
+const mini = sparkline([2, 4, 3, 6], { width: 120, animate: false });
+document.body.append(mini);
 ```
 
 ### React (via Web Components)
