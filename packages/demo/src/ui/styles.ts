@@ -33,7 +33,7 @@ export const tabContainer = cva(
  * - muted: slate-200 bg when active, transparent when inactive (chart subtype filter)
  * - filled: slate-200 bg when active, slate-100 bg when inactive
  */
-export const tabButton = cva("rounded-md font-medium transition", {
+export const tabButton = cva("select-none rounded-md font-medium transition", {
   compoundVariants: [
     // Default variant
     {
@@ -126,7 +126,7 @@ export const toggleGrid = cva(
  * Individual button within a toggle group.
  */
 export const toggleButton = cva(
-  "min-w-0 cursor-pointer truncate rounded-lg px-2 py-1 text-[11px] font-medium leading-tight transition disabled:cursor-not-allowed disabled:hover:bg-transparent",
+  "min-w-0 cursor-pointer truncate select-none rounded-lg px-2 py-1 text-[11px] font-medium leading-tight transition disabled:cursor-not-allowed disabled:hover:bg-transparent",
   {
     defaultVariants: {
       selected: false,
@@ -145,7 +145,7 @@ export const toggleButton = cva(
  * Sidebar navigation item.
  */
 export const sidebarItem = cva(
-  "w-full truncate rounded-md px-2 py-1 text-left text-xs leading-4 transition",
+  "w-full truncate select-none rounded-md px-2 py-1 text-left text-xs leading-4 transition",
   {
     defaultVariants: {
       active: false,
