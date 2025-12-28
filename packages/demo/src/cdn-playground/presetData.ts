@@ -7,7 +7,14 @@ import { buildSegments, buildSeries, createSeededRng } from "../browse/seed";
 
 type PresetDataConfig = {
   /** Chart type determines what kind of data to generate */
-  type: "sparkline" | "bars" | "donut" | "dashboard";
+  type:
+    | "sparkline"
+    | "bars"
+    | "donut"
+    | "dashboard"
+    | "auto"
+    | "auto-csv"
+    | "auto-override";
   /** Number of data points for series data */
   length?: number;
   /** Number of segments for donut charts */
@@ -15,6 +22,9 @@ type PresetDataConfig = {
 };
 
 const PRESET_CONFIGS: Record<string, PresetDataConfig> = {
+  "auto-csv": { segmentCount: 3, type: "auto-csv" },
+  "auto-inference": { length: 5, segmentCount: 3, type: "auto" },
+  "auto-override": { segmentCount: 3, type: "auto-override" },
   "bar-chart": { length: 7, type: "bars" },
   "csp-safe": { length: 10, type: "sparkline" },
   donut: { segmentCount: 3, type: "donut" },
@@ -46,17 +56,51 @@ function generateBarsData(seed: string, length: number): string {
  * Example: '[{"pct":62,"color":"#6366f1","name":"Desktop"},...]'
  */
 function generateDonutData(seed: string, count: number): string {
+  return JSON.stringify(buildNamedSegments(seed, count));
+}
+
+const AUTO_SEGMENT_COLORS = [
+  "#6366f1",
+  "#22c55e",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+];
+const AUTO_SEGMENT_NAMES = ["Desktop", "Mobile", "Tablet", "Other", "Unknown"];
+
+function buildNamedSegments(seed: string, count: number) {
   const segments = buildSegments(seed, count);
-  // Use hex colors for better readability in the playground
-  const hexColors = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
-  const names = ["Desktop", "Mobile", "Tablet", "Other", "Unknown"];
-  return JSON.stringify(
-    segments.map((s, i) => ({
-      color: hexColors[i % hexColors.length],
-      name: names[i % names.length],
-      pct: s.pct,
-    })),
-  );
+  return segments.map((segment, i) => ({
+    color: AUTO_SEGMENT_COLORS[i % AUTO_SEGMENT_COLORS.length],
+    name: AUTO_SEGMENT_NAMES[i % AUTO_SEGMENT_NAMES.length],
+    pct: segment.pct,
+  }));
+}
+
+function generateAutoDeltaData(seed: string): string {
+  const rng = createSeededRng(seed);
+  const max = rng.int(12, 40);
+  const currentMin = Math.max(1, Math.floor(max * 0.4));
+  const current = rng.int(currentMin, max);
+  const previous = rng.int(1, max);
+  return JSON.stringify({ current, max, previous });
+}
+
+function generateAutoValueData(seed: string): string {
+  const rng = createSeededRng(seed);
+  const max = rng.int(10, 40);
+  const value = rng.int(1, max);
+  return JSON.stringify({ max, value });
+}
+
+function generateAutoCsvData(seed: string, count: number): string {
+  const segments = buildNamedSegments(seed, count);
+  return [
+    "pct,color,name",
+    ...segments.map((segment) => {
+      return `${segment.pct},${segment.color},${segment.name}`;
+    }),
+  ].join("\n");
 }
 
 /**
@@ -153,6 +197,54 @@ export function generateDataForPreset(
       });
       break;
     }
+
+    case "auto": {
+      const seriesSeed = `${seed}:auto-series:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: 'microviz-auto[data-kind="series"]',
+        value: generateSparklineData(seriesSeed, config.length ?? 5),
+      });
+      const deltaSeed = `${seed}:auto-delta:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: 'microviz-auto[data-kind="delta"]',
+        value: generateAutoDeltaData(deltaSeed),
+      });
+      const segmentSeed = `${seed}:auto-segments:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: 'microviz-auto[data-kind="segments"]',
+        value: generateDonutData(segmentSeed, config.segmentCount ?? 3),
+      });
+      const valueSeed = `${seed}:auto-value:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: 'microviz-auto[data-kind="value"]',
+        value: generateAutoValueData(valueSeed),
+      });
+      break;
+    }
+
+    case "auto-csv": {
+      const csvSeed = `${seed}:auto-csv:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: 'microviz-auto[data-kind="csv"]',
+        value: generateAutoCsvData(csvSeed, config.segmentCount ?? 3),
+      });
+      break;
+    }
+
+    case "auto-override": {
+      const overrideSeed = `${seed}:auto-override:${rng.int(0, 9999)}`;
+      updates.push({
+        attribute: "data",
+        selector: 'microviz-auto[data-kind="override"]',
+        value: generateDonutData(overrideSeed, config.segmentCount ?? 3),
+      });
+      break;
+    }
   }
 
   // csp-safe cannot be updated reactively (data is in JS code, not attribute)
@@ -244,6 +336,63 @@ export function applySeededData(
       result = result.replace(donutDataRegex, (_, before, _data, after) => {
         const subSeed = `${seed}:dash-donut:${rng.int(0, 9999)}`;
         return `${before}${generateDonutData(subSeed, 3)}${after}`;
+      });
+      break;
+    }
+
+    case "auto": {
+      const seriesRegex =
+        /(<microviz-auto[^>]*data-kind="series"[^>]*\sdata=")([^"]+)(")/g;
+      result = result.replace(seriesRegex, (_, before, _data, after) => {
+        const subSeed = `${seed}:auto-series:${rng.int(0, 9999)}`;
+        return `${before}${generateSparklineData(subSeed, config.length ?? 5)}${after}`;
+      });
+
+      const deltaRegex =
+        /(<microviz-auto[^>]*data-kind="delta"[^>]*\sdata=')([^']+)(')/g;
+      result = result.replace(deltaRegex, (_, before, _data, after) => {
+        const subSeed = `${seed}:auto-delta:${rng.int(0, 9999)}`;
+        return `${before}${generateAutoDeltaData(subSeed)}${after}`;
+      });
+
+      const segmentsRegex =
+        /(<microviz-auto[^>]*data-kind="segments"[^>]*\sdata=')([^']+)(')/g;
+      result = result.replace(segmentsRegex, (_, before, _data, after) => {
+        const subSeed = `${seed}:auto-segments:${rng.int(0, 9999)}`;
+        return `${before}${generateDonutData(subSeed, config.segmentCount ?? 3)}${after}`;
+      });
+
+      const valueRegex =
+        /(<microviz-auto[^>]*data-kind="value"[^>]*\sdata=')([^']+)(')/g;
+      result = result.replace(valueRegex, (_, before, _data, after) => {
+        const subSeed = `${seed}:auto-value:${rng.int(0, 9999)}`;
+        return `${before}${generateAutoValueData(subSeed)}${after}`;
+      });
+      break;
+    }
+
+    case "auto-csv": {
+      const subSeed = `${seed}:auto-csv:${rng.int(0, 9999)}`;
+      const csvData = generateAutoCsvData(subSeed, config.segmentCount ?? 3);
+      const csvRegex =
+        /(<microviz-auto[^>]*data-kind="csv"[^>]*\sdata=")([^"]+)(")/g;
+      result = result.replace(csvRegex, (_, before, _data, after) => {
+        return `${before}${csvData}${after}`;
+      });
+
+      const preRegex = /(<pre>)([\s\S]*?)(<\/pre>)/g;
+      result = result.replace(preRegex, (_, before, _data, after) => {
+        return `${before}${csvData}${after}`;
+      });
+      break;
+    }
+
+    case "auto-override": {
+      const overrideRegex =
+        /(<microviz-auto[^>]*data-kind="override"[^>]*\sdata=')([^']+)(')/g;
+      result = result.replace(overrideRegex, (_, before, _data, after) => {
+        const subSeed = `${seed}:auto-override:${rng.int(0, 9999)}`;
+        return `${before}${generateDonutData(subSeed, config.segmentCount ?? 3)}${after}`;
       });
       break;
     }
