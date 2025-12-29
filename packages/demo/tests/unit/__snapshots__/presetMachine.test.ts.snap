@@ -1,0 +1,308 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Tier 2: Determinism > snapshot: 'elements'/'auto-inference' 1`] = `
+{
+  "canRandomize": true,
+  "code": "<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz Auto Inference</title>
+  <script type="module">
+    import "/cdn/microviz.js";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    h2 { font-size: 0.875rem; margin: 0 0 0.5rem; color: #64748b; }
+    .grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      background: #fff;
+    }
+    .note { font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Auto Inference (Basics)</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>Series → Sparkline</h2>
+      <microviz-auto
+        data-kind="series"
+        data="62, 59, 61, 64, 68"
+        width="200"
+        height="32"
+      ></microviz-auto>
+    </div>
+    <div class="card">
+      <h2>Delta → Bullet</h2>
+      <microviz-auto
+        data-kind="delta"
+        data='{"current":11,"max":26,"previous":25}'
+        width="220"
+        height="40"
+      ></microviz-auto>
+    </div>
+    <div class="card">
+      <h2>Segments → Donut</h2>
+      <microviz-auto
+        data-kind="segments"
+        data='[{"color":"#6366f1","name":"Desktop","pct":23},{"color":"#22c55e","name":"Mobile","pct":15},{"color":"#f59e0b","name":"Tablet","pct":62}]'
+        width="140"
+        height="140"
+      ></microviz-auto>
+    </div>
+    <div class="card">
+      <h2>Value → Bar</h2>
+      <microviz-auto
+        data-kind="value"
+        data='{"max":34,"value":26}'
+        width="220"
+        height="32"
+      ></microviz-auto>
+      <div class="note">Auto picks the bar renderer from a value object.</div>
+    </div>
+  </div>
+</body>
+</html>",
+  "reactiveUpdates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-auto[data-kind="series"]",
+      "value": "62, 59, 61, 64, 68",
+    },
+    {
+      "attribute": "data",
+      "selector": "microviz-auto[data-kind="delta"]",
+      "value": "{"current":11,"max":26,"previous":25}",
+    },
+    {
+      "attribute": "data",
+      "selector": "microviz-auto[data-kind="segments"]",
+      "value": "[{"color":"#6366f1","name":"Desktop","pct":23},{"color":"#22c55e","name":"Mobile","pct":15},{"color":"#f59e0b","name":"Tablet","pct":62}]",
+    },
+    {
+      "attribute": "data",
+      "selector": "microviz-auto[data-kind="value"]",
+      "value": "{"max":34,"value":26}",
+    },
+  ],
+}
+`;
+
+exports[`Tier 2: Determinism > snapshot: 'elements'/'bar-chart' 1`] = `
+{
+  "canRandomize": true,
+  "code": "<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz Bar Chart</title>
+  <script type="module">
+    import "/cdn/microviz.js";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Bar Chart</h1>
+  <microviz-chart
+    spec='{"type":"sparkline-bars"}'
+    data="[66,68,65,69,69,66,65]"
+    width="280"
+    height="120"
+  ></microviz-chart>
+</body>
+</html>",
+  "reactiveUpdates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-chart",
+      "value": "[66,68,65,69,69,66,65]",
+    },
+  ],
+}
+`;
+
+exports[`Tier 2: Determinism > snapshot: 'elements'/'donut' 1`] = `
+{
+  "canRandomize": true,
+  "code": "<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz Donut</title>
+  <script type="module">
+    import "/cdn/microviz.js";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Donut Chart</h1>
+  <microviz-chart
+    spec='{"type":"donut"}'
+    data='[{"color":"#6366f1","name":"Desktop","pct":37},{"color":"#22c55e","name":"Mobile","pct":28},{"color":"#f59e0b","name":"Tablet","pct":35}]'
+    width="160"
+    height="160"
+  ></microviz-chart>
+</body>
+</html>",
+  "reactiveUpdates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-chart",
+      "value": "[{"color":"#6366f1","name":"Desktop","pct":37},{"color":"#22c55e","name":"Mobile","pct":28},{"color":"#f59e0b","name":"Tablet","pct":35}]",
+    },
+  ],
+}
+`;
+
+exports[`Tier 2: Determinism > snapshot: 'elements'/'sparkline' 1`] = `
+{
+  "canRandomize": true,
+  "code": "<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz Sparkline</title>
+  <script type="module">
+    import "/cdn/microviz.js";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Sparkline</h1>
+  <microviz-sparkline
+    data="55, 51, 46, 48, 49, 54, 51, 54, 53"
+    width="200"
+    height="32"
+  ></microviz-sparkline>
+</body>
+</html>",
+  "reactiveUpdates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-sparkline",
+      "value": "55, 51, 46, 48, 49, 54, 51, 54, 53",
+    },
+    {
+      "attribute": "data",
+      "selector": "microviz-chart",
+      "value": "[62,65,67,64,61,66,63,65,69]",
+    },
+  ],
+}
+`;
+
+exports[`Tier 2: Determinism > snapshot: 'solid'/'sparkline' 1`] = `
+{
+  "canRandomize": false,
+  "code": "<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz + Solid.js</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "solid-js": "https://esm.sh/solid-js@1.9",
+      "solid-js/web": "https://esm.sh/solid-js@1.9/web",
+      "@microviz/core": "https://esm.sh/@microviz/core",
+      "@microviz/renderers": "https://esm.sh/@microviz/renderers",
+      "@microviz/solid": "/cdn/solid.js"
+    }
+  }
+  </script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .chart-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      background: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #f8fafc;
+    }
+    .note {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Solid.js + Microviz</h1>
+  <div class="chart-container">
+    <div id="chart"></div>
+    <button
+      id="reroll"
+      type="button"
+    >
+      Reroll Data
+    </button>
+  </div>
+  <p class="note">Uses @microviz/solid imperative render functions (no JSX compilation needed).</p>
+
+  <script type="module">
+    import { computeModel } from '@microviz/core';
+    import { renderSolidSvg } from '@microviz/solid';
+
+    let dispose = null;
+
+    function randomData(length) {
+      return Array.from({ length }, () => Math.floor(Math.random() * 40) + 5);
+    }
+
+    function render(data) {
+      if (dispose) dispose();
+
+      const model = computeModel({
+        data,
+        spec: { type: 'sparkline' },
+        size: { width: 200, height: 32 }
+      });
+
+      dispose = renderSolidSvg(
+        document.getElementById('chart'),
+        { model }
+      );
+    }
+
+    // Initial render
+    render([10, 25, 15, 30, 20, 35, 25]);
+
+    // Reroll button
+    document.getElementById('reroll').addEventListener('click', () => {
+      render(randomData(7));
+    });
+  </script>
+</body>
+</html>",
+  "reactiveUpdates": null,
+}
+`;
