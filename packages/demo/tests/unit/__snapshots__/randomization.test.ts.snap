@@ -1,0 +1,107 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`applyRandomData (integration) > snapshot: 'full document' 1`] = `
+{
+  "canRandomize": true,
+  "html": "<!DOCTYPE html><html><body><microviz-sparkline data="9, 17, 14"></microviz-sparkline></body></html>",
+  "updates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-sparkline:nth-of-type(1)",
+      "value": "9, 17, 14",
+    },
+  ],
+}
+`;
+
+exports[`applyRandomData (integration) > snapshot: 'multiple embeds' 1`] = `
+{
+  "canRandomize": true,
+  "html": "<microviz-sparkline data="9, 17, 14"></microviz-sparkline>",
+  "updates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-sparkline:nth-of-type(1)",
+      "value": "9, 17, 14",
+    },
+  ],
+}
+`;
+
+exports[`applyRandomData (integration) > snapshot: 'multiple embeds' 2`] = `
+{
+  "canRandomize": true,
+  "html": "<microviz-chart data="9, 17, 14, 71, 53"></microviz-chart>",
+  "updates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-chart:nth-of-type(1)",
+      "value": "9, 17, 14, 71, 53",
+    },
+  ],
+}
+`;
+
+exports[`applyRandomData (integration) > snapshot: 'multiple embeds' 3`] = `
+{
+  "canRandomize": true,
+  "html": "<microviz-chart data='[{"pct":34,"color":"#6366f1"},{"pct":66,"color":"#22c55e"}]'></microviz-chart>",
+  "updates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-chart:nth-of-type(1)",
+      "value": "[{"pct":34,"color":"#6366f1"},{"pct":66,"color":"#22c55e"}]",
+    },
+  ],
+}
+`;
+
+exports[`applyRandomData (integration) > snapshot: 'multiple embeds' 4`] = `
+{
+  "canRandomize": true,
+  "html": "<microviz-auto data-kind="delta" data='{"current":9,"previous":17,"max":24}'></microviz-auto>",
+  "updates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-auto:nth-of-type(1)",
+      "value": "{"current":9,"previous":17,"max":24}",
+    },
+  ],
+}
+`;
+
+exports[`applyRandomData (integration) > snapshot: 'multiple embeds' 5`] = `
+{
+  "canRandomize": true,
+  "html": "<microviz-sparkline data="9, 17, 14"></microviz-sparkline><microviz-chart data="40, 55, 81"></microviz-chart>",
+  "updates": [
+    {
+      "attribute": "data",
+      "selector": "microviz-sparkline:nth-of-type(1)",
+      "value": "9, 17, 14",
+    },
+    {
+      "attribute": "data",
+      "selector": "microviz-chart:nth-of-type(2)",
+      "value": "40, 55, 81",
+    },
+  ],
+}
+`;
+
+exports[`generateRandomData > generates data for {"type":"csv","headers":["pct","color","name"],"rows":3} 1`] = `
+"pct,color,name
+78,#6366f1,Item 1
+50,#22c55e,Item 2
+2,#f59e0b,Item 3"
+`;
+
+exports[`generateRandomData > generates data for {"type":"delta"} 1`] = `"{"current":78,"previous":50,"max":79}"`;
+
+exports[`generateRandomData > generates data for {"type":"segments","count":3} 1`] = `"[{"pct":60,"color":"#6366f1"},{"pct":38,"color":"#22c55e"},{"pct":2,"color":"#f59e0b"}]"`;
+
+exports[`generateRandomData > generates data for {"type":"series","length":5} 1`] = `"78, 50, 2, 67, 67"`;
+
+exports[`generateRandomData > generates data for {"type":"series","length":10} 1`] = `"78, 50, 2, 67, 67, 1, 67, 66, 10, 8"`;
+
+exports[`generateRandomData > generates data for {"type":"value"} 1`] = `"{"value":45,"max":89}"`;
