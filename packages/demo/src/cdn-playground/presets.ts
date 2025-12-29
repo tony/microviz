@@ -166,8 +166,8 @@ export const PRESETS: Preset[] = [
   <microviz-sparkline
     data="10, 25, 15, 30, 20, 35, 25, 40, 30"
     width="200"
-    height="32">
-  </microviz-sparkline>
+    height="32"
+  ></microviz-sparkline>
 </body>
 </html>`,
     description: "Simple sparkline chart",
@@ -194,8 +194,8 @@ export const PRESETS: Preset[] = [
     spec='{"type":"sparkline-bars"}'
     data="[65, 59, 80, 81, 56, 72, 68]"
     width="280"
-    height="120">
-  </microviz-chart>
+    height="120"
+  ></microviz-chart>
 </body>
 </html>`,
     description: "Vertical bar chart with labels",
@@ -233,8 +233,8 @@ export const PRESETS: Preset[] = [
     data="[6, 10, 7, 12, 9, 14, 11, 8, 15, 10, 13, 9]"
     width="280"
     height="64"
-    id="myChart">
-  </microviz-chart>
+    id="myChart"
+  ></microviz-chart>
   <div id="output">Hover over the chart...</div>
 
   <script type="module">
@@ -276,8 +276,8 @@ export const PRESETS: Preset[] = [
     spec='{"type":"donut"}'
     data='[{"pct":62,"color":"#6366f1","name":"Desktop"},{"pct":28,"color":"#22c55e","name":"Mobile"},{"pct":10,"color":"#f59e0b","name":"Tablet"}]'
     width="160"
-    height="160">
-  </microviz-chart>
+    height="160"
+  ></microviz-chart>
 </body>
 </html>`,
     description: "Donut/pie chart with segments",
@@ -407,8 +407,8 @@ export const PRESETS: Preset[] = [
   <microviz-sparkline
     data="10, 25, 15, 30, 20, 35, 25, 40, 30"
     width="200"
-    height="32">
-  </microviz-sparkline>
+    height="32"
+  ></microviz-sparkline>
 </body>
 </html>`,
     description: "Preview a PR build from cdn-dev.microviz.org",
