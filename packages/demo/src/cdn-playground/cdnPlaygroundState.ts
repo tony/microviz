@@ -6,11 +6,13 @@
 import {
   type CdnSource,
   DEFAULT_CDN_SOURCE,
+  getCdnUrl,
   parseCdnSource,
   serializeCdnSource,
 } from "./cdnSources";
 import { applySeededData } from "./presetData";
 import { DEFAULT_PRESET, PRESETS } from "./presets";
+import { DEFAULT_WRAPPER, findWrapper } from "./wrappers";
 
 export type CspMode = "off" | "claude-artifacts";
 
@@ -20,6 +22,7 @@ export type CdnPlaygroundState = {
   cspMode: CspMode;
   presetId: string | null;
   seed: string;
+  wrapperId: string;
 };
 
 export const DEFAULT_CDN_PLAYGROUND_STATE: CdnPlaygroundState = {
@@ -28,6 +31,7 @@ export const DEFAULT_CDN_PLAYGROUND_STATE: CdnPlaygroundState = {
   cspMode: "off",
   presetId: DEFAULT_PRESET.id,
   seed: "mv-1",
+  wrapperId: DEFAULT_WRAPPER.id,
 };
 
 /**
@@ -41,6 +45,7 @@ export type PlaygroundSearchParams = {
   p?: string; // preset ID
   s?: string; // seed
   state?: string; // legacy format (for backward compat)
+  w?: string; // wrapper ID
 };
 
 function utf8ToBase64(str: string): string {
@@ -90,6 +95,10 @@ export function encodePlaygroundSearch(
     params.s = state.seed;
   }
 
+  if (state.wrapperId !== DEFAULT_WRAPPER.id) {
+    params.w = state.wrapperId;
+  }
+
   return params;
 }
 
@@ -105,6 +114,9 @@ export function decodePlaygroundSearch(
     if (legacy) return legacy;
   }
 
+  const wrapperId =
+    search.w && findWrapper(search.w) ? search.w : DEFAULT_WRAPPER.id;
+
   // Custom code takes precedence
   if (search.c) {
     return {
@@ -113,6 +125,7 @@ export function decodePlaygroundSearch(
       cspMode: (search.csp as CspMode) ?? "off",
       presetId: null,
       seed: search.s ?? "mv-1",
+      wrapperId,
     };
   }
 
@@ -120,13 +133,22 @@ export function decodePlaygroundSearch(
   const presetId = search.p ?? DEFAULT_PRESET.id;
   const preset = PRESETS.find((p) => p.id === presetId) ?? DEFAULT_PRESET;
   const seed = search.s ?? "mv-1";
+  const cdnSource = search.cdn
+    ? parseCdnSource(search.cdn)
+    : DEFAULT_CDN_SOURCE;
+
+  // Apply seeded data, then wrapper transform
+  const seededCode = applySeededData(presetId, preset.code, seed);
+  const wrapper = findWrapper(wrapperId) ?? DEFAULT_WRAPPER;
+  const code = wrapper.transform(seededCode, getCdnUrl(cdnSource));
 
   return {
-    cdnSource: search.cdn ? parseCdnSource(search.cdn) : DEFAULT_CDN_SOURCE,
-    code: applySeededData(presetId, preset.code, seed),
+    cdnSource,
+    code,
     cspMode: (search.csp as CspMode) ?? "off",
     presetId: preset.id,
     seed,
+    wrapperId,
   };
 }
 
@@ -162,6 +184,7 @@ function decodeLegacyState(encoded: string): CdnPlaygroundState | null {
       cspMode: serialized.csp ?? "off",
       presetId: effectivePresetId,
       seed: serialized.s ?? "mv-1",
+      wrapperId: DEFAULT_WRAPPER.id, // Legacy format didn't have wrappers
     };
   } catch {
     return null;
