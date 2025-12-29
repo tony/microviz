@@ -35,6 +35,7 @@ import {
   renderSvgString,
   svgStringToBlob,
 } from "@microviz/renderers";
+import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   type FC,
@@ -50,6 +51,11 @@ import {
   useState,
 } from "react";
 import { CodeEditor } from "../cdn-playground/CodeEditor";
+import {
+  type CdnPlaygroundState,
+  encodeCdnPlaygroundState,
+} from "../cdn-playground/cdnPlaygroundState";
+import { DEFAULT_CDN_SOURCE } from "../cdn-playground/cdnSources";
 import { buildPaletteColors } from "../demoPalette";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import { RerollButton } from "../ui/RerollButton";
@@ -609,6 +615,43 @@ document.querySelector("#chart")?.replaceChildren();
 document.querySelector("#chart")?.insertAdjacentHTML("beforeend", svg);`,
     language: "javascript",
   };
+}
+
+function buildPlaygroundHtml(params: {
+  input: ComputeModelInput;
+  renderer: Renderer;
+}): string {
+  const { input, renderer } = params;
+  const dataAttr = toInlineJson(input.data);
+  const specAttr = toInlineJson(input.spec);
+  const width = input.size?.width ?? 200;
+  const height = input.size?.height ?? 32;
+
+  const rendererAttr =
+    renderer === "html" || renderer === "html-svg"
+      ? '\n    renderer="html"'
+      : "";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Microviz</title>
+  <script type="module">
+    import "{{CDN_URL}}";
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; }
+  </style>
+</head>
+<body>
+  <microviz-chart
+    style="width: ${width}px; height: ${height}px"
+    spec='${specAttr}'
+    data='${dataAttr}'${rendererAttr}
+  ></microviz-chart>
+</body>
+</html>`;
 }
 
 function isHtmlSafeMark(mark: Mark, defsById: Map<string, Def>): boolean {
@@ -1246,6 +1289,7 @@ export const MicrovizBrowse: FC<{
   onUrlStateChange?: (state: BrowseState) => void;
   urlState?: BrowseState;
 }> = ({ onUrlStateChange, urlState }) => {
+  const navigate = useNavigate();
   const initialUrlState = urlState ?? DEFAULT_BROWSE_STATE;
 
   const [wrapper, setWrapper] = useState<Wrapper>(
@@ -3219,6 +3263,31 @@ export const MicrovizBrowse: FC<{
     textarea.remove();
     finish();
   }, [codeSnippet.code]);
+
+  const handleOpenInPlayground = useCallback(() => {
+    if (!selectedInput || wrapper !== "elements") return;
+
+    const playgroundCode = buildPlaygroundHtml({
+      input: selectedInput,
+      renderer,
+    });
+
+    const playgroundState: CdnPlaygroundState = {
+      cdnSource: DEFAULT_CDN_SOURCE,
+      code: playgroundCode,
+      cspMode: "off",
+      presetId: null,
+      seed: "mv-1",
+    };
+
+    const encoded = encodeCdnPlaygroundState(playgroundState);
+
+    void navigate({
+      search: encoded ? { state: encoded } : {},
+      to: "/playground",
+    });
+  }, [navigate, renderer, selectedInput, wrapper]);
+
   return (
     <div className="relative flex h-full min-h-0 w-full">
       <ResizablePane
@@ -4373,17 +4442,33 @@ export const MicrovizBrowse: FC<{
                 <div className="mt-3 border-t border-slate-200/70 pt-3 dark:border-slate-800/70">
                   <div className="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     <span>Snippet</span>
-                    <button
-                      className={tabButton({
-                        active: false,
-                        size: "xs",
-                        variant: "muted",
-                      })}
-                      onClick={handleCopyCode}
-                      type="button"
-                    >
-                      {codeCopied ? "Copied" : "Copy"}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {wrapper === "elements" && (
+                        <button
+                          className={tabButton({
+                            active: false,
+                            size: "xs",
+                            variant: "muted",
+                          })}
+                          onClick={handleOpenInPlayground}
+                          title="Open in Playground"
+                          type="button"
+                        >
+                          Playground
+                        </button>
+                      )}
+                      <button
+                        className={tabButton({
+                          active: false,
+                          size: "xs",
+                          variant: "muted",
+                        })}
+                        onClick={handleCopyCode}
+                        type="button"
+                      >
+                        {codeCopied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
                   </div>
                   <div className="mt-2 h-64 overflow-hidden rounded border border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/40">
                     <CodeEditor
