@@ -24,6 +24,11 @@ import {
   MicrovizSvgString as MicrovizReactSvgString,
 } from "@microviz/react";
 import {
+  renderSolidCanvas,
+  renderSolidSvg,
+  renderSolidSvgString,
+} from "@microviz/solid";
+import {
   canvasToBlob,
   getCanvasUnsupportedFilterPrimitiveTypes,
   getHtmlUnsupportedDefTypes,
@@ -2839,6 +2844,8 @@ export const MicrovizBrowse: FC<{
             model={model}
           />,
         );
+      if (wrapper === "solid")
+        return wrapTokenFrame(<AnimatedSolidSvgString model={model} />);
       return wrapTokenFrame(<AnimatedSvgStringPreview model={model} />);
     }
 
@@ -2850,6 +2857,8 @@ export const MicrovizBrowse: FC<{
             model={model}
           />,
         );
+      if (wrapper === "solid")
+        return wrapTokenFrame(<AnimatedSolidSvgString model={model} />);
       return wrapTokenFrame(<AnimatedSvgStringPreview model={model} />);
     }
 
@@ -2873,6 +2882,8 @@ export const MicrovizBrowse: FC<{
             <AnimatedReactSvg className="block" model={model} />
           </div>,
         );
+      if (wrapper === "solid")
+        return wrapTokenFrame(<AnimatedSolidSvg model={model} />);
       return wrapTokenFrame(<AnimatedSvgDomPreview model={model} />);
     }
 
@@ -2884,6 +2895,10 @@ export const MicrovizBrowse: FC<{
             model={model}
             options={canvasOptions}
           />,
+        );
+      if (wrapper === "solid")
+        return wrapTokenFrame(
+          <AnimatedSolidCanvas model={model} options={canvasOptions} />,
         );
       return wrapTokenFrame(
         <AnimatedCanvasPreview model={model} options={canvasOptions} />,
@@ -2924,6 +2939,9 @@ export const MicrovizBrowse: FC<{
           />
         );
       }
+      if (wrapper === "solid") {
+        return <AnimatedSolidSvgString model={model} />;
+      }
       return <AnimatedSvgStringPreview model={model} />;
     }
 
@@ -2948,6 +2966,9 @@ export const MicrovizBrowse: FC<{
           </div>
         );
       }
+      if (wrapper === "solid") {
+        return <AnimatedSolidSvg model={model} />;
+      }
       return <AnimatedSvgDomPreview model={model} />;
     }
 
@@ -2959,6 +2980,10 @@ export const MicrovizBrowse: FC<{
           options={canvasOptions}
         />
       );
+    }
+
+    if (wrapper === "solid") {
+      return <AnimatedSolidCanvas model={model} options={canvasOptions} />;
     }
 
     return <AnimatedCanvasPreview model={model} options={canvasOptions} />;
@@ -3457,13 +3482,14 @@ export const MicrovizBrowse: FC<{
                   />
 
                   <ToggleGroup<Wrapper>
-                    columns={3}
+                    columns={4}
                     label="Wrapper"
                     onChange={setWrapper}
                     options={[
-                      { id: "vanilla", label: "Vanilla (TS)" },
+                      { id: "vanilla", label: "Vanilla" },
                       { id: "react", label: "React" },
-                      { id: "elements", label: "Web components" },
+                      { id: "solid", label: "Solid" },
+                      { id: "elements", label: "Elements" },
                     ]}
                     value={wrapper}
                   />
@@ -4691,6 +4717,83 @@ const AnimatedReactCanvas: FC<{
       className={className}
       model={animatedModel}
       options={options}
+    />
+  );
+};
+
+const AnimatedSolidSvgString: FC<{
+  className?: string;
+  model: RenderModel;
+}> = ({ className, model }) => {
+  const animatedModel = useAnimatedModel(model);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const dispose = renderSolidSvgString(container, {
+      model: animatedModel,
+      className,
+    });
+    return dispose;
+  }, [animatedModel, className]);
+
+  return (
+    <div
+      className="inline-block rounded bg-[var(--mv-bg)]"
+      ref={containerRef}
+    />
+  );
+};
+
+const AnimatedSolidSvg: FC<{
+  className?: string;
+  model: RenderModel;
+}> = ({ className, model }) => {
+  const animatedModel = useAnimatedModel(model);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const dispose = renderSolidSvg(container, {
+      model: animatedModel,
+      className,
+    });
+    return dispose;
+  }, [animatedModel, className]);
+
+  return (
+    <div
+      className="inline-block rounded bg-[var(--mv-bg)]"
+      ref={containerRef}
+    />
+  );
+};
+
+const AnimatedSolidCanvas: FC<{
+  className?: string;
+  model: RenderModel;
+  options?: RenderCanvasOptions;
+}> = ({ className, model, options }) => {
+  const animatedModel = useAnimatedModel(model);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const dispose = renderSolidCanvas(container, {
+      model: animatedModel,
+      className,
+      canvasOptions: options,
+    });
+    return dispose;
+  }, [animatedModel, className, options]);
+
+  return (
+    <div
+      className="inline-block rounded bg-[var(--mv-bg)]"
+      ref={containerRef}
     />
   );
 };

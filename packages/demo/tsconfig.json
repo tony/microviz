@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
     "declaration": false,
     "declarationMap": false,
     "jsx": "react-jsx",
@@ -11,6 +12,19 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "paths": {
+      "@microviz/core": ["../core/src/index.ts"],
+      "@microviz/core/*": ["../core/src/*"],
+      "@microviz/elements": ["../elements/src/index.ts"],
+      "@microviz/elements/*": ["../elements/src/*"],
+      "@microviz/react": ["../react/src/index.ts"],
+      "@microviz/react/*": ["../react/src/*"],
+      "@microviz/renderers": ["../renderers/src/index.ts"],
+      "@microviz/renderers/*": ["../renderers/src/*"],
+      "@microviz/solid": ["../solid/dist/index.d.ts"],
+      "@microviz/themes": ["../themes/src/index.ts"],
+      "@microviz/themes/*": ["../themes/src/*"]
+    },
     "strict": true,
     "target": "es2017",
     "types": ["vite/client"]

@@ -1,7 +1,7 @@
 import { type ChartSpec, getAllChartMeta } from "@microviz/core";
 import type { DataPreset, SeriesPreset } from "./seed";
 
-export type Wrapper = "elements" | "react" | "vanilla";
+export type Wrapper = "elements" | "react" | "solid" | "vanilla";
 export type Renderer =
   | "canvas"
   | "offscreen-canvas"
@@ -137,7 +137,12 @@ function base64ToUtf8(base64: string): string {
 }
 
 function isWrapper(value: unknown): value is Wrapper {
-  return value === "vanilla" || value === "react" || value === "elements";
+  return (
+    value === "vanilla" ||
+    value === "react" ||
+    value === "solid" ||
+    value === "elements"
+  );
 }
 
 function isRenderer(value: unknown): value is Renderer {

@@ -43,6 +43,7 @@ export default defineConfig({
       "@microviz/elements": resolve(__dirname, "../elements/src/index.ts"),
       "@microviz/react": resolve(__dirname, "../react/src/index.ts"),
       "@microviz/renderers": resolve(__dirname, "../renderers/src/index.ts"),
+      "@microviz/solid": resolve(__dirname, "../solid/dist/solid.js"),
     },
   },
   server: {
