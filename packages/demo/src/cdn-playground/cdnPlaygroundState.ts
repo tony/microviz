@@ -1,6 +1,6 @@
 /**
  * URL state serialization for the playground.
- * Follows the pattern from browse/browseUrlState.ts
+ * Uses flat query params for minimal URLs.
  */
 
 import {
@@ -29,13 +29,17 @@ export const DEFAULT_CDN_PLAYGROUND_STATE: CdnPlaygroundState = {
   seed: "mv-1",
 };
 
-// Compact keys for URL serialization
-type SerializedState = {
-  c?: string; // code (base64)
-  cdn?: string; // cdnSource
-  csp?: CspMode; // cspMode
-  p?: string; // presetId
+/**
+ * Search params for playground URL.
+ * All fields optional - omitted = default.
+ */
+export type PlaygroundSearchParams = {
+  c?: string; // code (base64, only for custom code)
+  cdn?: string; // CDN source type
+  csp?: string; // CSP mode
+  p?: string; // preset ID
   s?: string; // seed
+  state?: string; // legacy format (for backward compat)
 };
 
 function utf8ToBase64(str: string): string {
@@ -55,63 +59,88 @@ function base64ToUtf8(str: string): string {
   );
 }
 
-export function encodeCdnPlaygroundState(
+/**
+ * Encode state to flat search params.
+ * Only includes non-default values.
+ */
+export function encodePlaygroundSearch(
   state: CdnPlaygroundState,
-): string | null {
-  const serialized: SerializedState = {};
-  let hasChanges = false;
+): PlaygroundSearchParams {
+  const params: PlaygroundSearchParams = {};
 
-  // Only encode code if it differs from the preset's default
-  const preset = state.presetId
-    ? PRESETS.find((p) => p.id === state.presetId)
-    : null;
-  const defaultCode = preset?.code ?? DEFAULT_PRESET.code;
-
-  if (state.code !== defaultCode) {
-    serialized.c = utf8ToBase64(state.code);
-    hasChanges = true;
+  // Custom code (presetId is null)
+  if (state.presetId === null) {
+    params.c = utf8ToBase64(state.code);
+  } else if (state.presetId !== DEFAULT_PRESET.id) {
+    // Non-default preset
+    params.p = state.presetId;
   }
+  // Default preset → no code/preset params needed
 
-  if (
-    state.cdnSource.type !== DEFAULT_CDN_SOURCE.type ||
-    (state.cdnSource.type === "custom" && state.cdnSource.url)
-  ) {
-    serialized.cdn = serializeCdnSource(state.cdnSource);
-    hasChanges = true;
+  if (state.cdnSource.type !== DEFAULT_CDN_SOURCE.type) {
+    params.cdn = serializeCdnSource(state.cdnSource);
   }
 
   if (state.cspMode !== "off") {
-    serialized.csp = state.cspMode;
-    hasChanges = true;
-  }
-
-  if (state.presetId !== DEFAULT_PRESET.id) {
-    serialized.p = state.presetId ?? undefined;
-    hasChanges = true;
+    params.csp = state.cspMode;
   }
 
   if (state.seed !== "mv-1") {
-    serialized.s = state.seed;
-    hasChanges = true;
+    params.s = state.seed;
   }
 
-  if (!hasChanges) {
-    return null;
-  }
-
-  return utf8ToBase64(JSON.stringify(serialized));
+  return params;
 }
 
-export function decodeCdnPlaygroundState(
-  encoded: string | undefined,
-): CdnPlaygroundState | null {
-  if (!encoded) {
-    return null;
+/**
+ * Decode state from search params.
+ */
+export function decodePlaygroundSearch(
+  search: PlaygroundSearchParams,
+): CdnPlaygroundState {
+  // Legacy format support - decode old ?state= format
+  if (search.state) {
+    const legacy = decodeLegacyState(search.state);
+    if (legacy) return legacy;
   }
 
+  // Custom code takes precedence
+  if (search.c) {
+    return {
+      cdnSource: search.cdn ? parseCdnSource(search.cdn) : DEFAULT_CDN_SOURCE,
+      code: base64ToUtf8(search.c),
+      cspMode: (search.csp as CspMode) ?? "off",
+      presetId: null,
+      seed: search.s ?? "mv-1",
+    };
+  }
+
+  // Preset-based
+  const presetId = search.p ?? DEFAULT_PRESET.id;
+  const preset = PRESETS.find((p) => p.id === presetId) ?? DEFAULT_PRESET;
+
+  return {
+    cdnSource: search.cdn ? parseCdnSource(search.cdn) : DEFAULT_CDN_SOURCE,
+    code: preset.code,
+    cspMode: (search.csp as CspMode) ?? "off",
+    presetId: preset.id,
+    seed: search.s ?? "mv-1",
+  };
+}
+
+/**
+ * Decode legacy ?state= format for backward compatibility.
+ */
+function decodeLegacyState(encoded: string): CdnPlaygroundState | null {
   try {
     const json = base64ToUtf8(encoded);
-    const serialized: SerializedState = JSON.parse(json);
+    const serialized = JSON.parse(json) as {
+      c?: string;
+      cdn?: string;
+      csp?: CspMode;
+      p?: string;
+      s?: string;
+    };
 
     const presetId = serialized.p ?? DEFAULT_PRESET.id;
     const preset = PRESETS.find((p) => p.id === presetId);
@@ -120,8 +149,8 @@ export function decodeCdnPlaygroundState(
       ? base64ToUtf8(serialized.c)
       : (preset?.code ?? DEFAULT_PRESET.code);
 
-    // If custom code was explicitly encoded, show "Custom"
-    const effectivePresetId = serialized.c ? null : (preset ? presetId : null);
+    // If custom code was encoded, show "Custom"
+    const effectivePresetId = serialized.c ? null : preset ? presetId : null;
 
     return {
       cdnSource: serialized.cdn
@@ -136,3 +165,6 @@ export function decodeCdnPlaygroundState(
     return null;
   }
 }
+
+// Re-export base64 helper for use in MicrovizBrowse
+export { utf8ToBase64 };

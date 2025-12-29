@@ -4,13 +4,19 @@ import { CdnPlayground } from "../cdn-playground/CdnPlayground";
 import {
   type CdnPlaygroundState,
   DEFAULT_CDN_PLAYGROUND_STATE,
-  decodeCdnPlaygroundState,
-  encodeCdnPlaygroundState,
+  decodePlaygroundSearch,
+  encodePlaygroundSearch,
+  type PlaygroundSearchParams,
 } from "../cdn-playground/cdnPlaygroundState";
 
 export const Route = createFileRoute("/playground")({
-  validateSearch: (search: Record<string, unknown>): { state?: string } => {
+  validateSearch: (search: Record<string, unknown>): PlaygroundSearchParams => {
     return {
+      c: typeof search.c === "string" ? search.c : undefined,
+      cdn: typeof search.cdn === "string" ? search.cdn : undefined,
+      csp: typeof search.csp === "string" ? search.csp : undefined,
+      p: typeof search.p === "string" ? search.p : undefined,
+      s: typeof search.s === "string" ? search.s : undefined,
       state: typeof search.state === "string" ? search.state : undefined,
     };
   },
@@ -21,23 +27,21 @@ function PlaygroundComponent() {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
-  const encoded = search.state ?? "";
   const urlState = useMemo(
-    () => decodeCdnPlaygroundState(encoded) ?? DEFAULT_CDN_PLAYGROUND_STATE,
-    [encoded],
+    () => decodePlaygroundSearch(search) ?? DEFAULT_CDN_PLAYGROUND_STATE,
+    [search],
   );
 
   const onUrlStateChange = useCallback(
     (nextState: CdnPlaygroundState) => {
-      const nextEncoded = encodeCdnPlaygroundState(nextState) || undefined;
-      if (nextEncoded === search.state) return;
+      const nextSearch = encodePlaygroundSearch(nextState);
 
       void navigate({
         replace: true,
-        search: (prev) => ({ ...prev, state: nextEncoded }),
+        search: nextSearch,
       });
     },
-    [navigate, search.state],
+    [navigate],
   );
 
   return (

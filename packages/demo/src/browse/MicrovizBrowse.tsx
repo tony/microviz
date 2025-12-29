@@ -51,11 +51,7 @@ import {
   useState,
 } from "react";
 import { CodeEditor } from "../cdn-playground/CodeEditor";
-import {
-  type CdnPlaygroundState,
-  encodeCdnPlaygroundState,
-} from "../cdn-playground/cdnPlaygroundState";
-import { DEFAULT_CDN_SOURCE } from "../cdn-playground/cdnSources";
+import { utf8ToBase64 } from "../cdn-playground/cdnPlaygroundState";
 import { buildPaletteColors } from "../demoPalette";
 import { applyNoiseDisplacementOverlay } from "../modelOverlays";
 import { RerollButton } from "../ui/RerollButton";
@@ -3272,18 +3268,8 @@ export const MicrovizBrowse: FC<{
       renderer,
     });
 
-    const playgroundState: CdnPlaygroundState = {
-      cdnSource: DEFAULT_CDN_SOURCE,
-      code: playgroundCode,
-      cspMode: "off",
-      presetId: null,
-      seed: "mv-1",
-    };
-
-    const encoded = encodeCdnPlaygroundState(playgroundState);
-
     void navigate({
-      search: encoded ? { state: encoded } : {},
+      search: { c: utf8ToBase64(playgroundCode) },
       to: "/playground",
     });
   }, [navigate, renderer, selectedInput, wrapper]);
