@@ -16,7 +16,7 @@ import type {
 import { computeModel } from "@microviz/core";
 import type { RenderCanvasOptions } from "@microviz/renderers";
 import { type Component, splitProps } from "solid-js";
-import { Switch, Match } from "solid-js/web";
+import { Match, Switch } from "solid-js/web";
 import {
   MicrovizCanvas,
   type MicrovizCanvasProps,

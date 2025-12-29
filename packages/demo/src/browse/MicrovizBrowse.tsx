@@ -24,11 +24,6 @@ import {
   MicrovizSvgString as MicrovizReactSvgString,
 } from "@microviz/react";
 import {
-  renderSolidCanvas,
-  renderSolidSvg,
-  renderSolidSvgString,
-} from "@microviz/solid";
-import {
   canvasToBlob,
   getCanvasUnsupportedFilterPrimitiveTypes,
   getHtmlUnsupportedDefTypes,
@@ -40,6 +35,11 @@ import {
   renderSvgString,
   svgStringToBlob,
 } from "@microviz/renderers";
+import {
+  renderSolidCanvas,
+  renderSolidSvg,
+  renderSolidSvgString,
+} from "@microviz/solid";
 import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -4732,8 +4732,8 @@ const AnimatedSolidSvgString: FC<{
     const container = containerRef.current;
     if (!container) return;
     const dispose = renderSolidSvgString(container, {
-      model: animatedModel,
       className,
+      model: animatedModel,
     });
     return dispose;
   }, [animatedModel, className]);
@@ -4757,8 +4757,8 @@ const AnimatedSolidSvg: FC<{
     const container = containerRef.current;
     if (!container) return;
     const dispose = renderSolidSvg(container, {
-      model: animatedModel,
       className,
+      model: animatedModel,
     });
     return dispose;
   }, [animatedModel, className]);
@@ -4783,9 +4783,9 @@ const AnimatedSolidCanvas: FC<{
     const container = containerRef.current;
     if (!container) return;
     const dispose = renderSolidCanvas(container, {
-      model: animatedModel,
-      className,
       canvasOptions: options,
+      className,
+      model: animatedModel,
     });
     return dispose;
   }, [animatedModel, className, options]);

@@ -32,9 +32,9 @@ export function renderSolidSvg(
   return render(
     () =>
       MicrovizSvg({
+        class: options.className,
         model: options.model,
         title: options.title,
-        class: options.className,
       }),
     container,
   );
@@ -51,9 +51,9 @@ export function renderSolidSvgString(
   return render(
     () =>
       MicrovizSvgString({
+        class: options.className,
         model: options.model,
         title: options.title,
-        class: options.className,
       }),
     container,
   );
@@ -70,11 +70,11 @@ export function renderSolidCanvas(
   return render(
     () =>
       MicrovizCanvas({
-        model: options.model,
         class: options.className,
-        options: options.canvasOptions,
         fallbackSvgWhenCanvasUnsupported:
           options.fallbackSvgWhenCanvasUnsupported,
+        model: options.model,
+        options: options.canvasOptions,
       }),
     container,
   );

@@ -13,9 +13,9 @@ import {
 } from "@microviz/renderers";
 import {
   type Component,
-  type JSX,
   createEffect,
   createMemo,
+  type JSX,
   onMount,
   splitProps,
 } from "solid-js";
@@ -388,6 +388,7 @@ export const MicrovizSvg: Component<MicrovizSvgProps> = (props) => {
   const role = () => local.model.a11y?.role ?? "img";
 
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: title element is conditionally rendered based on label()
     <svg
       aria-label={label()}
       height={local.model.height}
@@ -419,7 +420,9 @@ export const MicrovizSvgString: Component<MicrovizSvgStringProps> = (props) => {
   const [local, others] = splitProps(props, ["model", "title"]);
   let hostRef: HTMLDivElement | undefined;
 
-  const svg = createMemo(() => renderSvgString(local.model, { title: local.title }));
+  const svg = createMemo(() =>
+    renderSvgString(local.model, { title: local.title }),
+  );
 
   onMount(() => {
     createEffect(() => {
@@ -444,21 +447,22 @@ export const MicrovizSvgString: Component<MicrovizSvgStringProps> = (props) => {
   return <div {...others} ref={hostRef} />;
 };
 
-export type MicrovizCanvasProps = JSX.CanvasHTMLAttributes<HTMLCanvasElement> & {
-  model: RenderModel;
-  options?: RenderCanvasOptions;
-  /**
-   * Canvas rendering currently ignores some SVG filter primitives.
-   * If enabled, fall back to an SVG renderer to avoid silent incorrect output.
-   */
-  fallbackSvgWhenCanvasUnsupported?: boolean;
-  /**
-   * Which SVG surface to use when falling back from Canvas.
-   */
-  fallbackRenderer?: "svg" | "svg-string";
-  svgProps?: Omit<MicrovizSvgProps, "model">;
-  svgStringProps?: Omit<MicrovizSvgStringProps, "model">;
-};
+export type MicrovizCanvasProps =
+  JSX.CanvasHTMLAttributes<HTMLCanvasElement> & {
+    model: RenderModel;
+    options?: RenderCanvasOptions;
+    /**
+     * Canvas rendering currently ignores some SVG filter primitives.
+     * If enabled, fall back to an SVG renderer to avoid silent incorrect output.
+     */
+    fallbackSvgWhenCanvasUnsupported?: boolean;
+    /**
+     * Which SVG surface to use when falling back from Canvas.
+     */
+    fallbackRenderer?: "svg" | "svg-string";
+    svgProps?: Omit<MicrovizSvgProps, "model">;
+    svgStringProps?: Omit<MicrovizSvgStringProps, "model">;
+  };
 
 export const MicrovizCanvas: Component<MicrovizCanvasProps> = (props) => {
   const [local, others] = splitProps(props, [
@@ -495,10 +499,8 @@ export const MicrovizCanvas: Component<MicrovizCanvasProps> = (props) => {
 
   return (
     <Show
-      when={!shouldFallbackToSvg()}
       fallback={
         <Show
-          when={fallbackRenderer() === "svg-string"}
           fallback={
             <MicrovizSvg
               class={local.class}
@@ -507,6 +509,7 @@ export const MicrovizCanvas: Component<MicrovizCanvasProps> = (props) => {
               {...local.svgProps}
             />
           }
+          when={fallbackRenderer() === "svg-string"}
         >
           <MicrovizSvgString
             class={local.class}
@@ -516,6 +519,7 @@ export const MicrovizCanvas: Component<MicrovizCanvasProps> = (props) => {
           />
         </Show>
       }
+      when={!shouldFallbackToSvg()}
     >
       <canvas
         class={local.class}
