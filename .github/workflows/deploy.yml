@@ -42,7 +42,7 @@ jobs:
           echo "AWS_CLOUDFRONT_INVALIDATION_PATHS=/ /index.html" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.MICROVIZ_SITE_ROLE_ARN }}
           aws-region: us-east-1
