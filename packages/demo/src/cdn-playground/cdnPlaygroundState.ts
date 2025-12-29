@@ -116,15 +116,20 @@ export function decodeCdnPlaygroundState(
     const presetId = serialized.p ?? DEFAULT_PRESET.id;
     const preset = PRESETS.find((p) => p.id === presetId);
 
+    const code = serialized.c
+      ? base64ToUtf8(serialized.c)
+      : (preset?.code ?? DEFAULT_PRESET.code);
+
+    // If custom code was explicitly encoded, show "Custom"
+    const effectivePresetId = serialized.c ? null : (preset ? presetId : null);
+
     return {
       cdnSource: serialized.cdn
         ? parseCdnSource(serialized.cdn)
         : DEFAULT_CDN_SOURCE,
-      code: serialized.c
-        ? base64ToUtf8(serialized.c)
-        : (preset?.code ?? DEFAULT_PRESET.code),
+      code,
       cspMode: serialized.csp ?? "off",
-      presetId,
+      presetId: effectivePresetId,
       seed: serialized.s ?? "mv-1",
     };
   } catch {
