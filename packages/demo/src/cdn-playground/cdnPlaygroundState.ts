@@ -9,6 +9,7 @@ import {
   parseCdnSource,
   serializeCdnSource,
 } from "./cdnSources";
+import { applySeededData } from "./presetData";
 import { DEFAULT_PRESET, PRESETS } from "./presets";
 
 export type CspMode = "off" | "claude-artifacts";
@@ -118,13 +119,14 @@ export function decodePlaygroundSearch(
   // Preset-based
   const presetId = search.p ?? DEFAULT_PRESET.id;
   const preset = PRESETS.find((p) => p.id === presetId) ?? DEFAULT_PRESET;
+  const seed = search.s ?? "mv-1";
 
   return {
     cdnSource: search.cdn ? parseCdnSource(search.cdn) : DEFAULT_CDN_SOURCE,
-    code: preset.code,
+    code: applySeededData(presetId, preset.code, seed),
     cspMode: (search.csp as CspMode) ?? "off",
     presetId: preset.id,
-    seed: search.s ?? "mv-1",
+    seed,
   };
 }
 

@@ -13,6 +13,11 @@ import {
 } from "./PreviewPane";
 import { applySeededData, generateDataForPreset } from "./presetData";
 import { PRESETS } from "./presets";
+import {
+  applyRandomData,
+  canRandomize,
+  generateReactiveUpdates,
+} from "./randomization";
 
 export type CdnPlaygroundProps = {
   urlState: CdnPlaygroundState;
@@ -108,10 +113,11 @@ export function CdnPlayground({
 
   const handleReroll = useCallback(() => {
     const newSeed = `mv-${Math.floor(Math.random() * 10_000)}`;
-    if (urlState.presetId) {
-      // Try reactive update first (no iframe reload)
-      const updates = generateDataForPreset(urlState.presetId, newSeed);
-      if (updates && previewRef.current) {
+
+    // Custom code path - use universal randomization
+    if (!urlState.presetId) {
+      const updates = generateReactiveUpdates(urlState.code, newSeed);
+      if (updates.length > 0 && previewRef.current) {
         // Send reactive updates to iframe via postMessage
         for (const update of updates) {
           previewRef.current.updateAttribute(
@@ -120,36 +126,55 @@ export function CdnPlayground({
             update.value,
           );
         }
-        // Update URL state for editor display and URL sharing
-        // Do NOT update stableCode - animation plays via postMessage update
-        const preset = PRESETS.find((p) => p.id === urlState.presetId);
-        if (preset) {
-          const code = applySeededData(urlState.presetId, preset.code, newSeed);
-          onUrlStateChange({
-            ...urlState,
-            code,
-            seed: newSeed,
-          });
-        }
-        return;
+        // Update code in editor (but NOT stableCode - iframe updates via postMessage)
+        const result = applyRandomData(urlState.code, newSeed);
+        onUrlStateChange({
+          ...urlState,
+          code: result.html,
+          seed: newSeed,
+        });
       }
+      return;
+    }
 
-      // Fallback: full reload for presets that don't support reactive updates
+    // Preset path - use preset-specific randomization
+    // Try reactive update first (no iframe reload)
+    const updates = generateDataForPreset(urlState.presetId, newSeed);
+    if (updates && previewRef.current) {
+      // Send reactive updates to iframe via postMessage
+      for (const update of updates) {
+        previewRef.current.updateAttribute(
+          update.selector,
+          update.attribute,
+          update.value,
+        );
+      }
+      // Update URL state for editor display and URL sharing
+      // Do NOT update stableCode - animation plays via postMessage update
       const preset = PRESETS.find((p) => p.id === urlState.presetId);
       if (preset) {
         const code = applySeededData(urlState.presetId, preset.code, newSeed);
-        setStableCode(code);
         onUrlStateChange({
           ...urlState,
           code,
           seed: newSeed,
         });
-        setConsoleLogs([]);
-        return;
       }
+      return;
     }
-    // If no preset, just update the seed (won't affect custom code)
-    onUrlStateChange({ ...urlState, seed: newSeed });
+
+    // Fallback: full reload for presets that don't support reactive updates
+    const preset = PRESETS.find((p) => p.id === urlState.presetId);
+    if (preset) {
+      const code = applySeededData(urlState.presetId, preset.code, newSeed);
+      setStableCode(code);
+      onUrlStateChange({
+        ...urlState,
+        code,
+        seed: newSeed,
+      });
+      setConsoleLogs([]);
+    }
   }, [urlState, onUrlStateChange]);
 
   const handleConsoleMessage = useCallback((entry: ConsoleEntry) => {
@@ -189,8 +214,10 @@ export function CdnPlayground({
           </select>
         </label>
 
-        {/* Reroll button - only show when a preset is selected */}
-        {urlState.presetId && <RerollButton onClick={handleReroll} />}
+        {/* Reroll button - show when preset selected OR custom code has randomizable charts */}
+        {(urlState.presetId || canRandomize(urlState.code)) && (
+          <RerollButton onClick={handleReroll} />
+        )}
 
         {/* CSP toggle */}
         <label className="flex items-center gap-2">
