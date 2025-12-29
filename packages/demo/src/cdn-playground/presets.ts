@@ -39,19 +39,39 @@ export const PRESETS: Preset[] = [
   <div class="grid">
     <div class="card">
       <h2>Series → Sparkline</h2>
-      <microviz-auto data-kind="series" data="10, 25, 15, 30, 20" width="200" height="32"></microviz-auto>
+      <microviz-auto
+        data-kind="series"
+        data="10, 25, 15, 30, 20"
+        width="200"
+        height="32"
+      ></microviz-auto>
     </div>
     <div class="card">
       <h2>Delta → Bullet</h2>
-      <microviz-auto data-kind="delta" data='{"current":12,"previous":9,"max":20}' width="220" height="40"></microviz-auto>
+      <microviz-auto
+        data-kind="delta"
+        data='{"current":12,"previous":9,"max":20}'
+        width="220"
+        height="40"
+      ></microviz-auto>
     </div>
     <div class="card">
       <h2>Segments → Donut</h2>
-      <microviz-auto data-kind="segments" data='[{"pct":62,"color":"#6366f1","name":"Desktop"},{"pct":28,"color":"#22c55e","name":"Mobile"},{"pct":10,"color":"#f59e0b","name":"Tablet"}]' width="140" height="140"></microviz-auto>
+      <microviz-auto
+        data-kind="segments"
+        data='[{"pct":62,"color":"#6366f1","name":"Desktop"},{"pct":28,"color":"#22c55e","name":"Mobile"},{"pct":10,"color":"#f59e0b","name":"Tablet"}]'
+        width="140"
+        height="140"
+      ></microviz-auto>
     </div>
     <div class="card">
       <h2>Value → Bar</h2>
-      <microviz-auto data-kind="value" data='{"value":12,"max":20}' width="220" height="32"></microviz-auto>
+      <microviz-auto
+        data-kind="value"
+        data='{"value":12,"max":20}'
+        width="220"
+        height="32"
+      ></microviz-auto>
       <div class="note">Auto picks the bar renderer from a value object.</div>
     </div>
   </div>
@@ -80,7 +100,12 @@ export const PRESETS: Preset[] = [
 <body>
   <h1>Auto Inference (CSV)</h1>
   <p>CSV with pct/color fields infers a donut.</p>
-  <microviz-auto data-kind="csv" data="pct,color,name\n62,#6366f1,Desktop\n28,#22c55e,Mobile\n10,#f59e0b,Tablet" width="160" height="160"></microviz-auto>
+  <microviz-auto
+    data-kind="csv"
+    data="pct,color,name\n62,#6366f1,Desktop\n28,#22c55e,Mobile\n10,#f59e0b,Tablet"
+    width="160"
+    height="160"
+  ></microviz-auto>
   <pre>pct,color,name
 62,#6366f1,Desktop
 28,#22c55e,Mobile
@@ -109,7 +134,13 @@ export const PRESETS: Preset[] = [
 <body>
   <h1>Auto Inference Override</h1>
   <p>Segments normally infer a donut, but <code>type="bullet-gauge"</code> forces a different chart.</p>
-  <microviz-auto data-kind="override" type="bullet-gauge" data='[{"pct":55,"color":"#6366f1","name":"Desktop"},{"pct":30,"color":"#22c55e","name":"Mobile"},{"pct":15,"color":"#f59e0b","name":"Tablet"}]' width="240" height="60"></microviz-auto>
+  <microviz-auto
+    data-kind="override"
+    type="bullet-gauge"
+    data='[{"pct":55,"color":"#6366f1","name":"Desktop"},{"pct":30,"color":"#22c55e","name":"Mobile"},{"pct":15,"color":"#f59e0b","name":"Tablet"}]'
+    width="240"
+    height="60"
+  ></microviz-auto>
 </body>
 </html>`,
     description: "Override inference with an explicit chart type",
@@ -324,15 +355,29 @@ export const PRESETS: Preset[] = [
   <div class="grid">
     <div class="card">
       <h2>Revenue Trend</h2>
-      <microviz-sparkline data="45, 52, 48, 61, 55, 67, 72" width="180" height="40"></microviz-sparkline>
+      <microviz-sparkline
+        data="45, 52, 48, 61, 55, 67, 72"
+        width="180"
+        height="40"
+      ></microviz-sparkline>
     </div>
     <div class="card">
       <h2>Sales by Region</h2>
-      <microviz-chart spec='{"type":"sparkline-bars"}' data="[65, 45, 78, 52]" width="180" height="80"></microviz-chart>
+      <microviz-chart
+        spec='{"type":"sparkline-bars"}'
+        data="[65, 45, 78, 52]"
+        width="180"
+        height="80"
+      ></microviz-chart>
     </div>
     <div class="card">
       <h2>Traffic Sources</h2>
-      <microviz-chart spec='{"type":"donut"}' data='[{"pct":45,"color":"#6366f1"},{"pct":30,"color":"#22c55e"},{"pct":25,"color":"#f59e0b"}]' width="100" height="100"></microviz-chart>
+      <microviz-chart
+        spec='{"type":"donut"}'
+        data='[{"pct":45,"color":"#6366f1"},{"pct":30,"color":"#22c55e"},{"pct":25,"color":"#f59e0b"}]'
+        width="100"
+        height="100"
+      ></microviz-chart>
     </div>
   </div>
 </body>
