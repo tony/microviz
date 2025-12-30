@@ -20,8 +20,8 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 export type CodeEditorProps = {
   value: string;
-  onChange: (value: string) => void;
-  language?: "html" | "javascript";
+  onChange?: (value: string) => void;
+  language?: "html" | "javascript" | "tsx";
   theme?: "light" | "dark";
   className?: string;
   readOnly?: boolean;
@@ -64,10 +64,16 @@ export function CodeEditor({
       closeBrackets(),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
-      language === "html" ? html() : javascript(),
+      language === "html"
+        ? html()
+        : javascript({ jsx: true, typescript: language === "tsx" }),
       EditorView.updateListener.of((update) => {
         // Only fire onChange for user edits, not external syncs (e.g., preset selection)
-        if (update.docChanged && !isExternalSync.current) {
+        if (
+          update.docChanged &&
+          !isExternalSync.current &&
+          onChangeRef.current
+        ) {
           isInternalChange.current = true;
           onChangeRef.current(update.state.doc.toString());
         }

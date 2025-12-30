@@ -9,6 +9,7 @@ import {
   parseCdnSource,
   serializeCdnSource,
 } from "./cdnSources";
+import type { OutputFormat } from "./generators/types";
 import { applySeededData } from "./presetData";
 import { DEFAULT_PRESET, PRESETS } from "./presets";
 
@@ -18,6 +19,8 @@ export type CdnPlaygroundState = {
   code: string;
   cdnSource: CdnSource;
   cspMode: CspMode;
+  /** Output format for code generation */
+  format: OutputFormat;
   presetId: string | null;
   seed: string;
 };
@@ -26,6 +29,7 @@ export const DEFAULT_CDN_PLAYGROUND_STATE: CdnPlaygroundState = {
   cdnSource: DEFAULT_CDN_SOURCE,
   code: DEFAULT_PRESET.code,
   cspMode: "off",
+  format: "html",
   presetId: DEFAULT_PRESET.id,
   seed: "mv-1",
 };
@@ -38,6 +42,7 @@ export type PlaygroundSearchParams = {
   c?: string; // code (base64, only for custom code)
   cdn?: string; // CDN source type
   csp?: string; // CSP mode
+  f?: string; // format (html | jsx)
   p?: string; // preset ID
   s?: string; // seed
   state?: string; // legacy format (for backward compat)
@@ -86,11 +91,23 @@ export function encodePlaygroundSearch(
     params.csp = state.cspMode;
   }
 
+  if (state.format !== "html") {
+    params.f = state.format;
+  }
+
   if (state.seed !== "mv-1") {
     params.s = state.seed;
   }
 
   return params;
+}
+
+/**
+ * Parse format from search params.
+ */
+function parseFormat(f: string | undefined): OutputFormat {
+  if (f === "jsx") return "jsx";
+  return "html";
 }
 
 /**
@@ -111,6 +128,7 @@ export function decodePlaygroundSearch(
       cdnSource: search.cdn ? parseCdnSource(search.cdn) : DEFAULT_CDN_SOURCE,
       code: base64ToUtf8(search.c),
       cspMode: (search.csp as CspMode) ?? "off",
+      format: parseFormat(search.f),
       presetId: null,
       seed: search.s ?? "mv-1",
     };
@@ -125,6 +143,7 @@ export function decodePlaygroundSearch(
     cdnSource: search.cdn ? parseCdnSource(search.cdn) : DEFAULT_CDN_SOURCE,
     code: applySeededData(presetId, preset.code, seed),
     cspMode: (search.csp as CspMode) ?? "off",
+    format: parseFormat(search.f),
     presetId: preset.id,
     seed,
   };
@@ -140,6 +159,7 @@ function decodeLegacyState(encoded: string): CdnPlaygroundState | null {
       c?: string;
       cdn?: string;
       csp?: CspMode;
+      f?: string;
       p?: string;
       s?: string;
     };
@@ -160,6 +180,7 @@ function decodeLegacyState(encoded: string): CdnPlaygroundState | null {
         : DEFAULT_CDN_SOURCE,
       code,
       cspMode: serialized.csp ?? "off",
+      format: parseFormat(serialized.f),
       presetId: effectivePresetId,
       seed: serialized.s ?? "mv-1",
     };
