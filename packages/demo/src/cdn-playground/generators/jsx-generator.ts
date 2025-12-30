@@ -69,25 +69,70 @@ function getReactComponentInfo(chart: ChartInstance): ReactComponentInfo {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Formatting Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Format a segment object for JSX: { color: "...", name: "...", pct: N }
+ */
+function formatSegment(seg: {
+  pct: number;
+  color: string;
+  name: string;
+}): string {
+  return `{ color: "${seg.color}", name: "${seg.name}", pct: ${seg.pct} }`;
+}
+
+/**
+ * Format a spec object for JSX: { type: "donut" }
+ */
+function formatSpec(spec: Record<string, unknown>): string {
+  const entries = Object.entries(spec)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+    .join(", ");
+  return `{ ${entries} }`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Data Formatting for JSX
 // ─────────────────────────────────────────────────────────────────────────────
 
-function formatDataForJsx(chart: ChartInstance, seed: string): string {
+function formatDataForJsx(
+  chart: ChartInstance,
+  seed: string,
+  baseIndent: string,
+): { value: string; isMultiline: boolean } {
   const data = generateDataForShape(chart.dataShape, seed);
 
   switch (data.type) {
     case "series":
       // Array literal: [10, 25, 15, 30]
-      return `[${data.values.join(", ")}]`;
-    case "segments":
-      // Array of objects with proper formatting
-      return JSON.stringify(data.segments);
+      return { isMultiline: false, value: `[${data.values.join(", ")}]` };
+    case "segments": {
+      // Multi-line array of objects
+      const lines = data.segments.map(
+        (s) => `${baseIndent}  ${formatSegment(s)},`,
+      );
+      return {
+        isMultiline: true,
+        value: `[\n${lines.join("\n")}\n${baseIndent}]`,
+      };
+    }
     case "delta":
+      // Format as { current: N, max: N, previous: N }
+      return {
+        isMultiline: false,
+        value: `{ current: ${data.current}, max: ${data.max}, previous: ${data.previous} }`,
+      };
     case "value":
-      return data.formatted;
+      // Format as { max: N, value: N }
+      return {
+        isMultiline: false,
+        value: `{ max: ${data.max}, value: ${data.value} }`,
+      };
     case "csv":
       // Template literal for multiline
-      return `\`${data.content}\``;
+      return { isMultiline: true, value: `\`${data.content}\`` };
   }
 }
 
@@ -95,58 +140,96 @@ function formatDataForJsx(chart: ChartInstance, seed: string): string {
 // JSX Element Generation
 // ─────────────────────────────────────────────────────────────────────────────
 
-function generateJsxElement(
-  chart: ChartInstance,
-  seed: string,
-  indent = "  ",
-): string {
+function generateJsxElement(chart: ChartInstance, seed: string): string {
   const info = getReactComponentInfo(chart);
-  const dataValue = formatDataForJsx(chart, seed);
 
-  const props: string[] = [];
-
-  // Data prop
+  // For "data" style components (Sparkline, Bar, etc.)
   if (info.propsStyle === "data") {
-    props.push(`data={${dataValue}}`);
-  } else {
-    // MicrovizChart uses input prop
-    const spec = chart.spec
-      ? JSON.stringify(chart.spec)
-      : '{ type: "sparkline" }';
-    props.push("input={{");
-    props.push(`    data: ${dataValue},`);
-    props.push(`    spec: ${spec},`);
-    props.push(`    size: { width: ${chart.width}, height: ${chart.height} },`);
-    props.push("  }}");
+    const dataResult = formatDataForJsx(chart, seed, "  ");
+    const lines = [
+      `<${info.name}`,
+      `  data={${dataResult.value}}`,
+      `  width={${chart.width}}`,
+      `  height={${chart.height}}`,
+    ];
+
+    // Handle interactive preset
+    if (chart.extraAttrs?.interactive !== undefined) {
+      lines.push("  interactive");
+    }
+    if (chart.extraAttrs?.["hit-slop"]) {
+      lines.push(`  hitSlop={${chart.extraAttrs["hit-slop"]}}`);
+    }
+
+    lines.push("/>");
+    return lines.join("\n");
   }
 
-  // Dimensions (for data-style components)
-  if (info.propsStyle === "data") {
-    props.push(`width={${chart.width}}`);
-    props.push(`height={${chart.height}}`);
-  }
+  // For MicrovizChart with input prop
+  // baseIndent = "    " (4 spaces) matches where `data:` prop sits inside input={{}}
+  const dataResult = formatDataForJsx(chart, seed, "    ");
+  const spec = chart.spec ? formatSpec(chart.spec) : '{ type: "sparkline" }';
+
+  const lines = [
+    `<${info.name}`,
+    "  input={{",
+    `    data: ${dataResult.value},`,
+    `    spec: ${spec},`,
+    `    size: { width: ${chart.width}, height: ${chart.height} },`,
+    "  }}",
+  ];
 
   // Handle interactive preset
   if (chart.extraAttrs?.interactive !== undefined) {
-    props.push("interactive");
+    lines.push("  interactive");
   }
   if (chart.extraAttrs?.["hit-slop"]) {
-    props.push(`hitSlop={${chart.extraAttrs["hit-slop"]}}`);
+    lines.push(`  hitSlop={${chart.extraAttrs["hit-slop"]}}`);
   }
 
-  // Format props
-  if (info.propsStyle === "input") {
-    // Multi-line for input prop
-    return `<${info.name}\n${indent}  ${props.join(`\n${indent}  `)}\n${indent}/>`;
-  }
-
-  // Single line for simple props
-  return `<${info.name} ${props.join(" ")} />`;
+  lines.push("/>");
+  return lines.join("\n");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Layout Wrapper Generation
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Format a multi-line style prop for a grid container.
+ */
+function formatGridStyle(columns: number, gap: string, indent: string): string {
+  return [
+    "style={{",
+    `${indent}  display: "grid",`,
+    `${indent}  gridTemplateColumns: "repeat(${columns}, 1fr)",`,
+    `${indent}  gap: "${gap}",`,
+    `${indent}}}`,
+  ].join("\n");
+}
+
+/**
+ * Re-indent a JSX block to a new base indentation level.
+ */
+function reindentJsx(jsx: string, newIndent: string): string {
+  const lines = jsx.split("\n");
+  // Find the minimum indentation of non-empty lines
+  const minIndent = lines
+    .filter((line) => line.trim().length > 0)
+    .reduce((min, line) => {
+      const match = line.match(/^(\s*)/);
+      const lineIndent = match ? match[1].length : 0;
+      return Math.min(min, lineIndent);
+    }, Number.POSITIVE_INFINITY);
+
+  // Re-indent all lines
+  return lines
+    .map((line) => {
+      if (line.trim().length === 0) return "";
+      return newIndent + line.slice(minIndent);
+    })
+    .join("\n");
+}
 
 function wrapInLayout(
   chartJsx: string[],
@@ -159,8 +242,10 @@ function wrapInLayout(
   }
 
   if (layout.type === "grid") {
-    const style = `{{ display: "grid", gridTemplateColumns: "repeat(${layout.columns}, 1fr)", gap: "${layout.gap ?? "1rem"}" }}`;
-    return `<div style={${style}}>\n${indent}${chartJsx.join(`\n${indent}`)}\n</div>`;
+    const gap = layout.gap ?? "1rem";
+    const styleLines = formatGridStyle(layout.columns, gap, indent);
+    const reindentedCharts = chartJsx.map((jsx) => reindentJsx(jsx, indent));
+    return `<div\n${indent}${styleLines}\n>\n${reindentedCharts.join("\n")}\n</div>`;
   }
 
   if (layout.type === "cards") {
@@ -168,15 +253,18 @@ function wrapInLayout(
     const cards = chartJsx.map((jsx, i) => {
       const chart = charts[i];
       const label = chart?.label;
+      const contentIndent = `${indent}  `; // 4 spaces for content inside card
+      const reindentedJsx = reindentJsx(jsx, contentIndent);
       if (label) {
-        return `<div className="card">\n${indent}  <h2>${label}</h2>\n${indent}  ${jsx}\n${indent}</div>`;
+        return `${indent}<div className="card">\n${contentIndent}<h2>${label}</h2>\n${reindentedJsx}\n${indent}</div>`;
       }
-      return `<div className="card">\n${indent}  ${jsx}\n${indent}</div>`;
+      return `${indent}<div className="card">\n${reindentedJsx}\n${indent}</div>`;
     });
 
     const cols = layout.columns ?? charts.length;
-    const style = `{{ display: "grid", gridTemplateColumns: "repeat(${cols}, 1fr)", gap: "1rem" }}`;
-    return `<div style={${style}}>\n${indent}${cards.join(`\n${indent}`)}\n</div>`;
+    const gap = layout.gap ?? "1rem";
+    const styleLines = formatGridStyle(cols, gap, indent);
+    return `<div\n${indent}${styleLines}\n>\n${cards.join("\n")}\n</div>`;
   }
 
   return chartJsx.join("\n");
