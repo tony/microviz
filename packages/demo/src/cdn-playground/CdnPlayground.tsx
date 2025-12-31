@@ -83,7 +83,7 @@ export function CdnPlayground({
 
   const handleCdnSourceChange = useCallback(
     (cdnSource: CdnSource) => {
-      // CDN source change - need full reload (stableCode stays same, but cdnUrl changes)
+      // CDN source change - need full reload
       onUrlStateChange({ ...urlState, cdnSource });
     },
     [urlState, onUrlStateChange],
@@ -115,17 +115,25 @@ export function CdnPlayground({
     [urlState.presetId],
   );
 
-  // Generate code using the new generators when in JSX mode
+  // Generate code using the unified generators (supports both HTML and JSX)
   const generatedCode = useMemo(() => {
-    if (!unifiedPreset || urlState.format === "html") {
+    if (!unifiedPreset) {
       return null;
     }
     return generateCode(unifiedPreset, urlState.format, {
+      cdnSource: urlState.cdnSource,
       cdnUrl,
       seed: urlState.seed,
       theme,
     });
-  }, [unifiedPreset, urlState.format, urlState.seed, cdnUrl, theme]);
+  }, [
+    unifiedPreset,
+    urlState.format,
+    urlState.seed,
+    cdnUrl,
+    urlState.cdnSource,
+    theme,
+  ]);
 
   // Use smart code for display/copy when in JSX mode
   const { showFull } = useSmartCode(
@@ -135,11 +143,25 @@ export function CdnPlayground({
 
   // Determine display code based on format
   const displayCode = useMemo(() => {
-    if (urlState.format === "jsx" && generatedCode) {
-      return showFull ? generatedCode.copyable : generatedCode.display;
+    // Use generated code for unified presets (both HTML and JSX)
+    if (generatedCode) {
+      if (urlState.format === "jsx") {
+        return showFull ? generatedCode.copyable : generatedCode.display;
+      }
+      // HTML format - always show full code
+      return generatedCode.display;
     }
+    // Fallback to user-edited code (custom or non-unified presets)
     return urlState.code;
   }, [urlState.format, urlState.code, generatedCode, showFull]);
+
+  // Update stableCode when generated HTML changes (CDN source, seed, etc.)
+  // This ensures the preview iframe reloads with new URLs
+  useEffect(() => {
+    if (generatedCode && urlState.format === "html") {
+      setStableCode(generatedCode.display);
+    }
+  }, [generatedCode, urlState.format]);
 
   const handlePresetChange = useCallback(
     (presetId: string) => {
