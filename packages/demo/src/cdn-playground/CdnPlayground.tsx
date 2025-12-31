@@ -83,10 +83,22 @@ export function CdnPlayground({
 
   const handleCdnSourceChange = useCallback(
     (cdnSource: CdnSource) => {
-      // CDN source change - need full reload
+      // CDN source change - need full reload with new CDN URL
+      const newCdnUrl = getCdnUrl(cdnSource);
+      const newUnifiedPreset = findUnifiedPreset(urlState.presetId);
+      if (newUnifiedPreset && urlState.format === "html") {
+        // Regenerate HTML with new CDN URL
+        const newCode = generateCode(newUnifiedPreset, "html", {
+          cdnSource,
+          cdnUrl: newCdnUrl,
+          seed: urlState.seed,
+          theme,
+        });
+        setStableCode(newCode.display);
+      }
       onUrlStateChange({ ...urlState, cdnSource });
     },
-    [urlState, onUrlStateChange],
+    [urlState, onUrlStateChange, theme],
   );
 
   const handleCspModeChange = useCallback(
@@ -154,14 +166,6 @@ export function CdnPlayground({
     // Fallback to user-edited code (custom or non-unified presets)
     return urlState.code;
   }, [urlState.format, urlState.code, generatedCode, showFull]);
-
-  // Update stableCode when generated HTML changes (CDN source, seed, etc.)
-  // This ensures the preview iframe reloads with new URLs
-  useEffect(() => {
-    if (generatedCode && urlState.format === "html") {
-      setStableCode(generatedCode.display);
-    }
-  }, [generatedCode, urlState.format]);
 
   const handlePresetChange = useCallback(
     (presetId: string) => {
