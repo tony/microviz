@@ -9,6 +9,7 @@ export type CdnSourceType =
   | "jsdelivr"
   | "unpkg"
   | "esm-sh"
+  | "esm-sh-gh"
   | "custom";
 
 export type CdnSource =
@@ -17,12 +18,14 @@ export type CdnSource =
   | { type: "jsdelivr" }
   | { type: "unpkg" }
   | { type: "esm-sh" }
+  | { type: "esm-sh-gh" }
   | { type: "custom"; url: string };
 
 export const CDN_SOURCE_LABELS: Record<CdnSourceType, string> = {
   "cdn-dev": "cdn-dev.microviz.org",
   custom: "Custom URL",
-  "esm-sh": "esm.sh",
+  "esm-sh": "esm.sh (npm)",
+  "esm-sh-gh": "esm.sh (GitHub)",
   jsdelivr: "jsDelivr",
   local: "Local Build",
   unpkg: "unpkg",
@@ -31,7 +34,8 @@ export const CDN_SOURCE_LABELS: Record<CdnSourceType, string> = {
 export const CDN_SOURCE_DESCRIPTIONS: Record<CdnSourceType, string> = {
   "cdn-dev": "Preview CDN (canary/next/latest)",
   custom: "Enter a custom URL",
-  "esm-sh": "esm.sh (on-demand ESM)",
+  "esm-sh": "esm.sh from npm (requires publish)",
+  "esm-sh-gh": `esm.sh from GitHub (branch: ${__GIT_BRANCH__})`,
   jsdelivr: "cdn.jsdelivr.net (popular, fast)",
   local: "Serve from demo's public/cdn/ folder",
   unpkg: "unpkg.com (npm-based)",
@@ -52,6 +56,15 @@ export function getCdnUrl(source: CdnSource): string {
       return "https://unpkg.com/@microviz/elements/cdn/microviz.js";
     case "esm-sh":
       return "https://esm.sh/@microviz/elements";
+    case "esm-sh-gh": {
+      // Use ?alias to redirect bare @microviz/* imports to GitHub paths
+      const base = `gh/tony/microviz@${__GIT_BRANCH__}/packages`;
+      const aliases = [
+        `@microviz/core:${base}/core/src/index.ts`,
+        `@microviz/renderers:${base}/renderers/src/index.ts`,
+      ].join(",");
+      return `https://esm.sh/${base}/elements/src/index.ts?alias=${aliases}`;
+    }
     case "custom":
       return source.url;
   }
@@ -69,7 +82,8 @@ export function parseCdnSource(value: string): CdnSource {
     value === "local" ||
     value === "jsdelivr" ||
     value === "unpkg" ||
-    value === "esm-sh"
+    value === "esm-sh" ||
+    value === "esm-sh-gh"
   ) {
     return { type: value };
   }

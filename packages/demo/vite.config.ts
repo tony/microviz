@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
@@ -5,7 +6,24 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { cdnBundlePlugin } from "./vite-plugin-cdn-bundle";
 
+/**
+ * Get current git branch for esm.sh GitHub URLs.
+ * Safe: uses execFileSync (no shell), no user input.
+ */
+function getGitBranch(): string {
+  try {
+    return execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+      encoding: "utf-8",
+    }).trim();
+  } catch {
+    return "main";
+  }
+}
+
 export default defineConfig({
+  define: {
+    __GIT_BRANCH__: JSON.stringify(getGitBranch()),
+  },
   plugins: [
     cdnBundlePlugin(),
     TanStackRouterVite({

@@ -6,6 +6,7 @@ import { CodeEditor } from "./CodeEditor";
 import { ConsoleOutput } from "./ConsoleOutput";
 import type { CdnPlaygroundState, CspMode } from "./cdnPlaygroundState";
 import { type CdnSource, getCdnUrl } from "./cdnSources";
+import { generateCode, type OutputFormat } from "./generators";
 import {
   type ConsoleEntry,
   PreviewPane,
@@ -13,11 +14,14 @@ import {
 } from "./PreviewPane";
 import { applySeededData, generateDataForPreset } from "./presetData";
 import { PRESETS } from "./presets";
+import { ReactPreviewPane } from "./ReactPreviewPane";
 import {
   applyRandomData,
   canRandomize,
   generateReactiveUpdates,
 } from "./randomization";
+import { SmartCopyButton, useSmartCode } from "./SmartCopyButton";
+import { findUnifiedPreset } from "./unified-presets";
 
 export type CdnPlaygroundProps = {
   urlState: CdnPlaygroundState;
@@ -79,10 +83,22 @@ export function CdnPlayground({
 
   const handleCdnSourceChange = useCallback(
     (cdnSource: CdnSource) => {
-      // CDN source change - need full reload (stableCode stays same, but cdnUrl changes)
+      // CDN source change - need full reload with new CDN URL
+      const newCdnUrl = getCdnUrl(cdnSource);
+      const newUnifiedPreset = findUnifiedPreset(urlState.presetId);
+      if (newUnifiedPreset && urlState.format === "html") {
+        // Regenerate HTML with new CDN URL
+        const newCode = generateCode(newUnifiedPreset, "html", {
+          cdnSource,
+          cdnUrl: newCdnUrl,
+          seed: urlState.seed,
+          theme,
+        });
+        setStableCode(newCode.display);
+      }
       onUrlStateChange({ ...urlState, cdnSource });
     },
-    [urlState, onUrlStateChange],
+    [urlState, onUrlStateChange, theme],
   );
 
   const handleCspModeChange = useCallback(
@@ -93,16 +109,80 @@ export function CdnPlayground({
     [urlState, onUrlStateChange],
   );
 
+  const handleFormatChange = useCallback(
+    (format: OutputFormat) => {
+      // Check if preset supports the format
+      const unifiedPreset = findUnifiedPreset(urlState.presetId);
+      if (unifiedPreset && !unifiedPreset.formats.includes(format)) {
+        return; // Preset doesn't support this format
+      }
+      onUrlStateChange({ ...urlState, format });
+    },
+    [urlState, onUrlStateChange],
+  );
+
+  // Get unified preset for current selection
+  const unifiedPreset = useMemo(
+    () => findUnifiedPreset(urlState.presetId),
+    [urlState.presetId],
+  );
+
+  // Generate code using the unified generators (supports both HTML and JSX)
+  const generatedCode = useMemo(() => {
+    if (!unifiedPreset) {
+      return null;
+    }
+    return generateCode(unifiedPreset, urlState.format, {
+      cdnSource: urlState.cdnSource,
+      cdnUrl,
+      seed: urlState.seed,
+      theme,
+    });
+  }, [
+    unifiedPreset,
+    urlState.format,
+    urlState.seed,
+    cdnUrl,
+    urlState.cdnSource,
+    theme,
+  ]);
+
+  // Use smart code for display/copy when in JSX mode
+  const { showFull } = useSmartCode(
+    generatedCode?.display ?? "",
+    generatedCode?.copyable ?? "",
+  );
+
+  // Determine display code based on format
+  const displayCode = useMemo(() => {
+    // Use generated code for unified presets (both HTML and JSX)
+    if (generatedCode) {
+      if (urlState.format === "jsx") {
+        return showFull ? generatedCode.copyable : generatedCode.display;
+      }
+      // HTML format - always show full code
+      return generatedCode.display;
+    }
+    // Fallback to user-edited code (custom or non-unified presets)
+    return urlState.code;
+  }, [urlState.format, urlState.code, generatedCode, showFull]);
+
   const handlePresetChange = useCallback(
     (presetId: string) => {
       const preset = PRESETS.find((p) => p.id === presetId);
       if (preset) {
         const code = applySeededData(presetId, preset.code, urlState.seed);
+        // Check if new preset supports current format
+        const newUnifiedPreset = findUnifiedPreset(presetId);
+        const newFormat = newUnifiedPreset?.formats.includes(urlState.format)
+          ? urlState.format
+          : "html";
         // Preset change - need full reload
         setStableCode(code);
         onUrlStateChange({
           ...urlState,
           code,
+          format: newFormat,
           presetId,
         });
         setConsoleLogs([]);
@@ -219,6 +299,34 @@ export function CdnPlayground({
           <RerollButton onClick={handleReroll} />
         )}
 
+        {/* Format toggle - show when preset supports multiple formats */}
+        {unifiedPreset && unifiedPreset.formats.length > 1 && (
+          <label className="flex items-center gap-2">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Format
+            </span>
+            <select
+              className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              onChange={(e) =>
+                handleFormatChange(e.target.value as OutputFormat)
+              }
+              value={urlState.format}
+            >
+              <option value="html">HTML</option>
+              <option value="jsx">JSX</option>
+            </select>
+          </label>
+        )}
+
+        {/* Smart copy button for JSX mode */}
+        {urlState.format === "jsx" && generatedCode && (
+          <SmartCopyButton
+            copyableCode={generatedCode.copyable}
+            displayCode={generatedCode.display}
+            showToggle
+          />
+        )}
+
         {/* CSP toggle */}
         <label className="flex items-center gap-2">
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -283,10 +391,12 @@ export function CdnPlayground({
             {/* Code editor */}
             <div className="flex-1 overflow-hidden">
               <CodeEditor
-                language="html"
-                onChange={handleCodeChange}
+                language={urlState.format === "jsx" ? "tsx" : "html"}
+                onChange={
+                  urlState.format === "html" ? handleCodeChange : undefined
+                }
                 theme={theme}
-                value={urlState.code}
+                value={displayCode}
               />
             </div>
           </div>
@@ -294,24 +404,34 @@ export function CdnPlayground({
 
         {/* Right pane - Preview + Console */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Preview */}
+          {/* Preview - HTML uses iframe, JSX uses inline React */}
           <div className="flex-1 overflow-hidden">
-            <PreviewPane
-              cdnUrl={cdnUrl}
-              className="h-full"
-              code={stableCode}
-              cspMode={urlState.cspMode}
-              onConsoleMessage={handleConsoleMessage}
-              ref={previewRef}
-            />
+            {urlState.format === "jsx" && unifiedPreset ? (
+              <ReactPreviewPane
+                className="h-full overflow-auto"
+                preset={unifiedPreset}
+                seed={urlState.seed}
+              />
+            ) : (
+              <PreviewPane
+                cdnUrl={cdnUrl}
+                className="h-full"
+                code={stableCode}
+                cspMode={urlState.cspMode}
+                onConsoleMessage={handleConsoleMessage}
+                ref={previewRef}
+              />
+            )}
           </div>
 
-          {/* Console */}
-          <ConsoleOutput
-            className="h-32 flex-shrink-0"
-            logs={consoleLogs}
-            onClear={handleClearConsole}
-          />
+          {/* Console - only show for HTML mode (JSX has no console capture) */}
+          {urlState.format === "html" && (
+            <ConsoleOutput
+              className="h-32 flex-shrink-0"
+              logs={consoleLogs}
+              onClear={handleClearConsole}
+            />
+          )}
         </div>
       </div>
     </div>

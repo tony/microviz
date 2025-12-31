@@ -16,10 +16,22 @@ type TelemetryAttribute =
 type MicrovizChartProps = BaseProps & {
   autosize?: boolean;
   data?: string;
+  height?: number | string;
+  "hit-slop"?: number | string;
   interactive?: boolean;
   renderer?: "html" | "svg";
   spec?: string;
   telemetry?: TelemetryAttribute;
+  width?: number | string;
+};
+
+type MicrovizSparklineProps = BaseProps & {
+  data?: string;
+  height?: number | string;
+  "hit-slop"?: number | string;
+  interactive?: boolean;
+  telemetry?: TelemetryAttribute;
+  width?: number | string;
 };
 
 type MicrovizAutoProps = BaseProps & {
@@ -250,10 +262,7 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       >;
-      "microviz-sparkline": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
+      "microviz-sparkline": MicrovizSparklineProps;
       "microviz-sparkline-bars": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
