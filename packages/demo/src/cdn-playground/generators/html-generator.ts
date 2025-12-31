@@ -338,7 +338,7 @@ export function generateHtml(
   <meta charset="utf-8">
   <title>Microviz ${name}</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "${context.cdnUrl}";
   </script>
   <style>
     ${styles}

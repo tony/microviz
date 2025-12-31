@@ -7,7 +7,7 @@ exports[`generateHtml - snapshots > snapshot for 'Auto Inference (Basics)' ('aut
   <meta charset="utf-8">
   <title>Microviz Auto Inference (Basics)</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -73,7 +73,7 @@ exports[`generateHtml - snapshots > snapshot for 'Auto Inference (CSV)' ('auto-c
   <meta charset="utf-8">
   <title>Microviz Auto Inference (CSV)</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -102,7 +102,7 @@ exports[`generateHtml - snapshots > snapshot for 'Auto Override' ('auto-override
   <meta charset="utf-8">
   <title>Microviz Auto Override</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -129,7 +129,7 @@ exports[`generateHtml - snapshots > snapshot for 'Bar Chart' ('bar-chart') 1`] =
   <meta charset="utf-8">
   <title>Microviz Bar Chart</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -226,7 +226,7 @@ exports[`generateHtml - snapshots > snapshot for 'Donut Chart' ('donut') 1`] = `
   <meta charset="utf-8">
   <title>Microviz Donut Chart</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -252,7 +252,7 @@ exports[`generateHtml - snapshots > snapshot for 'Interactive Chart' ('interacti
   <meta charset="utf-8">
   <title>Microviz Interactive Chart</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -303,7 +303,7 @@ exports[`generateHtml - snapshots > snapshot for 'Multiple Charts' ('multiple-ch
   <meta charset="utf-8">
   <title>Microviz Multiple Charts</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }
@@ -359,7 +359,7 @@ exports[`generateHtml - snapshots > snapshot for 'Sparkline' ('sparkline') 1`] =
   <meta charset="utf-8">
   <title>Microviz Sparkline</title>
   <script type="module">
-    import "{{CDN_URL}}";
+    import "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js";
   </script>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; }

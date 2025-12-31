@@ -59,10 +59,10 @@ describe("generateHtml - basic output", () => {
     expect(result.display).toContain("<body>");
   });
 
-  it("includes CDN URL placeholder", () => {
+  it("includes CDN URL from context", () => {
     const result = generateHtml(getPreset("sparkline"), defaultContext);
 
-    expect(result.display).toContain("{{CDN_URL}}");
+    expect(result.display).toContain(defaultContext.cdnUrl);
   });
 });
 
