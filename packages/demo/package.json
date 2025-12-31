@@ -37,7 +37,7 @@
     "@tanstack/react-router": "^1.144.0",
     "@tanstack/react-router-devtools": "^1.144.0",
     "@tanstack/react-table": "^8.21.3",
-    "@tanstack/react-virtual": "^3.13.13",
+    "@tanstack/react-virtual": "^3.13.14",
     "@tanstack/zod-adapter": "^1.144.0",
     "class-variance-authority": "^0.7.1",
     "react": "^19.2.3",
