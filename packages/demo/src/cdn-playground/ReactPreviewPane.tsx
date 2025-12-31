@@ -35,6 +35,27 @@ function easeOutCubic(t: number): number {
 // Data Parsing
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Parse CSV string into segment objects for donut charts.
+ * Expected format: "pct,color,name\n35,#6366f1,Desktop\n..."
+ */
+function parseCsvToSegments(
+  csv: string,
+): { pct: number; color: string; name: string }[] {
+  const lines = csv.trim().split("\n");
+  if (lines.length < 2) return [];
+
+  // Skip header row, parse data rows
+  return lines.slice(1).map((line) => {
+    const [pct, color, name] = line.split(",");
+    return {
+      color: color?.trim() ?? "#888",
+      name: name?.trim() ?? "",
+      pct: Number(pct) || 0,
+    };
+  });
+}
+
 function parseChartData(chart: ChartInstance, seed: string): unknown {
   const data = generateDataForShape(chart.dataShape, seed);
 
@@ -53,7 +74,8 @@ function parseChartData(chart: ChartInstance, seed: string): unknown {
     case "value":
       return { max: data.max, value: data.value };
     case "csv":
-      return data.content;
+      // Parse CSV into segments for React preview (computeModel expects arrays, not CSV strings)
+      return parseCsvToSegments(data.content);
     default: {
       // Exhaustive check - this should never happen
       const _exhaustiveCheck: never = data;
@@ -243,7 +265,7 @@ type ChartRendererProps = {
 function ChartRenderer({ chart, seed, onHit }: ChartRendererProps) {
   // If chart is interactive and we have a hit handler, use Web Component renderer
   if (chart.extraAttrs?.interactive !== undefined && onHit) {
-    return <InteractiveChartRenderer chart={chart} seed={seed} onHit={onHit} />;
+    return <InteractiveChartRenderer chart={chart} onHit={onHit} seed={seed} />;
   }
 
   // Otherwise use animated SVG renderer
@@ -314,7 +336,15 @@ function InteractiveChartRenderer({
         }
       }
     }
-  }, [dataStr, chart.width, chart.height, chart.element, specStr, hitSlop, chart.extraAttrs]);
+  }, [
+    dataStr,
+    chart.width,
+    chart.height,
+    chart.element,
+    specStr,
+    hitSlop,
+    chart.extraAttrs,
+  ]);
 
   // Attach event listener
   useEffect(() => {
@@ -361,7 +391,7 @@ function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
   if (layout.type === "single") {
     const chart = charts[0];
     if (!chart) return null;
-    return <ChartRenderer chart={chart} seed={seed} onHit={onHit} />;
+    return <ChartRenderer chart={chart} onHit={onHit} seed={seed} />;
   }
 
   if (layout.type === "grid") {
@@ -377,7 +407,12 @@ function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
         }}
       >
         {charts.map((chart) => (
-          <ChartRenderer chart={chart} key={chart.id} seed={seed} onHit={onHit} />
+          <ChartRenderer
+            chart={chart}
+            key={chart.id}
+            onHit={onHit}
+            seed={seed}
+          />
         ))}
       </div>
     );
@@ -413,7 +448,7 @@ function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
                 {chart.label}
               </h2>
             )}
-            <ChartRenderer chart={chart} seed={seed} onHit={onHit} />
+            <ChartRenderer chart={chart} onHit={onHit} seed={seed} />
           </div>
         ))}
       </div>
@@ -488,8 +523,8 @@ export function ReactPreviewPane({
       <LayoutRenderer
         charts={charts}
         layout={layout}
-        seed={seed}
         onHit={interactive ? handleHit : undefined}
+        seed={seed}
       />
 
       {interactive && (

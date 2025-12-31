@@ -27,7 +27,7 @@ export function Chart() {
     <MicrovizChart
       input={{
         data: { current: 33, max: 37, previous: 15 },
-        spec: { type: "sparkline" },
+        spec: { type: "bullet-delta" },
         size: { width: 220, height: 40 },
       }}
     />
@@ -41,7 +41,7 @@ export function Chart() {
           { color: "#22c55e", name: "Mobile", pct: 36 },
           { color: "#f59e0b", name: "Tablet", pct: 26 },
         ],
-        spec: { type: "sparkline" },
+        spec: { type: "donut" },
         size: { width: 140, height: 140 },
       }}
     />
@@ -51,7 +51,7 @@ export function Chart() {
     <MicrovizChart
       input={{
         data: { max: 20, value: 16 },
-        spec: { type: "sparkline" },
+        spec: { type: "bar" },
         size: { width: 220, height: 32 },
       }}
     />
@@ -84,7 +84,7 @@ exports[`generateJsx - snapshots > snapshot for 'Auto Inference (Basics)' ('auto
     <MicrovizChart
       input={{
         data: { current: 33, max: 37, previous: 15 },
-        spec: { type: "sparkline" },
+        spec: { type: "bullet-delta" },
         size: { width: 220, height: 40 },
       }}
     />
@@ -98,7 +98,7 @@ exports[`generateJsx - snapshots > snapshot for 'Auto Inference (Basics)' ('auto
           { color: "#22c55e", name: "Mobile", pct: 36 },
           { color: "#f59e0b", name: "Tablet", pct: 26 },
         ],
-        spec: { type: "sparkline" },
+        spec: { type: "donut" },
         size: { width: 140, height: 140 },
       }}
     />
@@ -108,7 +108,7 @@ exports[`generateJsx - snapshots > snapshot for 'Auto Inference (Basics)' ('auto
     <MicrovizChart
       input={{
         data: { max: 20, value: 16 },
-        spec: { type: "sparkline" },
+        spec: { type: "bar" },
         size: { width: 220, height: 32 },
       }}
     />
@@ -127,7 +127,7 @@ export function Chart() {
 35,#6366f1,Desktop
 32,#22c55e,Mobile
 33,#f59e0b,Tablet\`,
-    spec: { type: "sparkline" },
+    spec: { type: "donut" },
     size: { width: 160, height: 160 },
   }}
 />
@@ -142,7 +142,7 @@ exports[`generateJsx - snapshots > snapshot for 'Auto Inference (CSV)' ('auto-cs
 35,#6366f1,Desktop
 32,#22c55e,Mobile
 33,#f59e0b,Tablet\`,
-    spec: { type: "sparkline" },
+    spec: { type: "donut" },
     size: { width: 160, height: 160 },
   }}
 />"
@@ -160,7 +160,7 @@ export function Chart() {
       { color: "#22c55e", name: "Mobile", pct: 30 },
       { color: "#f59e0b", name: "Tablet", pct: 36 },
     ],
-    spec: { type: "sparkline" },
+    spec: { type: "bullet-gauge" },
     size: { width: 240, height: 60 },
   }}
 />
@@ -176,7 +176,7 @@ exports[`generateJsx - snapshots > snapshot for 'Auto Override' ('auto-override'
       { color: "#22c55e", name: "Mobile", pct: 30 },
       { color: "#f59e0b", name: "Tablet", pct: 36 },
     ],
-    spec: { type: "sparkline" },
+    spec: { type: "bullet-gauge" },
     size: { width: 240, height: 60 },
   }}
 />"

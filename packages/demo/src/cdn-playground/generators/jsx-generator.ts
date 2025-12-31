@@ -93,6 +93,47 @@ function formatSpec(spec: Record<string, unknown>): string {
   return `{ ${entries} }`;
 }
 
+/**
+ * Infer the spec string for a chart based on its configuration.
+ * For auto charts (microviz-auto element), infers from dataKind.
+ * React's MicrovizChart requires an explicit spec since there's no Auto component.
+ */
+function inferSpecFromDataKind(chart: ChartInstance): string {
+  // If chart has an explicit spec, use it
+  if (chart.spec) {
+    return formatSpec(chart.spec);
+  }
+
+  // For auto charts, infer from dataKind
+  if (chart.chartType === "auto" || chart.element === "microviz-auto") {
+    switch (chart.dataKind) {
+      case "csv":
+      case "segments":
+        return '{ type: "donut" }';
+      case "delta":
+        return '{ type: "bullet-delta" }';
+      case "value":
+        return '{ type: "bar" }';
+      case "series":
+        return '{ type: "sparkline" }';
+      case "override":
+        // Check for explicit type in extraAttrs
+        if (chart.extraAttrs?.type) {
+          return `{ type: "${chart.extraAttrs.type}" }`;
+        }
+        return '{ type: "bar" }';
+    }
+  }
+
+  // For explicit chart types, use them directly
+  if (chart.chartType && chart.chartType !== "auto") {
+    return `{ type: "${chart.chartType}" }`;
+  }
+
+  // Default fallback
+  return '{ type: "sparkline" }';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Data Formatting for JSX
 // ─────────────────────────────────────────────────────────────────────────────
@@ -168,7 +209,7 @@ function generateJsxElement(chart: ChartInstance, seed: string): string {
   // For MicrovizChart with input prop
   // baseIndent = "    " (4 spaces) matches where `data:` prop sits inside input={{}}
   const dataResult = formatDataForJsx(chart, seed, "    ");
-  const spec = chart.spec ? formatSpec(chart.spec) : '{ type: "sparkline" }';
+  const spec = inferSpecFromDataKind(chart);
 
   const lines = [
     `<${info.name}`,
@@ -299,7 +340,9 @@ function generateInteractiveJsx(
 ): GeneratedCode {
   const chart = preset.charts[0];
   if (!chart || !preset.interactive) {
-    throw new Error("Interactive preset must have a chart and interactive config");
+    throw new Error(
+      "Interactive preset must have a chart and interactive config",
+    );
   }
 
   const chartSeed = `${context.seed}:${chart.id}:0`;
