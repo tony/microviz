@@ -15,6 +15,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const defaultContext: GeneratorContext = {
+  cdnSource: { type: "jsdelivr" },
   cdnUrl: "https://cdn.jsdelivr.net/npm/@microviz/elements/cdn/microviz.js",
   seed: "test-seed",
   theme: "light",

@@ -2,6 +2,8 @@
  * Type definitions for the multi-format code generator system.
  */
 
+import type { CdnSource } from "../cdnSources";
+
 export type OutputFormat = "html" | "jsx";
 
 export type GeneratorContext = {
@@ -9,6 +11,8 @@ export type GeneratorContext = {
   seed: string;
   /** CDN URL for microviz imports */
   cdnUrl: string;
+  /** Full CDN source configuration (for branch-aware URL generation) */
+  cdnSource: CdnSource;
   /** Current theme */
   theme: "light" | "dark";
 };
