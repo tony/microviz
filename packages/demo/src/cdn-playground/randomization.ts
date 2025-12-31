@@ -197,7 +197,7 @@ export function generateRandomData(
       const values = Array.from({ length: shape.length }, () =>
         Math.round(rng() * 100),
       );
-      return values.join(", ");
+      return JSON.stringify(values);
     }
 
     case "segments": {

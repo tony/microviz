@@ -18,6 +18,7 @@ export const Route = createFileRoute("/playground")({
       p: typeof search.p === "string" ? search.p : undefined,
       s: typeof search.s === "string" ? search.s : undefined,
       state: typeof search.state === "string" ? search.state : undefined,
+      w: typeof search.w === "string" ? search.w : undefined,
     };
   },
   component: PlaygroundComponent,

@@ -12,6 +12,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
+    "test:browser": "vitest run --config vitest.config.browser.ts",
     "test:visual": "vitest run --config vitest.visual.config.ts",
     "test:visual:update": "vitest run --config vitest.visual.config.ts --update",
     "lint": "biome lint .",

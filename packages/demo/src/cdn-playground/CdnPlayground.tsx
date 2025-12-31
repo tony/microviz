@@ -18,6 +18,7 @@ import {
   canRandomize,
   generateReactiveUpdates,
 } from "./randomization";
+import { DEFAULT_WRAPPER, findWrapper, WRAPPERS } from "./wrappers";
 
 export type CdnPlaygroundProps = {
   urlState: CdnPlaygroundState;
@@ -97,7 +98,13 @@ export function CdnPlayground({
     (presetId: string) => {
       const preset = PRESETS.find((p) => p.id === presetId);
       if (preset) {
-        const code = applySeededData(presetId, preset.code, urlState.seed);
+        const wrapper = findWrapper(urlState.wrapperId) ?? DEFAULT_WRAPPER;
+        const seededCode = applySeededData(
+          presetId,
+          preset.code,
+          urlState.seed,
+        );
+        const code = wrapper.transform(seededCode, cdnUrl);
         // Preset change - need full reload
         setStableCode(code);
         onUrlStateChange({
@@ -108,7 +115,41 @@ export function CdnPlayground({
         setConsoleLogs([]);
       }
     },
-    [urlState, onUrlStateChange],
+    [urlState, cdnUrl, onUrlStateChange],
+  );
+
+  const handleWrapperChange = useCallback(
+    (wrapperId: string) => {
+      const wrapper = findWrapper(wrapperId);
+      if (!wrapper) return;
+
+      // For presets, transform the preset code
+      if (urlState.presetId) {
+        const preset = PRESETS.find((p) => p.id === urlState.presetId);
+        if (preset) {
+          const seededCode = applySeededData(
+            urlState.presetId,
+            preset.code,
+            urlState.seed,
+          );
+          const code = wrapper.transform(seededCode, cdnUrl);
+          setStableCode(code);
+          onUrlStateChange({
+            ...urlState,
+            code,
+            wrapperId,
+          });
+          setConsoleLogs([]);
+        }
+      } else {
+        // For custom code, just update wrapperId (don't transform)
+        onUrlStateChange({
+          ...urlState,
+          wrapperId,
+        });
+      }
+    },
+    [urlState, cdnUrl, onUrlStateChange],
   );
 
   const handleReroll = useCallback(() => {
@@ -209,6 +250,30 @@ export function CdnPlayground({
             {PRESETS.map((preset) => (
               <option key={preset.id} value={preset.id}>
                 {preset.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* Wrapper selector */}
+        <label className="flex items-center gap-2">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Wrapper
+          </span>
+          <select
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            disabled={urlState.presetId === null}
+            onChange={(e) => handleWrapperChange(e.target.value)}
+            title={
+              urlState.presetId === null
+                ? "Wrapper selection only available for presets"
+                : undefined
+            }
+            value={urlState.wrapperId}
+          >
+            {WRAPPERS.map((wrapper) => (
+              <option key={wrapper.id} value={wrapper.id}>
+                {wrapper.name}
               </option>
             ))}
           </select>
