@@ -5,14 +5,23 @@
 
 import type { ChartSpec, RenderModel, Size } from "@microviz/core";
 import { computeModel, interpolateModel } from "@microviz/core";
+// Import elements to register Web Components for interactive charts
+import "@microviz/elements";
 import { MicrovizSvg } from "@microviz/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { generateDataForShape } from "./generators/data-generator";
 import type {
   ChartInstance,
   LayoutTemplate,
   UnifiedPreset,
 } from "./unified-presets";
+
+// Type for microviz-hit event detail
+type MicrovizHitDetail = {
+  hit: { markId: string; markType: string } | null;
+  client: { x: number; y: number };
+  point: { x: number; y: number };
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Animation Easing
@@ -142,17 +151,21 @@ function computeModelForChart(
 // Single Chart Renderer
 // ─────────────────────────────────────────────────────────────────────────────
 
-type ChartRendererProps = {
+type AnimatedChartRendererProps = {
   chart: ChartInstance;
   seed: string;
   animationDuration?: number;
 };
 
-function ChartRenderer({
+/**
+ * Renders a chart with smooth animation on data changes.
+ * Uses MicrovizSvg for pure SVG rendering without interactivity.
+ */
+function AnimatedChartRenderer({
   chart,
   seed,
   animationDuration = 300,
-}: ChartRendererProps) {
+}: AnimatedChartRendererProps) {
   const chartSeed = `${seed}:${chart.id}`;
 
   // Compute data and model
@@ -214,6 +227,126 @@ function ChartRenderer({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Chart Renderer Wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ChartRendererProps = {
+  chart: ChartInstance;
+  seed: string;
+  onHit?: (detail: MicrovizHitDetail) => void;
+};
+
+/**
+ * Wrapper component that delegates to either InteractiveChartRenderer or
+ * AnimatedChartRenderer based on whether the chart is interactive.
+ */
+function ChartRenderer({ chart, seed, onHit }: ChartRendererProps) {
+  // If chart is interactive and we have a hit handler, use Web Component renderer
+  if (chart.extraAttrs?.interactive !== undefined && onHit) {
+    return <InteractiveChartRenderer chart={chart} seed={seed} onHit={onHit} />;
+  }
+
+  // Otherwise use animated SVG renderer
+  return <AnimatedChartRenderer chart={chart} seed={seed} />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Interactive Chart Renderer (Web Component)
+// ─────────────────────────────────────────────────────────────────────────────
+
+type InteractiveChartRendererProps = {
+  chart: ChartInstance;
+  seed: string;
+  onHit: (detail: MicrovizHitDetail) => void;
+};
+
+/**
+ * Renders an interactive chart using Web Components.
+ * Web Components have built-in hit testing and emit microviz-hit events.
+ */
+function InteractiveChartRenderer({
+  chart,
+  seed,
+  onHit,
+}: InteractiveChartRendererProps) {
+  const ref = useRef<HTMLElement>(null);
+  const chartSeed = `${seed}:${chart.id}`;
+
+  // Parse data for the chart
+  const data = useMemo(
+    () => parseChartData(chart, chartSeed),
+    [chart, chartSeed],
+  );
+
+  // Serialize data for HTML attribute
+  const dataStr = useMemo(() => {
+    if (typeof data === "string") return data; // CSV string
+    return JSON.stringify(data);
+  }, [data]);
+
+  const specStr = useMemo(
+    () => (chart.spec ? JSON.stringify(chart.spec) : '{"type":"sparkline"}'),
+    [chart.spec],
+  );
+
+  const hitSlop = chart.extraAttrs?.["hit-slop"] ?? "8";
+
+  // Set attributes manually to ensure they're set as HTML attributes
+  // React 19 might set some props as properties which Web Components don't read
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    el.setAttribute("data", dataStr);
+    el.setAttribute("width", String(chart.width));
+    el.setAttribute("height", String(chart.height));
+    el.setAttribute("interactive", "");
+    el.setAttribute("hit-slop", hitSlop);
+    if (chart.element === "microviz-chart") {
+      el.setAttribute("spec", specStr);
+    }
+    // Set additional attributes from extraAttrs (like id)
+    if (chart.extraAttrs) {
+      for (const [key, value] of Object.entries(chart.extraAttrs)) {
+        // Skip attributes we've already set
+        if (key !== "interactive" && key !== "hit-slop") {
+          el.setAttribute(key, value);
+        }
+      }
+    }
+  }, [dataStr, chart.width, chart.height, chart.element, specStr, hitSlop, chart.extraAttrs]);
+
+  // Attach event listener
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<MicrovizHitDetail>;
+      onHit(customEvent.detail);
+    };
+
+    el.addEventListener("microviz-hit", handler);
+    return () => el.removeEventListener("microviz-hit", handler);
+  }, [onHit]);
+
+  // Render the appropriate Web Component
+  // Note: We set attributes via useEffect above, but set explicit dimensions
+  // in style to prevent the element from expanding beyond the chart size
+  const chartStyle = {
+    display: "block",
+    height: chart.height,
+    width: chart.width,
+  };
+
+  if (chart.element === "microviz-sparkline") {
+    return <microviz-sparkline ref={ref} style={chartStyle} />;
+  }
+
+  return <microviz-chart ref={ref} style={chartStyle} />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Layout Renderer
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -221,13 +354,14 @@ type LayoutRendererProps = {
   charts: ChartInstance[];
   layout: LayoutTemplate;
   seed: string;
+  onHit?: (detail: MicrovizHitDetail) => void;
 };
 
-function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
+function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
   if (layout.type === "single") {
     const chart = charts[0];
     if (!chart) return null;
-    return <ChartRenderer chart={chart} seed={seed} />;
+    return <ChartRenderer chart={chart} seed={seed} onHit={onHit} />;
   }
 
   if (layout.type === "grid") {
@@ -243,7 +377,7 @@ function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
         }}
       >
         {charts.map((chart) => (
-          <ChartRenderer chart={chart} key={chart.id} seed={seed} />
+          <ChartRenderer chart={chart} key={chart.id} seed={seed} onHit={onHit} />
         ))}
       </div>
     );
@@ -279,7 +413,7 @@ function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
                 {chart.label}
               </h2>
             )}
-            <ChartRenderer chart={chart} seed={seed} />
+            <ChartRenderer chart={chart} seed={seed} onHit={onHit} />
           </div>
         ))}
       </div>
@@ -302,6 +436,7 @@ export type ReactPreviewPaneProps = {
 /**
  * Inline React preview pane.
  * Renders actual @microviz/react components with smooth animations on data changes.
+ * For interactive charts, uses Web Components with hit event handling.
  */
 export function ReactPreviewPane({
   preset,
@@ -310,11 +445,31 @@ export function ReactPreviewPane({
 }: ReactPreviewPaneProps) {
   const { charts, layout, interactive } = preset;
 
+  // State for interactive chart hit info
+  const [hitInfo, setHitInfo] = useState<string>(
+    interactive?.initialText ?? "",
+  );
+
+  // Callback for hit events from interactive charts
+  const handleHit = useCallback(
+    (detail: MicrovizHitDetail) => {
+      if (detail.hit) {
+        setHitInfo(
+          `Hovered: ${detail.hit.markId} at (${Math.round(detail.client.x)}, ${Math.round(detail.client.y)})`,
+        );
+      } else {
+        setHitInfo(interactive?.initialText ?? "");
+      }
+    },
+    [interactive?.initialText],
+  );
+
   return (
     <div
       className={`react-preview ${className}`}
       style={{
         background: "#fff",
+        color: "#1e293b",
         fontFamily: "system-ui, sans-serif",
         minHeight: "100%",
         padding: "2rem",
@@ -322,6 +477,7 @@ export function ReactPreviewPane({
     >
       <h1
         style={{
+          color: "#0f172a",
           fontSize: "1.25rem",
           marginBottom: "1rem",
         }}
@@ -329,7 +485,12 @@ export function ReactPreviewPane({
         {preset.name}
       </h1>
 
-      <LayoutRenderer charts={charts} layout={layout} seed={seed} />
+      <LayoutRenderer
+        charts={charts}
+        layout={layout}
+        seed={seed}
+        onHit={interactive ? handleHit : undefined}
+      />
 
       {interactive && (
         <div
@@ -337,13 +498,14 @@ export function ReactPreviewPane({
           style={{
             background: "#f1f5f9",
             borderRadius: "0.25rem",
+            color: "#475569",
             fontSize: "0.875rem",
             marginTop: "1rem",
             minHeight: "1.5rem",
             padding: "0.5rem",
           }}
         >
-          {interactive.initialText}
+          {hitInfo}
         </div>
       )}
     </div>

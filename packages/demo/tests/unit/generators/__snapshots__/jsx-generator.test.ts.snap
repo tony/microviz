@@ -239,42 +239,85 @@ exports[`generateJsx - snapshots > snapshot for 'Donut Chart' ('donut') > displa
 `;
 
 exports[`generateJsx - snapshots > snapshot for 'Interactive Chart' ('interactive') > copyable 1`] = `
-"import { Sparkline } from "@microviz/react";
+"import { useEffect, useRef, useState } from "react";
 
-function handleHit(event) {
-  const { hit, client } = event.detail;
-  const output = document.getElementById("output");
-  if (hit) {
-    output.textContent = \`Hovered: \${hit.markId} at (\${Math.round(client.x)}, \${Math.round(client.y)})\`;
-  } else {
-    output.textContent = "Hover over the chart...";
-  }
-}
+export function InteractiveChart() {
+  const chartRef = useRef<HTMLElement>(null);
+  const [hitInfo, setHitInfo] = useState("Hover over the chart...");
 
-export function Chart() {
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const handleHit = (event: CustomEvent) => {
+      const { hit, client } = event.detail;
+      if (hit) {
+        setHitInfo(\`Hovered: \${hit.markId} at (\${Math.round(client.x)}, \${Math.round(client.y)})\`);
+      } else {
+        setHitInfo("Hover over the chart...");
+      }
+    };
+
+    chart.addEventListener("microviz-hit", handleHit as EventListener);
+    return () => chart.removeEventListener("microviz-hit", handleHit as EventListener);
+  }, []);
+
   return (
     <>
-      <Sparkline
-  data={[69, 70, 68, 67, 66, 69, 64, 62, 64, 62, 59, 57]}
-  width={280}
-  height={64}
-  interactive
-  hitSlop={8}
-/>
-      <div id="output">Hover over the chart...</div>
+      <microviz-chart
+        ref={chartRef}
+        data="[69, 70, 68, 67, 66, 69, 64, 62, 64, 62, 59, 57]"
+        spec="{'type':'sparkline'}"
+        width={280}
+        height={64}
+        interactive
+        hit-slop="8"
+      />
+      <div id="output">{hitInfo}</div>
     </>
   );
 }"
 `;
 
 exports[`generateJsx - snapshots > snapshot for 'Interactive Chart' ('interactive') > display 1`] = `
-"<Sparkline
-  data={[69, 70, 68, 67, 66, 69, 64, 62, 64, 62, 59, 57]}
-  width={280}
-  height={64}
-  interactive
-  hitSlop={8}
-/>"
+"import { useEffect, useRef, useState } from "react";
+
+export function InteractiveChart() {
+  const chartRef = useRef<HTMLElement>(null);
+  const [hitInfo, setHitInfo] = useState("Hover over the chart...");
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const handleHit = (event: CustomEvent) => {
+      const { hit, client } = event.detail;
+      if (hit) {
+        setHitInfo(\`Hovered: \${hit.markId} at (\${Math.round(client.x)}, \${Math.round(client.y)})\`);
+      } else {
+        setHitInfo("Hover over the chart...");
+      }
+    };
+
+    chart.addEventListener("microviz-hit", handleHit as EventListener);
+    return () => chart.removeEventListener("microviz-hit", handleHit as EventListener);
+  }, []);
+
+  return (
+    <>
+      <microviz-chart
+        ref={chartRef}
+        data="[69, 70, 68, 67, 66, 69, 64, 62, 64, 62, 59, 57]"
+        spec="{'type':'sparkline'}"
+        width={280}
+        height={64}
+        interactive
+        hit-slop="8"
+      />
+      <div id="output">{hitInfo}</div>
+    </>
+  );
+}"
 `;
 
 exports[`generateJsx - snapshots > snapshot for 'Multiple Charts' ('multiple-charts') > copyable 1`] = `

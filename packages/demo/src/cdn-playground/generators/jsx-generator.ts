@@ -286,22 +286,101 @@ function generateImports(charts: ChartInstance[]): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Interactive Code Generation
+// Interactive JSX Generation (Web Components + Hooks)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function generateInteractiveCode(preset: UnifiedPreset): string {
-  if (!preset.interactive) return "";
-
-  return `
-function handleHit(event) {
-  const { hit, client } = event.detail;
-  const output = document.getElementById("${preset.interactive.outputId}");
-  if (hit) {
-    output.textContent = \`Hovered: \${hit.markId} at (\${Math.round(client.x)}, \${Math.round(client.y)})\`;
-  } else {
-    output.textContent = "${preset.interactive.initialText}";
+/**
+ * Generate JSX for interactive presets using Web Components with React hooks.
+ * React's Sparkline/MicrovizChart don't support interactivity - only Web Components do.
+ */
+function generateInteractiveJsx(
+  preset: UnifiedPreset,
+  context: GeneratorContext,
+): GeneratedCode {
+  const chart = preset.charts[0];
+  if (!chart || !preset.interactive) {
+    throw new Error("Interactive preset must have a chart and interactive config");
   }
+
+  const chartSeed = `${context.seed}:${chart.id}:0`;
+  const data = generateDataForShape(chart.dataShape, chartSeed);
+
+  // Format data for HTML attribute
+  let dataAttr: string;
+  switch (data.type) {
+    case "series":
+      dataAttr = `[${data.values.join(", ")}]`;
+      break;
+    case "segments":
+      dataAttr = JSON.stringify(data.segments);
+      break;
+    case "delta":
+      dataAttr = JSON.stringify({
+        current: data.current,
+        max: data.max,
+        previous: data.previous,
+      });
+      break;
+    case "value":
+      dataAttr = JSON.stringify({ max: data.max, value: data.value });
+      break;
+    case "csv":
+      dataAttr = data.content;
+      break;
+  }
+
+  const specAttr = chart.spec
+    ? JSON.stringify(chart.spec).replace(/"/g, "'")
+    : "{'type':'sparkline'}";
+  const hitSlop = chart.extraAttrs?.["hit-slop"] ?? "8";
+  const { initialText } = preset.interactive;
+
+  // For interactive charts, show the full component with hooks and event handling
+  // This teaches users how to wire up Web Components with React
+  const code = `import { useEffect, useRef, useState } from "react";
+
+export function InteractiveChart() {
+  const chartRef = useRef<HTMLElement>(null);
+  const [hitInfo, setHitInfo] = useState("${initialText}");
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const handleHit = (event: CustomEvent) => {
+      const { hit, client } = event.detail;
+      if (hit) {
+        setHitInfo(\`Hovered: \${hit.markId} at (\${Math.round(client.x)}, \${Math.round(client.y)})\`);
+      } else {
+        setHitInfo("${initialText}");
+      }
+    };
+
+    chart.addEventListener("microviz-hit", handleHit as EventListener);
+    return () => chart.removeEventListener("microviz-hit", handleHit as EventListener);
+  }, []);
+
+  return (
+    <>
+      <microviz-chart
+        ref={chartRef}
+        data="${dataAttr}"
+        spec="${specAttr}"
+        width={${chart.width}}
+        height={${chart.height}}
+        interactive
+        hit-slop="${hitSlop}"
+      />
+      <div id="output">{hitInfo}</div>
+    </>
+  );
 }`;
+
+  return {
+    copyable: code,
+    display: code,
+    language: "tsx",
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -312,6 +391,12 @@ export function generateJsx(
   preset: UnifiedPreset,
   context: GeneratorContext,
 ): GeneratedCode {
+  // Use special interactive generator for interactive presets
+  // React components don't support interactivity - only Web Components do
+  if (preset.interactive) {
+    return generateInteractiveJsx(preset, context);
+  }
+
   const { charts, layout } = preset;
 
   // Generate JSX for each chart
@@ -328,30 +413,13 @@ export function generateJsx(
 
   // Copyable code (full, with imports)
   const imports = generateImports(charts);
-  const interactiveCode = generateInteractiveCode(preset);
-
-  let copyable: string;
-  if (preset.interactive) {
-    copyable = `${imports}
-${interactiveCode}
-
-export function Chart() {
-  return (
-    <>
-      ${body}
-      <div id="${preset.interactive.outputId}">${preset.interactive.initialText}</div>
-    </>
-  );
-}`;
-  } else {
-    copyable = `${imports}
+  const copyable = `${imports}
 
 export function Chart() {
   return (
     ${body}
   );
 }`;
-  }
 
   return {
     copyable,

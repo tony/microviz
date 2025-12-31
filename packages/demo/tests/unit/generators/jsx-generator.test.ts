@@ -20,14 +20,22 @@ const defaultContext: GeneratorContext = {
   theme: "light",
 };
 
+/** Get preset by ID with proper type narrowing (avoids non-null assertion) */
+function getPreset(id: string): UnifiedPreset {
+  const preset = UNIFIED_PRESETS.find((p) => p.id === id);
+  if (!preset) {
+    throw new Error(`Preset "${id}" not found in UNIFIED_PRESETS`);
+  }
+  return preset;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Basic Output Tests
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("generateJsx - basic output", () => {
   it("returns GeneratedCode with correct language", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result).toHaveProperty("display");
     expect(result).toHaveProperty("copyable");
@@ -36,24 +44,21 @@ describe("generateJsx - basic output", () => {
   });
 
   it("display does not contain imports", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result.display).not.toContain("import");
     expect(result.display).not.toContain("@microviz/react");
   });
 
   it("copyable contains imports", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result.copyable).toContain("import {");
     expect(result.copyable).toContain("@microviz/react");
   });
 
   it("copyable contains export function", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result.copyable).toContain("export function Chart()");
   });
@@ -65,24 +70,21 @@ describe("generateJsx - basic output", () => {
 
 describe("generateJsx - component mapping", () => {
   it("maps sparkline to Sparkline component", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result.display).toContain("<Sparkline");
     expect(result.copyable).toContain("Sparkline");
   });
 
   it("maps bar-chart to Bar component", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "bar-chart");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("bar-chart"), defaultContext);
 
     expect(result.display).toContain("<Bar");
     expect(result.copyable).toContain("Bar");
   });
 
   it("maps donut to MicrovizChart component", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "donut");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("donut"), defaultContext);
 
     expect(result.display).toContain("<MicrovizChart");
     expect(result.copyable).toContain("MicrovizChart");
@@ -95,23 +97,20 @@ describe("generateJsx - component mapping", () => {
 
 describe("generateJsx - props", () => {
   it("includes data prop with array", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result.display).toMatch(/data=\{\[[\d, ]+\]\}/);
   });
 
   it("includes width and height props for simple components", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     expect(result.display).toContain("width={");
     expect(result.display).toContain("height={");
   });
 
   it("includes input prop for MicrovizChart", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "donut");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("donut"), defaultContext);
 
     expect(result.display).toContain("input={{");
     expect(result.display).toContain("data:");
@@ -126,8 +125,7 @@ describe("generateJsx - props", () => {
 
 describe("generateJsx - layouts", () => {
   it("single layout returns bare component", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("sparkline"), defaultContext);
 
     // Should not have grid wrapper
     expect(result.display).not.toContain("gridTemplateColumns");
@@ -135,16 +133,14 @@ describe("generateJsx - layouts", () => {
   });
 
   it("grid layout wraps in div with grid style", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "multiple-charts");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("multiple-charts"), defaultContext);
 
     expect(result.display).toContain('display: "grid"');
     expect(result.display).toContain("gridTemplateColumns");
   });
 
   it("cards layout includes labels when present", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "multiple-charts");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("multiple-charts"), defaultContext);
 
     // Should include card labels
     expect(result.display).toContain("<h2>Revenue Trend</h2>");
@@ -159,18 +155,18 @@ describe("generateJsx - layouts", () => {
 
 describe("generateJsx - determinism", () => {
   it("same seed produces same output", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const a = generateJsx(preset!, defaultContext);
-    const b = generateJsx(preset!, defaultContext);
+    const preset = getPreset("sparkline");
+    const a = generateJsx(preset, defaultContext);
+    const b = generateJsx(preset, defaultContext);
 
     expect(a.display).toBe(b.display);
     expect(a.copyable).toBe(b.copyable);
   });
 
   it("different seeds produce different data", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "sparkline");
-    const a = generateJsx(preset!, { ...defaultContext, seed: "seed-a" });
-    const b = generateJsx(preset!, { ...defaultContext, seed: "seed-b" });
+    const preset = getPreset("sparkline");
+    const a = generateJsx(preset, { ...defaultContext, seed: "seed-a" });
+    const b = generateJsx(preset, { ...defaultContext, seed: "seed-b" });
 
     expect(a.display).not.toBe(b.display);
   });
@@ -182,24 +178,21 @@ describe("generateJsx - determinism", () => {
 
 describe("generateJsx - interactive", () => {
   it("includes event handler for interactive presets", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "interactive");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("interactive"), defaultContext);
 
     expect(result.copyable).toContain("handleHit");
     expect(result.copyable).toContain("event.detail");
   });
 
   it("includes output element", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "interactive");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("interactive"), defaultContext);
 
     expect(result.copyable).toContain('id="output"');
     expect(result.copyable).toContain("Hover over the chart...");
   });
 
   it("includes interactive prop", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "interactive");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("interactive"), defaultContext);
 
     expect(result.display).toContain("interactive");
   });
@@ -215,8 +208,7 @@ describe("generateJsx - snapshots", () => {
   test.for(
     jsxPresets.map((p) => ({ id: p.id, name: p.name })),
   )("snapshot for $name ($id)", ({ id }) => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === id);
-    const result = generateJsx(preset!, {
+    const result = generateJsx(getPreset(id), {
       ...defaultContext,
       seed: "snapshot-seed",
     });
@@ -268,8 +260,7 @@ describe("generateJsx - imports", () => {
   });
 
   it("imports multiple components when different types used", () => {
-    const preset = UNIFIED_PRESETS.find((p) => p.id === "multiple-charts");
-    const result = generateJsx(preset!, defaultContext);
+    const result = generateJsx(getPreset("multiple-charts"), defaultContext);
 
     // Should import multiple components
     expect(result.copyable).toMatch(/import \{ .+, .+ \}/);
