@@ -36,30 +36,30 @@ describe("Tier 0: generatePresetCode", () => {
     })),
   );
 
-  test.for(allCombinations)(
-    "generates valid code for $wrapper/$presetId",
-    ({ wrapper, presetId }) => {
-      const result = generatePresetCode({
-        cdnSource: { type: "local" },
-        presetId,
-        seed: "test-seed",
-        wrapper,
-      });
+  test.for(allCombinations)("generates valid code for $wrapper/$presetId", ({
+    wrapper,
+    presetId,
+  }) => {
+    const result = generatePresetCode({
+      cdnSource: { type: "local" },
+      presetId,
+      seed: "test-seed",
+      wrapper,
+    });
 
-      // Code should be valid HTML
-      expect(result.code).toContain("<!DOCTYPE html>");
-      expect(result.code).toContain("<html>");
-      expect(result.code).toContain("</html>");
+    // Code should be valid HTML
+    expect(result.code).toContain("<!DOCTYPE html>");
+    expect(result.code).toContain("<html>");
+    expect(result.code).toContain("</html>");
 
-      // CDN URL placeholder should be replaced
-      expect(result.code).not.toContain("{{CDN_URL}}");
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing that template literal placeholders are resolved
-      expect(result.code).not.toContain("${cdnUrl}");
+    // CDN URL placeholder should be replaced
+    expect(result.code).not.toContain("{{CDN_URL}}");
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing that template literal placeholders are resolved
+    expect(result.code).not.toContain("${cdnUrl}");
 
-      // Should have metadata
-      expect(typeof result.canRandomize).toBe("boolean");
-    },
-  );
+    // Should have metadata
+    expect(typeof result.canRandomize).toBe("boolean");
+  });
 
   it("returns reactiveUpdates for randomizable presets", () => {
     const result = generatePresetCode({
@@ -119,7 +119,9 @@ describe("Tier 1: Registry Completeness", () => {
     expect(config.presets.length).toBeGreaterThan(0);
   });
 
-  test.for(WRAPPER_TYPES)("wrapper '%s' has valid default preset", (wrapper) => {
+  test.for(
+    WRAPPER_TYPES,
+  )("wrapper '%s' has valid default preset", (wrapper) => {
     const config = PRESET_REGISTRY[wrapper];
     const defaultPreset = config.presets.find(
       (p) => p.id === config.defaultPresetId,
@@ -187,27 +189,29 @@ describe("Tier 2: Determinism", () => {
     { presetId: "sparkline", wrapper: "solid" as WrapperType },
   ];
 
-  test.for(deterministicTestCases)(
-    "same seed produces same output for $wrapper/$presetId",
-    ({ wrapper, presetId }) => {
-      const input = {
-        cdnSource: { type: "local" } as CdnSource,
-        presetId,
-        seed: "determinism-test-fixed-seed",
-        wrapper,
-      };
+  test.for(
+    deterministicTestCases,
+  )("same seed produces same output for $wrapper/$presetId", ({
+    wrapper,
+    presetId,
+  }) => {
+    const input = {
+      cdnSource: { type: "local" } as CdnSource,
+      presetId,
+      seed: "determinism-test-fixed-seed",
+      wrapper,
+    };
 
-      const result1 = generatePresetCode(input);
-      const result2 = generatePresetCode(input);
+    const result1 = generatePresetCode(input);
+    const result2 = generatePresetCode(input);
 
-      expect(result1.code).toBe(result2.code);
-      expect(result1.canRandomize).toBe(result2.canRandomize);
+    expect(result1.code).toBe(result2.code);
+    expect(result1.canRandomize).toBe(result2.canRandomize);
 
-      if (result1.reactiveUpdates && result2.reactiveUpdates) {
-        expect(result1.reactiveUpdates).toEqual(result2.reactiveUpdates);
-      }
-    },
-  );
+    if (result1.reactiveUpdates && result2.reactiveUpdates) {
+      expect(result1.reactiveUpdates).toEqual(result2.reactiveUpdates);
+    }
+  });
 
   it("different seeds produce different output", () => {
     const baseInput = {
@@ -238,19 +242,19 @@ describe("Tier 2: Determinism", () => {
   });
 
   // Snapshot tests for regression detection
-  test.for(deterministicTestCases)(
-    "snapshot: $wrapper/$presetId",
-    ({ wrapper, presetId }) => {
-      const result = generatePresetCode({
-        cdnSource: { type: "local" },
-        presetId,
-        seed: "snapshot-seed-v1",
-        wrapper,
-      });
+  test.for(deterministicTestCases)("snapshot: $wrapper/$presetId", ({
+    wrapper,
+    presetId,
+  }) => {
+    const result = generatePresetCode({
+      cdnSource: { type: "local" },
+      presetId,
+      seed: "snapshot-seed-v1",
+      wrapper,
+    });
 
-      expect(result).toMatchSnapshot();
-    },
-  );
+    expect(result).toMatchSnapshot();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -267,7 +271,9 @@ describe("Tier 3: CDN URL Generation", () => {
     { type: "custom", url: "https://example.com/microviz.js" },
   ];
 
-  test.for(WRAPPER_TYPES)("wrapper '%s' generates URLs for all CDN sources", (wrapper) => {
+  test.for(
+    WRAPPER_TYPES,
+  )("wrapper '%s' generates URLs for all CDN sources", (wrapper) => {
     for (const cdnSource of cdnSourceTypes) {
       const url = getCdnUrlForWrapper(wrapper, cdnSource);
       expect(url).toBeTruthy();

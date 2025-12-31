@@ -69,6 +69,8 @@ function getElementsCdnUrl(source: CdnSource): string {
       return "https://unpkg.com/@microviz/elements/cdn/microviz.js";
     case "esm-sh":
       return "https://esm.sh/@microviz/elements";
+    case "esm-sh-gh":
+      return `https://esm.sh/gh/tony/microviz@${__GIT_BRANCH__}/packages/elements/src/index.ts`;
     case "custom":
       return source.url;
   }
@@ -86,6 +88,8 @@ function getSolidCdnUrl(source: CdnSource): string {
       return "https://unpkg.com/@microviz/solid/dist/solid.js";
     case "esm-sh":
       return "https://esm.sh/@microviz/solid";
+    case "esm-sh-gh":
+      return `https://esm.sh/gh/tony/microviz@${__GIT_BRANCH__}/packages/solid/src/index.ts`;
     case "custom":
       return source.url.replace(/microviz\.js$/, "solid.js");
   }
@@ -103,6 +107,8 @@ function getReactCdnUrl(source: CdnSource): string {
       return "https://unpkg.com/@microviz/react/dist/react.js";
     case "esm-sh":
       return "https://esm.sh/@microviz/react";
+    case "esm-sh-gh":
+      return `https://esm.sh/gh/tony/microviz@${__GIT_BRANCH__}/packages/react/src/index.ts`;
     case "custom":
       return source.url.replace(/microviz\.js$/, "react.js");
   }

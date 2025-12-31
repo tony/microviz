@@ -6,6 +6,7 @@
 import type { UnifiedPreset } from "../unified-presets";
 import { generateHtml } from "./html-generator";
 import { generateJsx } from "./jsx-generator";
+import { generateSolid } from "./solid-generator";
 import type {
   CodeGenerator,
   GeneratedCode,
@@ -20,6 +21,7 @@ import type {
 const generators: Record<OutputFormat, CodeGenerator<UnifiedPreset>> = {
   html: generateHtml,
   jsx: generateJsx,
+  solid: generateSolid,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,3 +72,4 @@ export {
 } from "./data-generator";
 export { generateHtml } from "./html-generator";
 export { generateJsx } from "./jsx-generator";
+export { generateSolid } from "./solid-generator";

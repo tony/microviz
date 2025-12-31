@@ -4,7 +4,7 @@
 
 import type { CdnSource } from "../cdnSources";
 
-export type OutputFormat = "html" | "jsx";
+export type OutputFormat = "html" | "jsx" | "solid";
 
 export type GeneratorContext = {
   /** Seed for deterministic random data generation */

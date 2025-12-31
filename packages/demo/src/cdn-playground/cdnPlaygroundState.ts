@@ -42,7 +42,7 @@ export type PlaygroundSearchParams = {
   c?: string; // code (base64, only for custom code)
   cdn?: string; // CDN source type
   csp?: string; // CSP mode
-  f?: string; // format (html | jsx)
+  f?: string; // format (html | jsx | solid)
   p?: string; // preset ID
   s?: string; // seed
   state?: string; // legacy format (for backward compat)
@@ -107,6 +107,7 @@ export function encodePlaygroundSearch(
  */
 function parseFormat(f: string | undefined): OutputFormat {
   if (f === "jsx") return "jsx";
+  if (f === "solid") return "solid";
   return "html";
 }
 

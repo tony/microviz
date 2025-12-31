@@ -8,8 +8,8 @@
 import { buildSegments, buildSeries, createSeededRng } from "../browse/seed";
 import type { CdnSource } from "./cdnSources";
 import {
-  type PresetDataConfig,
   PRESET_REGISTRY,
+  type PresetDataConfig,
   type PresetTemplate,
   type WrapperType,
 } from "./presetRegistry";
@@ -458,4 +458,8 @@ export function canRandomizePreset(
 
 // Re-export types for convenience
 export type { CdnSource } from "./cdnSources";
-export type { WrapperType, PresetTemplate, PresetDataConfig } from "./presetRegistry";
+export type {
+  PresetDataConfig,
+  PresetTemplate,
+  WrapperType,
+} from "./presetRegistry";

@@ -21,6 +21,7 @@ import {
   generateReactiveUpdates,
 } from "./randomization";
 import { SmartCopyButton, useSmartCode } from "./SmartCopyButton";
+import { SolidPreviewPane } from "./SolidPreviewPane";
 import { findUnifiedPreset } from "./unified-presets";
 
 export type CdnPlaygroundProps = {
@@ -155,9 +156,9 @@ export function CdnPlayground({
 
   // Determine display code based on format
   const displayCode = useMemo(() => {
-    // Use generated code for unified presets (both HTML and JSX)
+    // Use generated code for unified presets (HTML, JSX, Solid)
     if (generatedCode) {
-      if (urlState.format === "jsx") {
+      if (urlState.format === "jsx" || urlState.format === "solid") {
         return showFull ? generatedCode.copyable : generatedCode.display;
       }
       // HTML format - always show full code
@@ -314,18 +315,20 @@ export function CdnPlayground({
             >
               <option value="html">HTML</option>
               <option value="jsx">JSX</option>
+              <option value="solid">Solid</option>
             </select>
           </label>
         )}
 
-        {/* Smart copy button for JSX mode */}
-        {urlState.format === "jsx" && generatedCode && (
-          <SmartCopyButton
-            copyableCode={generatedCode.copyable}
-            displayCode={generatedCode.display}
-            showToggle
-          />
-        )}
+        {/* Smart copy button for JSX/Solid modes */}
+        {(urlState.format === "jsx" || urlState.format === "solid") &&
+          generatedCode && (
+            <SmartCopyButton
+              copyableCode={generatedCode.copyable}
+              displayCode={generatedCode.display}
+              showToggle
+            />
+          )}
 
         {/* CSP toggle */}
         <label className="flex items-center gap-2">
@@ -404,10 +407,16 @@ export function CdnPlayground({
 
         {/* Right pane - Preview + Console */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Preview - HTML uses iframe, JSX uses inline React */}
+          {/* Preview - HTML uses iframe, JSX/Solid use inline renderers */}
           <div className="flex-1 overflow-hidden">
             {urlState.format === "jsx" && unifiedPreset ? (
               <ReactPreviewPane
+                className="h-full overflow-auto"
+                preset={unifiedPreset}
+                seed={urlState.seed}
+              />
+            ) : urlState.format === "solid" && unifiedPreset ? (
+              <SolidPreviewPane
                 className="h-full overflow-auto"
                 preset={unifiedPreset}
                 seed={urlState.seed}
