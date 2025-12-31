@@ -124,7 +124,7 @@ function renderPatternMark(mark: PatternMark): JSX.Element {
         />
       );
     default:
-      return <></>;
+      return null as unknown as JSX.Element;
   }
 }
 
@@ -173,7 +173,7 @@ function renderFilterPrimitive(primitive: FilterPrimitive): JSX.Element {
         />
       );
     default:
-      return <></>;
+      return null as unknown as JSX.Element;
   }
 }
 
@@ -373,7 +373,7 @@ function renderMark(mark: Mark): JSX.Element {
         />
       );
     default:
-      return <></>;
+      return null as unknown as JSX.Element;
   }
 }
 
