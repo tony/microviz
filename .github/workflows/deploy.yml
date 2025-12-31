@@ -2,7 +2,7 @@ name: Deploy Site
 
 on:
   push:
-    branches: [main, next]
+    branches: [main, next, react-playground]
   workflow_dispatch:
 
 permissions:
