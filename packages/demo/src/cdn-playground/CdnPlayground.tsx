@@ -394,7 +394,7 @@ export function CdnPlayground({
             {/* Code editor */}
             <div className="flex-1 overflow-hidden">
               <CodeEditor
-                language={urlState.format === "jsx" ? "tsx" : "html"}
+                language={urlState.format === "html" ? "html" : "tsx"}
                 onChange={
                   urlState.format === "html" ? handleCodeChange : undefined
                 }
