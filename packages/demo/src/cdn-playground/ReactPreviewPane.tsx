@@ -176,7 +176,9 @@ function computeModelForChart(
 type AnimatedChartRendererProps = {
   chart: ChartInstance;
   seed: string;
+  chartIndex: number;
   animationDuration?: number;
+  dataOverrides?: Record<string, unknown>;
 };
 
 /**
@@ -186,15 +188,19 @@ type AnimatedChartRendererProps = {
 function AnimatedChartRenderer({
   chart,
   seed,
+  chartIndex,
   animationDuration = 300,
+  dataOverrides,
 }: AnimatedChartRendererProps) {
   const chartSeed = `${seed}:${chart.id}`;
 
   // Compute data and model
   const targetModel = useMemo(() => {
-    const data = parseChartData(chart, chartSeed);
+    // Use data override if available (from user-edited code)
+    const overrideData = dataOverrides?.[String(chartIndex)];
+    const data = overrideData ?? parseChartData(chart, chartSeed);
     return computeModelForChart(chart, data);
-  }, [chart, chartSeed]);
+  }, [chart, chartSeed, chartIndex, dataOverrides]);
 
   // Animation state
   const [currentModel, setCurrentModel] = useState<RenderModel>(targetModel);
@@ -255,21 +261,44 @@ function AnimatedChartRenderer({
 type ChartRendererProps = {
   chart: ChartInstance;
   seed: string;
+  chartIndex: number;
   onHit?: (detail: MicrovizHitDetail) => void;
+  dataOverrides?: Record<string, unknown>;
 };
 
 /**
  * Wrapper component that delegates to either InteractiveChartRenderer or
  * AnimatedChartRenderer based on whether the chart is interactive.
  */
-function ChartRenderer({ chart, seed, onHit }: ChartRendererProps) {
+function ChartRenderer({
+  chart,
+  seed,
+  chartIndex,
+  onHit,
+  dataOverrides,
+}: ChartRendererProps) {
   // If chart is interactive and we have a hit handler, use Web Component renderer
   if (chart.extraAttrs?.interactive !== undefined && onHit) {
-    return <InteractiveChartRenderer chart={chart} onHit={onHit} seed={seed} />;
+    return (
+      <InteractiveChartRenderer
+        chart={chart}
+        chartIndex={chartIndex}
+        dataOverrides={dataOverrides}
+        onHit={onHit}
+        seed={seed}
+      />
+    );
   }
 
   // Otherwise use animated SVG renderer
-  return <AnimatedChartRenderer chart={chart} seed={seed} />;
+  return (
+    <AnimatedChartRenderer
+      chart={chart}
+      chartIndex={chartIndex}
+      dataOverrides={dataOverrides}
+      seed={seed}
+    />
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -279,7 +308,9 @@ function ChartRenderer({ chart, seed, onHit }: ChartRendererProps) {
 type InteractiveChartRendererProps = {
   chart: ChartInstance;
   seed: string;
+  chartIndex: number;
   onHit: (detail: MicrovizHitDetail) => void;
+  dataOverrides?: Record<string, unknown>;
 };
 
 /**
@@ -289,16 +320,18 @@ type InteractiveChartRendererProps = {
 function InteractiveChartRenderer({
   chart,
   seed,
+  chartIndex,
   onHit,
+  dataOverrides,
 }: InteractiveChartRendererProps) {
   const ref = useRef<HTMLElement>(null);
   const chartSeed = `${seed}:${chart.id}`;
 
-  // Parse data for the chart
-  const data = useMemo(
-    () => parseChartData(chart, chartSeed),
-    [chart, chartSeed],
-  );
+  // Parse data for the chart (use override if available)
+  const data = useMemo(() => {
+    const overrideData = dataOverrides?.[String(chartIndex)];
+    return overrideData ?? parseChartData(chart, chartSeed);
+  }, [chart, chartSeed, chartIndex, dataOverrides]);
 
   // Serialize data for HTML attribute
   const dataStr = useMemo(() => {
@@ -385,13 +418,28 @@ type LayoutRendererProps = {
   layout: LayoutTemplate;
   seed: string;
   onHit?: (detail: MicrovizHitDetail) => void;
+  dataOverrides?: Record<string, unknown>;
 };
 
-function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
+function LayoutRenderer({
+  charts,
+  layout,
+  seed,
+  onHit,
+  dataOverrides,
+}: LayoutRendererProps) {
   if (layout.type === "single") {
     const chart = charts[0];
     if (!chart) return null;
-    return <ChartRenderer chart={chart} onHit={onHit} seed={seed} />;
+    return (
+      <ChartRenderer
+        chart={chart}
+        chartIndex={0}
+        dataOverrides={dataOverrides}
+        onHit={onHit}
+        seed={seed}
+      />
+    );
   }
 
   if (layout.type === "grid") {
@@ -406,9 +454,11 @@ function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
           gridTemplateColumns: `repeat(${columns}, 1fr)`,
         }}
       >
-        {charts.map((chart) => (
+        {charts.map((chart, index) => (
           <ChartRenderer
             chart={chart}
+            chartIndex={index}
+            dataOverrides={dataOverrides}
             key={chart.id}
             onHit={onHit}
             seed={seed}
@@ -427,7 +477,7 @@ function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        {charts.map((chart) => (
+        {charts.map((chart, index) => (
           <div
             key={chart.id}
             style={{
@@ -448,7 +498,13 @@ function LayoutRenderer({ charts, layout, seed, onHit }: LayoutRendererProps) {
                 {chart.label}
               </h2>
             )}
-            <ChartRenderer chart={chart} onHit={onHit} seed={seed} />
+            <ChartRenderer
+              chart={chart}
+              chartIndex={index}
+              dataOverrides={dataOverrides}
+              onHit={onHit}
+              seed={seed}
+            />
           </div>
         ))}
       </div>
@@ -466,6 +522,8 @@ export type ReactPreviewPaneProps = {
   preset: UnifiedPreset;
   seed: string;
   className?: string;
+  /** User-edited data overrides from JSX code. Keys are chart indices as strings. */
+  dataOverrides?: Record<string, unknown>;
 };
 
 /**
@@ -477,6 +535,7 @@ export function ReactPreviewPane({
   preset,
   seed,
   className = "",
+  dataOverrides,
 }: ReactPreviewPaneProps) {
   const { charts, layout, interactive } = preset;
 
@@ -522,6 +581,7 @@ export function ReactPreviewPane({
 
       <LayoutRenderer
         charts={charts}
+        dataOverrides={dataOverrides}
         layout={layout}
         onHit={interactive ? handleHit : undefined}
         seed={seed}

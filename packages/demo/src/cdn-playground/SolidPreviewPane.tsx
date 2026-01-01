@@ -1,14 +1,13 @@
 /**
  * Inline preview pane for Solid format.
- * Since the demo app is React-based, this uses the same rendering approach
- * as ReactPreviewPane (computeModel + MicrovizSvg from React).
- * The visual output is identical since both frameworks use the same core.
+ * Uses actual Solid.js rendering via renderSolidSvg from @microviz/solid.
+ * This embeds real Solid components in the React demo app.
  */
 
 import type { ChartSpec, RenderModel, Size } from "@microviz/core";
 import { computeModel, interpolateModel } from "@microviz/core";
-import { MicrovizSvg } from "@microviz/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { renderSolidSvg } from "@microviz/solid";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { generateDataForShape } from "./generators/data-generator";
 import type {
   ChartInstance,
@@ -25,7 +24,7 @@ function easeOutCubic(t: number): number {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Data Parsing (same as ReactPreviewPane)
+// Data Parsing
 // ─────────────────────────────────────────────────────────────────────────────
 
 function parseCsvToSegments(
@@ -147,31 +146,39 @@ function computeModelForChart(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Single Chart Renderer
+// Single Chart Renderer (uses actual Solid rendering)
 // ─────────────────────────────────────────────────────────────────────────────
 
 type AnimatedChartRendererProps = {
   chart: ChartInstance;
   seed: string;
+  chartIndex: number;
   animationDuration?: number;
+  dataOverrides?: Record<string, unknown>;
 };
 
 function AnimatedChartRenderer({
   chart,
   seed,
+  chartIndex,
   animationDuration = 300,
+  dataOverrides,
 }: AnimatedChartRendererProps) {
   const chartSeed = `${seed}:${chart.id}`;
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const targetModel = useMemo(() => {
-    const data = parseChartData(chart, chartSeed);
+    // Use data override if available (from user-edited code)
+    const overrideData = dataOverrides?.[String(chartIndex)];
+    const data = overrideData ?? parseChartData(chart, chartSeed);
     return computeModelForChart(chart, data);
-  }, [chart, chartSeed]);
+  }, [chart, chartSeed, chartIndex, dataOverrides]);
 
   const [currentModel, setCurrentModel] = useState<RenderModel>(targetModel);
   const prevModelRef = useRef<RenderModel>(targetModel);
   const animationRef = useRef<number | null>(null);
 
+  // Animation effect - interpolate between models
   useEffect(() => {
     if (animationRef.current !== null) {
       cancelAnimationFrame(animationRef.current);
@@ -205,9 +212,21 @@ function AnimatedChartRenderer({
     };
   }, [targetModel, animationDuration]);
 
+  // Solid rendering effect - mount/update the Solid component
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const dispose = renderSolidSvg(container, {
+      model: currentModel,
+    });
+
+    return dispose;
+  }, [currentModel]);
+
   return (
-    <MicrovizSvg
-      model={currentModel}
+    <div
+      ref={containerRef}
       style={{
         display: "block",
         height: chart.height,
@@ -225,13 +244,26 @@ type LayoutRendererProps = {
   charts: ChartInstance[];
   layout: LayoutTemplate;
   seed: string;
+  dataOverrides?: Record<string, unknown>;
 };
 
-function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
+function LayoutRenderer({
+  charts,
+  layout,
+  seed,
+  dataOverrides,
+}: LayoutRendererProps) {
   if (layout.type === "single") {
     const chart = charts[0];
     if (!chart) return null;
-    return <AnimatedChartRenderer chart={chart} seed={seed} />;
+    return (
+      <AnimatedChartRenderer
+        chart={chart}
+        chartIndex={0}
+        dataOverrides={dataOverrides}
+        seed={seed}
+      />
+    );
   }
 
   if (layout.type === "grid") {
@@ -246,8 +278,14 @@ function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
           gridTemplateColumns: `repeat(${columns}, 1fr)`,
         }}
       >
-        {charts.map((chart) => (
-          <AnimatedChartRenderer chart={chart} key={chart.id} seed={seed} />
+        {charts.map((chart, index) => (
+          <AnimatedChartRenderer
+            chart={chart}
+            chartIndex={index}
+            dataOverrides={dataOverrides}
+            key={chart.id}
+            seed={seed}
+          />
         ))}
       </div>
     );
@@ -262,7 +300,7 @@ function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        {charts.map((chart) => (
+        {charts.map((chart, index) => (
           <div
             key={chart.id}
             style={{
@@ -283,7 +321,12 @@ function LayoutRenderer({ charts, layout, seed }: LayoutRendererProps) {
                 {chart.label}
               </h2>
             )}
-            <AnimatedChartRenderer chart={chart} seed={seed} />
+            <AnimatedChartRenderer
+              chart={chart}
+              chartIndex={index}
+              dataOverrides={dataOverrides}
+              seed={seed}
+            />
           </div>
         ))}
       </div>
@@ -301,17 +344,20 @@ export type SolidPreviewPaneProps = {
   preset: UnifiedPreset;
   seed: string;
   className?: string;
+  /** User-edited data overrides from Solid code. Keys are chart indices as strings. */
+  dataOverrides?: Record<string, unknown>;
 };
 
 /**
  * Inline preview pane for Solid format.
- * Uses the same rendering approach as React since both produce identical output.
- * The visual result is the same because computeModel + SVG rendering is framework-agnostic.
+ * Uses actual Solid.js rendering via renderSolidSvg.
+ * The Solid component is mounted into a container div within the React tree.
  */
 export function SolidPreviewPane({
   preset,
   seed,
   className = "",
+  dataOverrides,
 }: SolidPreviewPaneProps) {
   const { charts, layout, interactive } = preset;
 
@@ -336,7 +382,12 @@ export function SolidPreviewPane({
         {preset.name}
       </h1>
 
-      <LayoutRenderer charts={charts} layout={layout} seed={seed} />
+      <LayoutRenderer
+        charts={charts}
+        dataOverrides={dataOverrides}
+        layout={layout}
+        seed={seed}
+      />
 
       {interactive && (
         <div

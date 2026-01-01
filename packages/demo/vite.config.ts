@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
 import { cdnBundlePlugin } from "./vite-plugin-cdn-bundle";
 
 /**
@@ -34,7 +35,14 @@ export default defineConfig({
       semicolons: true,
       target: "react",
     }),
-    react(),
+    // React: exclude solid package files from React's JSX transform
+    react({
+      exclude: [/packages\/solid\//],
+    }),
+    // Solid: only process solid package files with Solid's JSX transform
+    solid({
+      include: [/packages\/solid\/.*\.tsx$/],
+    }),
     tailwindcss(),
   ],
   resolve: {
@@ -43,7 +51,7 @@ export default defineConfig({
       "@microviz/elements": resolve(__dirname, "../elements/src/index.ts"),
       "@microviz/react": resolve(__dirname, "../react/src/index.ts"),
       "@microviz/renderers": resolve(__dirname, "../renderers/src/index.ts"),
-      "@microviz/solid": resolve(__dirname, "../solid/dist/solid.js"),
+      "@microviz/solid": resolve(__dirname, "../solid/src/index.ts"),
     },
   },
   server: {

@@ -12,6 +12,7 @@ import {
   PreviewPane,
   type PreviewPaneHandle,
 } from "./PreviewPane";
+import { parseJsxData } from "./parsers/jsx-data-parser";
 import { applySeededData, generateDataForPreset } from "./presetData";
 import { PRESETS } from "./presets";
 import { ReactPreviewPane } from "./ReactPreviewPane";
@@ -46,6 +47,28 @@ export function CdnPlayground({
   // urlState.code without causing visual issues.
   const [stableCode, setStableCode] = useState(urlState.code);
 
+  // Data overrides from user-edited JSX/Solid code.
+  // When set, preview panes use these values instead of generated data.
+  const [dataOverrides, setDataOverrides] = useState<
+    Record<string, unknown> | undefined
+  >(undefined);
+  const parseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Flag to abort pending parse operations (prevents race conditions)
+  const parseAbortedRef = useRef(false);
+
+  // Clear dataOverrides when preset or format changes.
+  // Note: seed changes are handled synchronously in handleReroll to avoid race conditions.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on these changes
+  useEffect(() => {
+    setDataOverrides(undefined);
+    // Abort any pending parse and clear timeout
+    parseAbortedRef.current = true;
+    if (parseTimeoutRef.current) {
+      clearTimeout(parseTimeoutRef.current);
+      parseTimeoutRef.current = null;
+    }
+  }, [urlState.presetId, urlState.format]);
+
   // Derive theme from system preference
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "dark";
@@ -75,9 +98,35 @@ export function CdnPlayground({
 
   const handleCodeChange = useCallback(
     (code: string) => {
-      // User edited code - need full reload
-      setStableCode(code);
-      onUrlStateChange({ ...urlState, code, presetId: null });
+      if (urlState.format === "html") {
+        // HTML format: user edited code - need full reload
+        setStableCode(code);
+        onUrlStateChange({ ...urlState, code, presetId: null });
+      } else {
+        // JSX/Solid format: parse data with debouncing
+        // Clear any pending parse
+        if (parseTimeoutRef.current) {
+          clearTimeout(parseTimeoutRef.current);
+        }
+        // Reset abort flag since this is a new user edit
+        parseAbortedRef.current = false;
+
+        // Debounce parsing by 300ms
+        parseTimeoutRef.current = setTimeout(() => {
+          // Check if parse was aborted (e.g., by Reroll)
+          if (parseAbortedRef.current) {
+            parseAbortedRef.current = false;
+            return;
+          }
+          const result = parseJsxData(code);
+          if (result.success && Object.keys(result.data).length > 0) {
+            setDataOverrides(result.data);
+          } else {
+            // Clear overrides on parse failure or no data
+            setDataOverrides(undefined);
+          }
+        }, 300);
+      }
     },
     [urlState, onUrlStateChange],
   );
@@ -194,6 +243,19 @@ export function CdnPlayground({
 
   const handleReroll = useCallback(() => {
     const newSeed = `mv-${Math.floor(Math.random() * 10_000)}`;
+
+    // For JSX/Solid formats, clear dataOverrides synchronously before any state updates
+    // This prevents race condition where old dataOverrides renders before the effect clears them
+    if (urlState.format === "jsx" || urlState.format === "solid") {
+      // Abort any pending parse operation
+      parseAbortedRef.current = true;
+      if (parseTimeoutRef.current) {
+        clearTimeout(parseTimeoutRef.current);
+        parseTimeoutRef.current = null;
+      }
+      // Clear overrides synchronously - this happens in the same render cycle
+      setDataOverrides(undefined);
+    }
 
     // Custom code path - use universal randomization
     if (!urlState.presetId) {
@@ -395,9 +457,7 @@ export function CdnPlayground({
             <div className="flex-1 overflow-hidden">
               <CodeEditor
                 language={urlState.format === "html" ? "html" : "tsx"}
-                onChange={
-                  urlState.format === "html" ? handleCodeChange : undefined
-                }
+                onChange={handleCodeChange}
                 theme={theme}
                 value={displayCode}
               />
@@ -412,12 +472,14 @@ export function CdnPlayground({
             {urlState.format === "jsx" && unifiedPreset ? (
               <ReactPreviewPane
                 className="h-full overflow-auto"
+                dataOverrides={dataOverrides}
                 preset={unifiedPreset}
                 seed={urlState.seed}
               />
             ) : urlState.format === "solid" && unifiedPreset ? (
               <SolidPreviewPane
                 className="h-full overflow-auto"
+                dataOverrides={dataOverrides}
                 preset={unifiedPreset}
                 seed={urlState.seed}
               />

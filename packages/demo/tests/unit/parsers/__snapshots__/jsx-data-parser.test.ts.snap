@@ -1,0 +1,88 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseJsxData > snapshot tests > snapshot: bullet delta parsing 1`] = `
+{
+  "data": {
+    "0": {
+      "current": 75,
+      "max": 100,
+      "previous": 50,
+    },
+  },
+  "errors": undefined,
+  "success": true,
+}
+`;
+
+exports[`parseJsxData > snapshot tests > snapshot: donut segments parsing 1`] = `
+{
+  "data": {
+    "0": [
+      {
+        "color": "#6366f1",
+        "pct": 60,
+      },
+      {
+        "color": "#10b981",
+        "pct": 40,
+      },
+    ],
+  },
+  "errors": undefined,
+  "success": true,
+}
+`;
+
+exports[`parseJsxData > snapshot tests > snapshot: error output format 1`] = `
+{
+  "data": {},
+  "errors": [
+    {
+      "index": 0,
+      "message": "Cannot parse literal: invalid",
+      "raw": "invalid",
+    },
+  ],
+  "success": false,
+}
+`;
+
+exports[`parseJsxData > snapshot tests > snapshot: multi-chart preset 1`] = `
+{
+  "data": {
+    "0": [
+      10,
+      20,
+      30,
+    ],
+    "1": {
+      "max": 100,
+      "value": 75,
+    },
+    "2": [
+      {
+        "color": "#6366f1",
+        "pct": 60,
+      },
+    ],
+  },
+  "errors": undefined,
+  "success": true,
+}
+`;
+
+exports[`parseJsxData > snapshot tests > snapshot: sparkline JSX parsing 1`] = `
+{
+  "data": {
+    "0": [
+      42,
+      58,
+      31,
+      65,
+      27,
+    ],
+  },
+  "errors": undefined,
+  "success": true,
+}
+`;
