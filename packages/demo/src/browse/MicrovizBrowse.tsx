@@ -3382,91 +3382,16 @@ export const MicrovizBrowse: FC<{
             {sidebarTab === "settings" && (
               <div className="h-full overflow-auto">
                 <div className="space-y-2 px-3 py-3">
-                  <label className="block text-sm" title={seriesPresetTooltip}>
-                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                      Data preset
-                    </div>
-                    <select
-                      className={inputField()}
-                      onChange={(e) =>
-                        setDataPreset(e.target.value as DataPreset)
-                      }
-                      title="Data preset"
-                      value={dataPreset}
-                    >
-                      {dataPresetOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="block text-sm">
-                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                      Series preset
-                    </div>
-                    <select
-                      className={`${inputField()} disabled:cursor-not-allowed disabled:border-slate-200/60 disabled:bg-slate-100/80 disabled:text-slate-400 dark:disabled:border-slate-700/50 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-500`}
-                      disabled={seriesPresetDisabled}
-                      onChange={(e) =>
-                        setSeriesPreset(e.target.value as SeriesPreset)
-                      }
-                      title={seriesPresetTooltip}
-                      value={seriesPreset}
-                    >
-                      <option value="trend">Trend</option>
-                      <option value="seasonal">Seasonal</option>
-                      <option value="spiky">Spiky</option>
-                      <option value="random-walk">Random walk</option>
-                    </select>
-                  </label>
-
-                  <div className="block text-sm">
-                    <label
-                      className="mb-1 block text-xs text-slate-500 dark:text-slate-400"
-                      htmlFor={seedInputId}
-                    >
-                      Seed
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        className={inputField({ font: "mono" })}
-                        id={seedInputId}
-                        onChange={(e) => setSeed(e.target.value)}
-                        title="Seed"
-                        value={seed}
-                      />
-                      <RerollButton onClick={randomizeSeed} />
-                    </div>
-                  </div>
-
-                  <FieldRange
-                    label="Series length"
-                    max={80}
-                    min={3}
-                    onChange={setSeriesLength}
-                    value={seriesLength}
-                  />
-
-                  <FieldRange
-                    label="Segment count"
-                    max={8}
-                    min={1}
-                    onChange={setSegmentCount}
-                    value={segmentCount}
-                  />
-
-                  <ToggleGroup<PaletteMode>
-                    columns={3}
-                    label="Palette mapping"
-                    onChange={handlePaletteModeChange}
+                  {/* Rendering pipeline: Layout → Wrapper → Renderer → Compute */}
+                  <ToggleGroup<SizePreset>
+                    columns={2}
+                    label="Layout"
+                    onChange={setSizePreset}
                     options={[
-                      { id: "value", label: "By value" },
-                      { id: "random", label: "Random" },
-                      { id: "chunks", label: "Chunks" },
+                      { id: "custom", label: "Standard" },
+                      { id: "token", label: "Micro tokens" },
                     ]}
-                    value={paletteMode}
+                    value={sizePreset}
                   />
 
                   <ToggleGroup<Wrapper>
@@ -3539,17 +3464,99 @@ export const MicrovizBrowse: FC<{
                     value={computeModeEffective}
                   />
 
-                  <ToggleGroup<SizePreset>
-                    columns={2}
-                    label="Layout"
-                    onChange={setSizePreset}
+                  {/* Data section */}
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 pt-2">
+                    Data
+                  </div>
+
+                  <div className="block text-sm">
+                    <label
+                      className="mb-1 block text-xs text-slate-500 dark:text-slate-400"
+                      htmlFor={seedInputId}
+                    >
+                      Seed
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        className={inputField({ font: "mono" })}
+                        id={seedInputId}
+                        onChange={(e) => setSeed(e.target.value)}
+                        title="Seed"
+                        value={seed}
+                      />
+                      <RerollButton onClick={randomizeSeed} />
+                    </div>
+                  </div>
+
+                  <ToggleGroup<PaletteMode>
+                    columns={3}
+                    label="Palette mapping"
+                    onChange={handlePaletteModeChange}
                     options={[
-                      { id: "custom", label: "Standard" },
-                      { id: "token", label: "Micro tokens" },
+                      { id: "value", label: "By value" },
+                      { id: "random", label: "Random" },
+                      { id: "chunks", label: "Chunks" },
                     ]}
-                    value={sizePreset}
+                    value={paletteMode}
                   />
 
+                  <FieldRange
+                    label="Series length"
+                    max={80}
+                    min={3}
+                    onChange={setSeriesLength}
+                    value={seriesLength}
+                  />
+
+                  <FieldRange
+                    label="Segment count"
+                    max={8}
+                    min={1}
+                    onChange={setSegmentCount}
+                    value={segmentCount}
+                  />
+
+                  <label className="block text-sm" title={seriesPresetTooltip}>
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Data preset
+                    </div>
+                    <select
+                      className={inputField()}
+                      onChange={(e) =>
+                        setDataPreset(e.target.value as DataPreset)
+                      }
+                      title="Data preset"
+                      value={dataPreset}
+                    >
+                      {dataPresetOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block text-sm">
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Series preset
+                    </div>
+                    <select
+                      className={`${inputField()} disabled:cursor-not-allowed disabled:border-slate-200/60 disabled:bg-slate-100/80 disabled:text-slate-400 dark:disabled:border-slate-700/50 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-500`}
+                      disabled={seriesPresetDisabled}
+                      onChange={(e) =>
+                        setSeriesPreset(e.target.value as SeriesPreset)
+                      }
+                      title={seriesPresetTooltip}
+                      value={seriesPreset}
+                    >
+                      <option value="trend">Trend</option>
+                      <option value="seasonal">Seasonal</option>
+                      <option value="spiky">Spiky</option>
+                      <option value="random-walk">Random walk</option>
+                    </select>
+                  </label>
+
+                  {/* Size controls */}
                   {sizePreset === "token" ? (
                     <FieldNumberWithRange
                       label="Token scale"
@@ -3579,6 +3586,7 @@ export const MicrovizBrowse: FC<{
                     </div>
                   )}
 
+                  {/* Display section */}
                   <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 pt-2">
                     Display
                   </div>
