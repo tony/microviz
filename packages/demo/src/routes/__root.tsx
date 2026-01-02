@@ -162,20 +162,20 @@ function RootComponent() {
             <option value="g100">G100</option>
           </select>
 
-          <TabToggle
-            label="Microviz background"
-            onChange={setMicrovizBackgroundPreference}
-            options={[
-              {
-                id: "transparent",
-                label: "Transparent",
-                title: "Microviz bg: transparent",
-              },
-              { id: "solid", label: "Solid", title: "Microviz bg: preset" },
-            ]}
-            size="xs"
+          <select
+            aria-label="Microviz background"
+            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
+            onChange={(event) =>
+              setMicrovizBackgroundPreference(
+                event.target.value as MicrovizBackgroundPreference,
+              )
+            }
+            title="Microviz background"
             value={microvizBackgroundPreference}
-          />
+          >
+            <option value="transparent">Transparent</option>
+            <option value="solid">Solid</option>
+          </select>
         </div>
       </header>
 
