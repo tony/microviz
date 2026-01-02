@@ -3284,9 +3284,6 @@ export const MicrovizBrowse: FC<{
         <div className="flex h-full flex-col">
           <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
             <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Controls
-              </div>
               <button
                 aria-label="Close controls"
                 className={tabButton({
@@ -3301,6 +3298,9 @@ export const MicrovizBrowse: FC<{
               >
                 <PanelLeftContractIcon className="h-4 w-4" />
               </button>
+              <div className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Controls
+              </div>
             </div>
             <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
               <TabToggle
