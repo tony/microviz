@@ -3700,17 +3700,18 @@ export const MicrovizBrowse: FC<{
       </ResizablePane>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* Main content ribbon toolbar */}
+        {/* Main content ribbon toolbar - three regions: left pinned, middle scrollable, right pinned */}
+        {/* Ribbon never wraps. One row only. Structural controls pinned, overflow handled intentionally. */}
         <div
-          className={`${ribbonToolbar()} gap-2 px-2`}
-          role="toolbar"
           aria-label="Chart filters and actions"
+          className={`${ribbonToolbar()} flex-nowrap sm:px-3`}
+          role="toolbar"
         >
-          {/* Sidebar expand (when collapsed) */}
+          {/* LEFT PINNED: Sidebar expand (when collapsed) */}
           {sidebarCollapsed && (
             <button
               aria-label="Show sidebar"
-              className={ribbonIconButton({ variant: "handle" })}
+              className={`${ribbonIconButton({ variant: "handle" })} shrink-0`}
               onClick={() => handleSidebarCollapsed(false)}
               title="Show sidebar"
               type="button"
@@ -3719,58 +3720,91 @@ export const MicrovizBrowse: FC<{
             </button>
           )}
 
-          {/* Chart subtype filter - slim segments */}
-          <TabToggle
-            container="ribbon"
-            label="Chart subtype filter"
-            onChange={setChartSubtype}
-            options={chartSubtypeOptions.map((o) => ({
-              ...o,
-              title: `Filter: ${o.label}`,
-            }))}
-            size="ribbon"
-            value={chartSubtype}
-            variant="muted"
-          />
-
-          {/* Reroll - emphasis via color, not size */}
-          <RerollButton onClick={randomizeSeed} variant="ribbon" />
-
-          {/* Status metadata - pushed right */}
-          <div className="ml-auto flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-            <span
-              title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
+          {/* MIDDLE FLEXIBLE: filters + reroll (scrollable if needed) */}
+          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pl-2 whitespace-nowrap [scrollbar-gutter:stable]">
+            {/* Chart subtype filter - dropdown on mobile, segmented on md+ */}
+            <select
+              aria-label="Chart type filter"
+              className="h-6 shrink-0 rounded-sm border border-slate-200/60 bg-transparent px-1.5 text-[11px] text-slate-700 md:hidden dark:border-slate-700/60 dark:text-slate-300"
+              onChange={(e) => setChartSubtype(e.target.value as ChartSubtype)}
+              title="Filter by chart type"
+              value={chartSubtype}
             >
-              {visibleCharts.length} charts
-            </span>
-            <span className="text-slate-300 dark:text-slate-600">·</span>
-            <span>{wrapper}</span>
-            <span className="text-slate-300 dark:text-slate-600">·</span>
-            <span>{renderer}</span>
-            {warningCount > 0 && (
-              <>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span className="font-semibold text-amber-600 dark:text-amber-300">
-                  {warningCount} warning{warningCount === 1 ? "" : "s"}
-                </span>
-              </>
-            )}
-            <span className="text-slate-300 dark:text-slate-600">·</span>
-            <span>{computeModeEffective}</span>
+              {chartSubtypeOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Segmented control - hidden on mobile */}
+            <div className="hidden shrink-0 md:block">
+              <TabToggle
+                container="ribbon"
+                label="Chart subtype filter"
+                onChange={setChartSubtype}
+                options={chartSubtypeOptions.map((o) => ({
+                  ...o,
+                  title: `Filter: ${o.label}`,
+                }))}
+                size="ribbon"
+                value={chartSubtype}
+                variant="muted"
+              />
+            </div>
+
+            {/* Reroll - emphasis via color, not size */}
+            <RerollButton
+              className="shrink-0"
+              onClick={randomizeSeed}
+              variant="ribbon"
+            />
           </div>
 
-          {/* Inspector expand (when collapsed) */}
-          {inspectorCollapsed && (
-            <button
-              aria-label="Show inspector"
-              className={ribbonIconButton({ variant: "handle" })}
-              onClick={() => handleInspectorCollapsed(false)}
-              title="Show inspector"
-              type="button"
-            >
-              <PanelRightExpandIcon className="h-4 w-4" />
-            </button>
-          )}
+          {/* RIGHT PINNED: status + inspector (never scrolls, never collapses) */}
+          <div className="flex shrink-0 items-center gap-2 pl-2">
+            {/* Status metadata - progressively revealed */}
+            <div className="hidden items-center gap-2 text-[11px] text-slate-500 whitespace-nowrap sm:flex dark:text-slate-400">
+              <span
+                title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
+              >
+                {visibleCharts.length} charts
+              </span>
+              {warningCount > 0 && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-600">·</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-300">
+                    {warningCount} warning{warningCount === 1 ? "" : "s"}
+                  </span>
+                </>
+              )}
+              <span className="hidden text-slate-300 md:inline dark:text-slate-600">
+                ·
+              </span>
+              <span className="hidden md:inline">{wrapper}</span>
+              <span className="hidden text-slate-300 lg:inline dark:text-slate-600">
+                ·
+              </span>
+              <span className="hidden lg:inline">{renderer}</span>
+              <span className="hidden text-slate-300 xl:inline dark:text-slate-600">
+                ·
+              </span>
+              <span className="hidden xl:inline">{computeModeEffective}</span>
+            </div>
+
+            {/* Inspector expand (when collapsed) - always reachable */}
+            {inspectorCollapsed && (
+              <button
+                aria-label="Show inspector"
+                className={`${ribbonIconButton({ variant: "handle" })} shrink-0`}
+                onClick={() => handleInspectorCollapsed(false)}
+                title="Show inspector"
+                type="button"
+              >
+                <PanelRightExpandIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         <div

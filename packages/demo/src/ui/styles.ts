@@ -88,10 +88,10 @@ export const tabButton = cva("select-none font-medium transition", {
     },
     size: {
       md: "rounded-md px-3 py-1.5 text-sm",
-      sm: "rounded-md px-2.5 py-1 text-xs",
-      xs: "rounded-md px-2 py-1 text-xs",
       // Ribbon: slim segments that fit within h-8 toolbar, tight radius
       ribbon: "rounded px-1.5 py-px text-[11px] leading-5",
+      sm: "rounded-md px-2.5 py-1 text-xs",
+      xs: "rounded-md px-2 py-1 text-xs",
     },
     variant: {
       default: "",
