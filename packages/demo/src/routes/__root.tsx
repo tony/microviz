@@ -107,12 +107,7 @@ function RootComponent() {
     <div className="flex h-screen h-[100dvh] flex-col overflow-hidden">
       <header className="flex min-h-11 flex-none flex-wrap items-center gap-2 border-b border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/40 sm:h-11 sm:flex-nowrap sm:gap-3 sm:py-0">
         <div className="flex min-w-0 w-full items-center gap-3 sm:w-auto">
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-sm font-semibold tracking-tight">microviz</h1>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              demo
-            </div>
-          </div>
+          <h1 className="text-sm font-semibold tracking-tight">microviz</h1>
 
           <TabToggle
             label="Navigation"
