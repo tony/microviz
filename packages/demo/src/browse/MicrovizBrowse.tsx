@@ -81,10 +81,19 @@ import {
 } from "./browseUrlState";
 import { JsonViewer } from "./JsonViewer";
 import {
+  AccessibilityIcon,
+  BugIcon,
+  DocumentIcon,
+  DownloadIcon,
+  GridIcon,
   PanelLeftContractIcon,
   PanelLeftExpandIcon,
   PanelRightContractIcon,
   PanelRightExpandIcon,
+  PulseIcon,
+  SettingsIcon,
+  TreemapIcon,
+  WarningIcon,
 } from "./PanelIcons";
 import { ResizablePane } from "./ResizablePane";
 import {
@@ -2530,22 +2539,6 @@ export const MicrovizBrowse: FC<{
     "export",
   ] as const;
   type InspectorTab = (typeof inspectorTabOptions)[number];
-  const inspectorTabLabels: Record<InspectorTab, string> = {
-    a11y: "A11y",
-    data: "Data",
-    diagnostics: "Diagnostics",
-    export: "Export",
-    model: "Model",
-    telemetry: "Telemetry",
-  };
-  const inspectorTabTitles: Record<InspectorTab, string> = {
-    a11y: "Accessibility",
-    data: "Inputs",
-    diagnostics: "Warnings",
-    export: "Export assets",
-    model: "Render model",
-    telemetry: "Render telemetry",
-  };
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("model");
   const [a11yCopied, setA11yCopied] = useState(false);
   const a11yCopyTimeoutRef = useRef<number | null>(null);
@@ -3282,39 +3275,57 @@ export const MicrovizBrowse: FC<{
         side="left"
       >
         <div className="flex h-full flex-col">
-          <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
-            <div className="flex items-center justify-between gap-2">
-              <button
-                aria-label="Close controls"
-                className={tabButton({
-                  active: false,
-                  size: "xs",
-                  variant: "muted",
-                })}
-                onClick={() => handleSidebarCollapsed(true)}
-                style={{ flexShrink: 0 }}
-                title="Close controls"
-                type="button"
-              >
-                <PanelLeftContractIcon className="h-4 w-4" />
-              </button>
-              <div className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Controls
-              </div>
-            </div>
-            <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
-              <TabToggle
-                label="Sidebar navigation"
-                onChange={setSidebarTab}
-                options={[
-                  { id: "browse", label: "Browse", title: "Charts" },
-                  { id: "settings", label: "Settings" },
-                  { id: "debug", label: "Debug" },
-                ]}
-                size="xs"
-                value={sidebarTab}
-              />
-            </div>
+          {/* Single-row icon toolbar header */}
+          <div
+            aria-label="Sidebar navigation"
+            className="flex items-center gap-1 border-b border-slate-200/70 bg-white/80 px-2 py-1.5 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
+            role="toolbar"
+          >
+            {/* Close button */}
+            <button
+              aria-label="Close sidebar"
+              className="flex h-7 w-7 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              onClick={() => handleSidebarCollapsed(true)}
+              title="Close sidebar"
+              type="button"
+            >
+              <PanelLeftContractIcon className="h-4 w-4" />
+            </button>
+
+            {/* Divider */}
+            <div className="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-600" />
+
+            {/* Tab buttons */}
+            <button
+              aria-label="Browse"
+              aria-pressed={sidebarTab === "browse"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${sidebarTab === "browse" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setSidebarTab("browse")}
+              title="Browse charts"
+              type="button"
+            >
+              <GridIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Settings"
+              aria-pressed={sidebarTab === "settings"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${sidebarTab === "settings" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setSidebarTab("settings")}
+              title="Settings"
+              type="button"
+            >
+              <SettingsIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Debug"
+              aria-pressed={sidebarTab === "debug"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${sidebarTab === "debug" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setSidebarTab("debug")}
+              title="Debug"
+              type="button"
+            >
+              <BugIcon className="h-4 w-4" />
+            </button>
           </div>
 
           <div className="min-h-0 flex-1 overflow-hidden px-3 py-3">
@@ -4000,45 +4011,90 @@ export const MicrovizBrowse: FC<{
         side="right"
       >
         <div className="flex h-full flex-col">
-          <div className="flex flex-col gap-2 border-b border-slate-200/70 bg-white/80 px-4 py-2 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Inspector
-              </div>
-              <button
-                aria-label="Close inspector"
-                className={tabButton({
-                  active: false,
-                  size: "xs",
-                  variant: "muted",
-                })}
-                onClick={() => handleInspectorCollapsed(true)}
-                style={{ flexShrink: 0 }}
-                title="Close inspector"
-                type="button"
-              >
-                <PanelRightContractIcon className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
-                  <TabToggle
-                    container="bordered"
-                    label="Inspector tabs"
-                    onChange={setInspectorTab}
-                    options={inspectorTabOptions.map((tab) => ({
-                      id: tab,
-                      label: inspectorTabLabels[tab],
-                      title: inspectorTabTitles[tab],
-                    }))}
-                    size="xs"
-                    value={inspectorTab}
-                    variant="muted"
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Single-row icon toolbar header */}
+          <div
+            aria-label="Inspector tabs"
+            className="flex items-center gap-1 border-b border-slate-200/70 bg-white/80 px-2 py-1.5 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
+            role="toolbar"
+          >
+            {/* Tab buttons */}
+            <button
+              aria-label="Model"
+              aria-pressed={inspectorTab === "model"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "model" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setInspectorTab("model")}
+              title="Render model"
+              type="button"
+            >
+              <TreemapIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Data"
+              aria-pressed={inspectorTab === "data"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "data" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setInspectorTab("data")}
+              title="Inputs"
+              type="button"
+            >
+              <DocumentIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Accessibility"
+              aria-pressed={inspectorTab === "a11y"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "a11y" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setInspectorTab("a11y")}
+              title="Accessibility"
+              type="button"
+            >
+              <AccessibilityIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Diagnostics"
+              aria-pressed={inspectorTab === "diagnostics"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "diagnostics" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setInspectorTab("diagnostics")}
+              title="Warnings"
+              type="button"
+            >
+              <WarningIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Telemetry"
+              aria-pressed={inspectorTab === "telemetry"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "telemetry" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setInspectorTab("telemetry")}
+              title="Render telemetry"
+              type="button"
+            >
+              <PulseIcon className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Export"
+              aria-pressed={inspectorTab === "export"}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "export" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              onClick={() => setInspectorTab("export")}
+              title="Export assets"
+              type="button"
+            >
+              <DownloadIcon className="h-4 w-4" />
+            </button>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Divider */}
+            <div className="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-600" />
+
+            {/* Close button */}
+            <button
+              aria-label="Close inspector"
+              className="flex h-7 w-7 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              onClick={() => handleInspectorCollapsed(true)}
+              title="Close inspector"
+              type="button"
+            >
+              <PanelRightContractIcon className="h-4 w-4" />
+            </button>
           </div>
 
           <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
