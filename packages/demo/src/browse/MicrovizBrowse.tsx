@@ -3686,7 +3686,7 @@ export const MicrovizBrowse: FC<{
         {sidebarCollapsed && (
           <button
             aria-label="Show sidebar"
-            className="absolute left-0 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-r-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="absolute bottom-3 left-0 z-10 flex h-8 w-8 items-center justify-center rounded-r-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 md:bottom-auto md:top-3 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             onClick={() => handleSidebarCollapsed(false)}
             title="Show sidebar"
             type="button"
@@ -3699,7 +3699,7 @@ export const MicrovizBrowse: FC<{
         {inspectorCollapsed && (
           <button
             aria-label="Show inspector"
-            className="absolute right-0 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-l-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="absolute bottom-3 right-0 z-10 flex h-8 w-8 items-center justify-center rounded-l-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 md:bottom-auto md:top-3 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             onClick={() => handleInspectorCollapsed(false)}
             title="Show inspector"
             type="button"
