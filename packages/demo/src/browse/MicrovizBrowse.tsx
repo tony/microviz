@@ -80,6 +80,12 @@ import {
   type Wrapper,
 } from "./browseUrlState";
 import { JsonViewer } from "./JsonViewer";
+import {
+  PanelLeftContractIcon,
+  PanelLeftExpandIcon,
+  PanelRightContractIcon,
+  PanelRightExpandIcon,
+} from "./PanelIcons";
 import { ResizablePane } from "./ResizablePane";
 import {
   buildCompareRange,
@@ -456,24 +462,6 @@ const HTML_SUPPORTED_FILTER_PRIMITIVES = new Set([
   "dropShadow",
   "gaussianBlur",
 ]);
-
-const CloseIcon: FC<{ className?: string }> = ({ className }) => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    height="16"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="1.6"
-    viewBox="0 0 24 24"
-    width="16"
-  >
-    <path d="m6 6 12 12" />
-    <path d="m18 6-12 12" />
-  </svg>
-);
 
 function extractUrlRefId(value: string | undefined): string | null {
   if (!value) return null;
@@ -3311,7 +3299,7 @@ export const MicrovizBrowse: FC<{
                 title="Close controls"
                 type="button"
               >
-                <CloseIcon className="h-3.5 w-3.5" />
+                <PanelLeftContractIcon className="h-4 w-4" />
               </button>
             </div>
             <div className="max-w-full overflow-x-auto [scrollbar-gutter:stable]">
@@ -3693,7 +3681,33 @@ export const MicrovizBrowse: FC<{
         </div>
       </ResizablePane>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        {/* Floating expand button for sidebar */}
+        {sidebarCollapsed && (
+          <button
+            aria-label="Show sidebar"
+            className="absolute left-0 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-r-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            onClick={() => handleSidebarCollapsed(false)}
+            title="Show sidebar"
+            type="button"
+          >
+            <PanelLeftExpandIcon className="h-5 w-5" />
+          </button>
+        )}
+
+        {/* Floating expand button for inspector */}
+        {inspectorCollapsed && (
+          <button
+            aria-label="Show inspector"
+            className="absolute right-0 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-l-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            onClick={() => handleInspectorCollapsed(false)}
+            title="Show inspector"
+            type="button"
+          >
+            <PanelRightExpandIcon className="h-5 w-5" />
+          </button>
+        )}
+
         <div className="px-4 py-2">
           <div className="flex items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
             <div className="flex items-center gap-2 whitespace-nowrap">
@@ -4007,7 +4021,7 @@ export const MicrovizBrowse: FC<{
                 title="Close inspector"
                 type="button"
               >
-                <CloseIcon className="h-3.5 w-3.5" />
+                <PanelRightContractIcon className="h-4 w-4" />
               </button>
             </div>
             <div className="flex min-w-0 items-center gap-2">

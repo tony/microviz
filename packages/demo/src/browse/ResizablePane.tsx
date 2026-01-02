@@ -1,6 +1,7 @@
 import type { FC, ReactNode, PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { resizableEdgeZone, resizablePaneBorder } from "../ui/styles";
+import { resizableEdgeZone } from "../ui/styles";
+import { PanelLeftContractIcon, PanelRightContractIcon } from "./PanelIcons";
 
 type Side = "left" | "right";
 
@@ -18,8 +19,6 @@ type Props = {
   persistCollapsed?: boolean;
   side: Side;
 };
-
-const COLLAPSED_WIDTH = 40;
 
 function clamp(value: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, value));
@@ -67,41 +66,6 @@ function storeCollapsed(key: string, value: boolean): void {
     // ignore
   }
 }
-
-// Chevron icons as inline SVGs
-const ChevronLeft: FC<{ className?: string }> = ({ className }) => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    height="16"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-    width="16"
-  >
-    <path d="m15 18-6-6 6-6" />
-  </svg>
-);
-
-const ChevronRight: FC<{ className?: string }> = ({ className }) => (
-  <svg
-    aria-hidden="true"
-    className={className}
-    fill="none"
-    height="16"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-    width="16"
-  >
-    <path d="m9 18 6-6-6-6" />
-  </svg>
-);
 
 export const ResizablePane: FC<Props> = ({
   children,
@@ -211,35 +175,9 @@ export const ResizablePane: FC<Props> = ({
     setSize(defaultSize);
   }, [defaultSize, storageKey]);
 
-  // Collapsed state - show thin bar with expand button
+  // Zero-width collapse - floating expand button handled by parent
   if (collapsed && !forceExpanded) {
-    return (
-      <div
-        className={`flex h-full flex-shrink-0 flex-col items-center bg-white/90 py-4 dark:bg-slate-950/70 ${resizablePaneBorder({ side })}`}
-        style={{ width: COLLAPSED_WIDTH }}
-      >
-        <button
-          className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-          onClick={toggleCollapse}
-          title="Expand"
-          type="button"
-        >
-          {side === "left" ? <ChevronRight /> : <ChevronLeft />}
-        </button>
-        <div className="mt-3 flex flex-1 items-center">
-          <span
-            className="text-xs font-medium uppercase tracking-widest text-slate-400 dark:text-slate-500"
-            style={{
-              textOrientation: "mixed",
-              transform: side === "left" ? "rotate(180deg)" : undefined,
-              writingMode: "vertical-rl",
-            }}
-          >
-            {name}
-          </span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -279,7 +217,11 @@ export const ResizablePane: FC<Props> = ({
               title="Collapse"
               type="button"
             >
-              {side === "left" ? <ChevronLeft /> : <ChevronRight />}
+              {side === "left" ? (
+                <PanelLeftContractIcon className="h-4 w-4" />
+              ) : (
+                <PanelRightContractIcon className="h-4 w-4" />
+              )}
             </button>
           )}
         </div>
