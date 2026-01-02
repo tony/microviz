@@ -1,7 +1,6 @@
 import type { FC, ReactNode, PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resizableEdgeZone } from "../ui/styles";
-import { PanelLeftContractIcon, PanelRightContractIcon } from "./PanelIcons";
 
 type Side = "left" | "right";
 
@@ -59,14 +58,6 @@ function readStoredCollapsed(key: string): boolean {
   }
 }
 
-function storeCollapsed(key: string, value: boolean): void {
-  try {
-    window.localStorage.setItem(key, String(value));
-  } catch {
-    // ignore
-  }
-}
-
 export const ResizablePane: FC<Props> = ({
   children,
   className,
@@ -77,7 +68,7 @@ export const ResizablePane: FC<Props> = ({
   forceExpanded = false,
   minSize = 180,
   name,
-  onCollapsedChange,
+  onCollapsedChange: _onCollapsedChange,
   persistCollapsed = true,
   side,
 }) => {
@@ -89,7 +80,7 @@ export const ResizablePane: FC<Props> = ({
     return readStoredSize(storageKey) ?? defaultSize;
   });
 
-  const [collapsedState, setCollapsedState] = useState<boolean>(() => {
+  const [collapsedState, _setCollapsedState] = useState<boolean>(() => {
     if (!collapsible) return false;
     if (typeof window === "undefined") return false;
     if (!persistCollapsed) return false;
@@ -102,25 +93,6 @@ export const ResizablePane: FC<Props> = ({
     startSize: number;
     startX: number;
   } | null>(null);
-
-  const setCollapsed = useCallback(
-    (next: boolean) => {
-      if (collapsedProp === undefined) {
-        setCollapsedState(next);
-      }
-      if (persistCollapsed) {
-        storeCollapsed(collapsedKey, next);
-      }
-      onCollapsedChange?.(next);
-    },
-    [collapsedKey, collapsedProp, onCollapsedChange, persistCollapsed],
-  );
-
-  const toggleCollapse = useCallback(() => {
-    if (forceExpanded) return;
-    const next = !collapsed;
-    setCollapsed(next);
-  }, [collapsed, forceExpanded, setCollapsed]);
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -198,9 +170,8 @@ export const ResizablePane: FC<Props> = ({
           {children}
         </div>
 
-        {/* Edge interaction zone - contains drag handle and collapse button */}
+        {/* Edge interaction zone - drag handle for resizing */}
         <div className={resizableEdgeZone({ side })} style={{ width: 12 }}>
-          {/* Drag handle */}
           <div
             aria-hidden="true"
             className="absolute inset-0 cursor-col-resize bg-transparent transition-colors group-hover:bg-slate-200/60 active:bg-slate-300/70 dark:group-hover:bg-slate-800/60 dark:active:bg-slate-700/70"
@@ -208,22 +179,6 @@ export const ResizablePane: FC<Props> = ({
             onPointerDown={onPointerDown}
             title="Resize (dbl-click reset)"
           />
-
-          {/* Collapse button - appears on hover */}
-          {collapsible && !forceExpanded && (
-            <button
-              className="absolute left-1/2 top-4 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 opacity-0 shadow-sm transition-all duration-150 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-200"
-              onClick={toggleCollapse}
-              title="Collapse"
-              type="button"
-            >
-              {side === "left" ? (
-                <PanelLeftContractIcon className="h-4 w-4" />
-              ) : (
-                <PanelRightContractIcon className="h-4 w-4" />
-              )}
-            </button>
-          )}
         </div>
       </div>
     </div>
