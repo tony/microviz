@@ -3335,10 +3335,10 @@ export const MicrovizBrowse: FC<{
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden px-3 py-3">
+          <div className="min-h-0 flex-1 overflow-hidden">
             {/* Browse tab */}
             {sidebarTab === "browse" && (
-              <div className="flex min-h-0 flex-1 flex-col gap-2">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pt-3">
                 <input
                   className={inputField({
                     className:
@@ -3351,8 +3351,8 @@ export const MicrovizBrowse: FC<{
                   type="text"
                   value={chartFilter}
                 />
-                <div className="min-h-0 flex-1 overflow-auto pr-1">
-                  <div className="grid grid-cols-2 gap-1">
+                <div className="-mx-3 min-h-0 flex-1 overflow-auto">
+                  <div className="grid grid-cols-2 gap-1 px-3 pb-3">
                     {filteredCharts.map((chart) => (
                       <SidebarItem
                         active={selectedChart === chart.chartId}
@@ -3363,7 +3363,7 @@ export const MicrovizBrowse: FC<{
                     ))}
                   </div>
                   {filteredCharts.length === 0 && (
-                    <div className="py-4 text-center text-xs text-slate-400">
+                    <div className="px-3 py-4 text-center text-xs text-slate-400">
                       No matching charts
                     </div>
                   )}
@@ -3373,8 +3373,8 @@ export const MicrovizBrowse: FC<{
 
             {/* Settings tab */}
             {sidebarTab === "settings" && (
-              <div className="h-full overflow-auto pr-1">
-                <div className="space-y-2">
+              <div className="h-full overflow-auto">
+                <div className="space-y-2 px-3 py-3">
                   <label className="block text-sm" title={seriesPresetTooltip}>
                     <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
                       Data preset
@@ -3577,8 +3577,8 @@ export const MicrovizBrowse: FC<{
 
             {/* Debug tab */}
             {sidebarTab === "debug" && (
-              <div className="h-full overflow-auto pr-1">
-                <div className="space-y-2">
+              <div className="h-full overflow-auto">
+                <div className="space-y-2 px-3 py-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Render
                   </div>
