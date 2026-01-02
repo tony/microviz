@@ -149,8 +149,8 @@ function RootComponent() {
             />
           </div>
 
-          {/* Row 2 on mobile, inline on sm+: Config controls (scrolls, never wraps) */}
-          <div className="flex min-w-0 w-full items-center gap-2 overflow-x-auto w-autoflex-1 justify-end [scrollbar-gutter:stable]">
+          {/* Config controls */}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
             {/* Mobile: compact dropdown; sm+: full TabToggle */}
             <select
               aria-label="UI color scheme"
