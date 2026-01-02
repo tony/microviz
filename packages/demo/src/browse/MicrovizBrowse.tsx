@@ -59,6 +59,9 @@ import {
   chartCard,
   chartCardContent,
   inputField,
+  ribbonDivider,
+  ribbonIconButton,
+  ribbonToolbar,
   sidebarItem,
   statusLed,
   tabButton,
@@ -3275,16 +3278,16 @@ export const MicrovizBrowse: FC<{
         side="left"
       >
         <div className="flex h-full flex-col">
-          {/* Ribbon-style contextual toolbar */}
+          {/* Blender-style ribbon toolbar */}
           <div
             aria-label="Sidebar navigation"
-            className="flex items-center border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
+            className={ribbonToolbar()}
             role="toolbar"
           >
-            {/* Close button (separated) */}
+            {/* Close handle (separated, distinct styling) */}
             <button
               aria-label="Close sidebar"
-              className="flex h-8 w-8 items-center justify-center text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              className={ribbonIconButton({ variant: "handle" })}
               onClick={() => handleSidebarCollapsed(true)}
               title="Close sidebar"
               type="button"
@@ -3293,13 +3296,15 @@ export const MicrovizBrowse: FC<{
             </button>
 
             {/* Divider */}
-            <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
+            <div className={ribbonDivider()} />
 
-            {/* Tab segment (flush buttons) */}
+            {/* Tab segment */}
             <button
               aria-label="Browse"
               aria-pressed={sidebarTab === "browse"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${sidebarTab === "browse" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: sidebarTab === "browse",
+              })}
               onClick={() => setSidebarTab("browse")}
               title="Browse charts"
               type="button"
@@ -3309,7 +3314,9 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Settings"
               aria-pressed={sidebarTab === "settings"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${sidebarTab === "settings" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: sidebarTab === "settings",
+              })}
               onClick={() => setSidebarTab("settings")}
               title="Settings"
               type="button"
@@ -3319,7 +3326,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Debug"
               aria-pressed={sidebarTab === "debug"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${sidebarTab === "debug" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({ selected: sidebarTab === "debug" })}
               onClick={() => setSidebarTab("debug")}
               title="Debug"
               type="button"
@@ -4011,17 +4018,19 @@ export const MicrovizBrowse: FC<{
         side="right"
       >
         <div className="flex h-full flex-col">
-          {/* Ribbon-style contextual toolbar */}
+          {/* Blender-style ribbon toolbar */}
           <div
             aria-label="Inspector tabs"
-            className="flex items-center border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
+            className={ribbonToolbar()}
             role="toolbar"
           >
-            {/* Tab segment (flush buttons) */}
+            {/* Tab segment */}
             <button
               aria-label="Model"
               aria-pressed={inspectorTab === "model"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "model" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: inspectorTab === "model",
+              })}
               onClick={() => setInspectorTab("model")}
               title="Render model"
               type="button"
@@ -4031,7 +4040,9 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Data"
               aria-pressed={inspectorTab === "data"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "data" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: inspectorTab === "data",
+              })}
               onClick={() => setInspectorTab("data")}
               title="Inputs"
               type="button"
@@ -4041,7 +4052,9 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Accessibility"
               aria-pressed={inspectorTab === "a11y"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "a11y" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: inspectorTab === "a11y",
+              })}
               onClick={() => setInspectorTab("a11y")}
               title="Accessibility"
               type="button"
@@ -4051,7 +4064,9 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Diagnostics"
               aria-pressed={inspectorTab === "diagnostics"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "diagnostics" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: inspectorTab === "diagnostics",
+              })}
               onClick={() => setInspectorTab("diagnostics")}
               title="Warnings"
               type="button"
@@ -4061,7 +4076,9 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Telemetry"
               aria-pressed={inspectorTab === "telemetry"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "telemetry" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: inspectorTab === "telemetry",
+              })}
               onClick={() => setInspectorTab("telemetry")}
               title="Render telemetry"
               type="button"
@@ -4071,7 +4088,9 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Export"
               aria-pressed={inspectorTab === "export"}
-              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "export" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={ribbonIconButton({
+                selected: inspectorTab === "export",
+              })}
               onClick={() => setInspectorTab("export")}
               title="Export assets"
               type="button"
@@ -4083,12 +4102,12 @@ export const MicrovizBrowse: FC<{
             <div className="flex-1" />
 
             {/* Divider */}
-            <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
+            <div className={ribbonDivider()} />
 
-            {/* Close button (separated) */}
+            {/* Close handle (separated, distinct styling) */}
             <button
               aria-label="Close inspector"
-              className="flex h-8 w-8 items-center justify-center text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              className={ribbonIconButton({ variant: "handle" })}
               onClick={() => handleInspectorCollapsed(true)}
               title="Close inspector"
               type="button"

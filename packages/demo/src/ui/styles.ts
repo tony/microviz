@@ -266,3 +266,91 @@ export const chartCardContent = cva("mt-3", {
     },
   },
 });
+
+// ============================================================================
+// Blender-style Ribbon Toolbar System
+// ============================================================================
+// Design principles:
+// - Value (lightness) shifts for state changes, not saturation
+// - Low-chroma slate neutrals
+// - Layered surfaces: ribbon < panel < content (in dark mode)
+// - Emerald accent only for positive intent (hover icons)
+
+/**
+ * Ribbon toolbar container (Blender-style).
+ * Slightly darker than panel background for visual separation.
+ */
+export const ribbonToolbar = cva("flex items-center border-b", {
+  defaultVariants: {
+    variant: "default",
+  },
+  variants: {
+    variant: {
+      // Default opaque ribbon
+      default:
+        "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200",
+      // Overlay/glass ribbon (slightly transparent)
+      overlay:
+        "border-slate-200/80 bg-slate-50/90 backdrop-blur text-slate-900 dark:border-slate-800/80 dark:bg-slate-900/90 dark:text-slate-200",
+    },
+  },
+});
+
+/**
+ * Ribbon icon button for toolbar actions (Blender-style).
+ * State changes are value-based (lightness), not saturation.
+ */
+export const ribbonIconButton = cva(
+  "grid h-8 w-8 place-items-center transition-colors",
+  {
+    compoundVariants: [
+      // Normal + not selected
+      {
+        className:
+          "text-slate-700 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200 active:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 dark:active:bg-slate-700/70 dark:active:text-slate-100",
+        selected: false,
+        variant: "normal",
+      },
+      // Normal + selected
+      {
+        className:
+          "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
+        selected: true,
+        variant: "normal",
+      },
+      // Handle (collapse/expand button) - more distinct, higher contrast
+      {
+        className:
+          "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:bg-slate-300/60 dark:bg-slate-950/70 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-100 dark:active:bg-slate-700/80",
+        selected: false,
+        variant: "handle",
+      },
+      // Handle + selected (rare, but consistent)
+      {
+        className:
+          "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
+        selected: true,
+        variant: "handle",
+      },
+    ],
+    defaultVariants: {
+      selected: false,
+      variant: "normal",
+    },
+    variants: {
+      selected: {
+        false: "",
+        true: "",
+      },
+      variant: {
+        handle: "",
+        normal: "",
+      },
+    },
+  },
+);
+
+/**
+ * Ribbon divider (vertical separator).
+ */
+export const ribbonDivider = cva("h-8 w-px bg-slate-200 dark:bg-slate-700");
