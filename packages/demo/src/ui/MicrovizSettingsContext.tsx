@@ -6,7 +6,9 @@ export type MicrovizSettingsContextValue = {
   microvizThemePreference: MicrovizThemePreference;
   setMicrovizThemePreference: (value: MicrovizThemePreference) => void;
   microvizBackgroundPreference: MicrovizBackgroundPreference;
-  setMicrovizBackgroundPreference: (value: MicrovizBackgroundPreference) => void;
+  setMicrovizBackgroundPreference: (
+    value: MicrovizBackgroundPreference,
+  ) => void;
 };
 
 export const MicrovizSettingsContext =

@@ -3382,55 +3382,6 @@ export const MicrovizBrowse: FC<{
             {sidebarTab === "settings" && (
               <div className="h-full overflow-auto">
                 <div className="space-y-2 px-3 py-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Display
-                  </div>
-
-                  <label className="block text-sm">
-                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                      Theme preset
-                    </div>
-                    <select
-                      className={inputField()}
-                      onChange={(e) =>
-                        setMicrovizThemePreference(
-                          e.target.value as typeof microvizThemePreference,
-                        )
-                      }
-                      title="Microviz theme preset (Auto follows UI color scheme)"
-                      value={microvizThemePreference}
-                    >
-                      <option value="auto">Auto</option>
-                      <option value="white">White</option>
-                      <option value="g10">G10</option>
-                      <option value="g90">G90</option>
-                      <option value="g100">G100</option>
-                    </select>
-                  </label>
-
-                  <label className="block text-sm">
-                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                      Background
-                    </div>
-                    <select
-                      className={inputField()}
-                      onChange={(e) =>
-                        setMicrovizBackgroundPreference(
-                          e.target.value as typeof microvizBackgroundPreference,
-                        )
-                      }
-                      title="Microviz chart background"
-                      value={microvizBackgroundPreference}
-                    >
-                      <option value="transparent">Transparent</option>
-                      <option value="solid">Solid</option>
-                    </select>
-                  </label>
-
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 pt-2">
-                    Data
-                  </div>
-
                   <label className="block text-sm" title={seriesPresetTooltip}>
                     <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
                       Data preset
@@ -3627,6 +3578,51 @@ export const MicrovizBrowse: FC<{
                       />
                     </div>
                   )}
+
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 pt-2">
+                    Display
+                  </div>
+
+                  <label className="block text-sm">
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Theme preset
+                    </div>
+                    <select
+                      className={inputField()}
+                      onChange={(e) =>
+                        setMicrovizThemePreference(
+                          e.target.value as typeof microvizThemePreference,
+                        )
+                      }
+                      title="Microviz theme preset (Auto follows UI color scheme)"
+                      value={microvizThemePreference}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="white">White</option>
+                      <option value="g10">G10</option>
+                      <option value="g90">G90</option>
+                      <option value="g100">G100</option>
+                    </select>
+                  </label>
+
+                  <label className="block text-sm">
+                    <div className="mb-1 text-xs text-slate-500 dark:text-slate-400">
+                      Background
+                    </div>
+                    <select
+                      className={inputField()}
+                      onChange={(e) =>
+                        setMicrovizBackgroundPreference(
+                          e.target.value as typeof microvizBackgroundPreference,
+                        )
+                      }
+                      title="Microviz chart background"
+                      value={microvizBackgroundPreference}
+                    >
+                      <option value="transparent">Transparent</option>
+                      <option value="solid">Solid</option>
+                    </select>
+                  </label>
                 </div>
               </div>
             )}
