@@ -7,22 +7,23 @@ import { cva } from "class-variance-authority";
  * Variants:
  * - filled: Slate background, no border (header, sidebar)
  * - bordered: White background with border (inspector, filter)
+ * - ribbon: Slim inline segments for ribbon toolbars (fits within h-8)
  */
-export const tabContainer = cva(
-  "inline-flex items-center gap-1 rounded-lg p-1",
-  {
-    defaultVariants: {
-      container: "filled",
-    },
-    variants: {
-      container: {
-        bordered:
-          "border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
-        filled: "bg-slate-100 dark:bg-slate-800/50",
-      },
+export const tabContainer = cva("inline-flex items-center", {
+  defaultVariants: {
+    container: "filled",
+  },
+  variants: {
+    container: {
+      bordered:
+        "gap-1 rounded-lg p-1 border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
+      filled: "gap-1 rounded-lg p-1 bg-slate-100 dark:bg-slate-800/50",
+      // Ribbon: groove, not card. Minimal border that doesn't compete with Reroll.
+      ribbon:
+        "gap-0.5 rounded-sm p-0.5 border border-slate-200/60 bg-transparent dark:border-slate-700/60",
     },
   },
-);
+});
 
 /**
  * Tab/toggle button used in navigation and filters.
@@ -33,7 +34,7 @@ export const tabContainer = cva(
  * - muted: slate-200 bg when active, transparent when inactive (chart subtype filter)
  * - filled: slate-200 bg when active, slate-100 bg when inactive
  */
-export const tabButton = cva("select-none rounded-md font-medium transition", {
+export const tabButton = cva("select-none font-medium transition", {
   compoundVariants: [
     // Default variant
     {
@@ -48,17 +49,17 @@ export const tabButton = cva("select-none rounded-md font-medium transition", {
         "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200",
       variant: "default",
     },
-    // Muted variant (chart subtype filter)
+    // Muted variant (chart subtype filter) - calmer transitions, doesn't compete with primary action
     {
       active: true,
       className:
-        "bg-slate-200 text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white",
+        "bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white",
       variant: "muted",
     },
     {
       active: false,
       className:
-        "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+        "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200",
       variant: "muted",
     },
     // Filled variant (inspector tabs)
@@ -86,9 +87,11 @@ export const tabButton = cva("select-none rounded-md font-medium transition", {
       true: "",
     },
     size: {
-      md: "px-3 py-1.5 text-sm",
-      sm: "px-2.5 py-1 text-xs",
-      xs: "px-2 py-1 text-xs",
+      md: "rounded-md px-3 py-1.5 text-sm",
+      sm: "rounded-md px-2.5 py-1 text-xs",
+      xs: "rounded-md px-2 py-1 text-xs",
+      // Ribbon: slim segments that fit within h-8 toolbar, tight radius
+      ribbon: "rounded px-1.5 py-px text-[11px] leading-5",
     },
     variant: {
       default: "",
@@ -278,9 +281,10 @@ export const chartCardContent = cva("mt-3", {
 
 /**
  * Ribbon toolbar container (Blender-style).
- * Slightly darker than panel background for visual separation.
+ * Height is fixed—controls must conform to the ribbon, never the other way around.
+ * In tool UIs, height is structure. Emphasis comes from contrast, not size.
  */
-export const ribbonToolbar = cva("flex items-center border-b", {
+export const ribbonToolbar = cva("flex h-8 items-center border-b", {
   defaultVariants: {
     variant: "default",
   },

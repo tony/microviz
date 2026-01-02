@@ -14,11 +14,11 @@ type TabToggleBaseProps<T extends string> = {
   /** Tab options to display */
   options: readonly TabOption<T>[];
   /** Container style variant */
-  container?: "filled" | "bordered";
+  container?: "filled" | "bordered" | "ribbon";
   /** Button active style variant */
   variant?: "default" | "muted";
   /** Button size */
-  size?: "xs" | "sm" | "md";
+  size?: "xs" | "sm" | "md" | "ribbon";
   /** Additional className for container */
   className?: string;
   /** Disable all buttons */

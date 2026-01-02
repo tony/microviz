@@ -3700,68 +3700,84 @@ export const MicrovizBrowse: FC<{
       </ResizablePane>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="px-4 py-2">
-          <div className="flex items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              {sidebarCollapsed && (
-                <button
-                  aria-label="Show sidebar"
-                  className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
-                  onClick={() => handleSidebarCollapsed(false)}
-                  title="Show sidebar"
-                  type="button"
-                >
-                  <PanelLeftExpandIcon className="h-4 w-4" />
-                </button>
-              )}
-              <TabToggle
-                container="bordered"
-                label="Chart subtype filter"
-                onChange={setChartSubtype}
-                options={chartSubtypeOptions.map((o) => ({
-                  ...o,
-                  title: `Filter: ${o.label}`,
-                }))}
-                size="xs"
-                value={chartSubtype}
-                variant="muted"
-              />
-              <RerollButton onClick={randomizeSeed} variant="full" />
-            </div>
-            <div className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-              <span
-                title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
-              >
-                {visibleCharts.length} charts ·{" "}
-              </span>
-              {wrapper} · {renderer}
-              {warningCount > 0 && (
+        {/* Main content ribbon toolbar */}
+        <div
+          className={`${ribbonToolbar()} gap-2 px-2`}
+          role="toolbar"
+          aria-label="Chart filters and actions"
+        >
+          {/* Sidebar expand (when collapsed) */}
+          {sidebarCollapsed && (
+            <button
+              aria-label="Show sidebar"
+              className={ribbonIconButton({ variant: "handle" })}
+              onClick={() => handleSidebarCollapsed(false)}
+              title="Show sidebar"
+              type="button"
+            >
+              <PanelLeftExpandIcon className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Chart subtype filter - slim segments */}
+          <TabToggle
+            container="ribbon"
+            label="Chart subtype filter"
+            onChange={setChartSubtype}
+            options={chartSubtypeOptions.map((o) => ({
+              ...o,
+              title: `Filter: ${o.label}`,
+            }))}
+            size="ribbon"
+            value={chartSubtype}
+            variant="muted"
+          />
+
+          {/* Reroll - emphasis via color, not size */}
+          <RerollButton onClick={randomizeSeed} variant="ribbon" />
+
+          {/* Status metadata - pushed right */}
+          <div className="ml-auto flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            <span
+              title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
+            >
+              {visibleCharts.length} charts
+            </span>
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span>{wrapper}</span>
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span>{renderer}</span>
+            {warningCount > 0 && (
+              <>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span className="font-semibold text-amber-600 dark:text-amber-300">
-                  {" "}
-                  · {warningCount} warning{warningCount === 1 ? "" : "s"}
+                  {warningCount} warning{warningCount === 1 ? "" : "s"}
                 </span>
-              )}{" "}
-              · {computeModeEffective}
-            </div>
-            {inspectorCollapsed && (
-              <button
-                aria-label="Show inspector"
-                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
-                onClick={() => handleInspectorCollapsed(false)}
-                title="Show inspector"
-                type="button"
-              >
-                <PanelRightExpandIcon className="h-4 w-4" />
-              </button>
+              </>
             )}
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span>{computeModeEffective}</span>
           </div>
+
+          {/* Inspector expand (when collapsed) */}
+          {inspectorCollapsed && (
+            <button
+              aria-label="Show inspector"
+              className={ribbonIconButton({ variant: "handle" })}
+              onClick={() => handleInspectorCollapsed(false)}
+              title="Show inspector"
+              type="button"
+            >
+              <PanelRightExpandIcon className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div
           className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
           ref={chartListRef}
         >
-          <div className="px-4 pb-4">
+          <div className="px-4 py-3">
             {chartBlocks.length === 0 ? (
               <div className="text-sm text-slate-500 dark:text-slate-400">
                 No charts
