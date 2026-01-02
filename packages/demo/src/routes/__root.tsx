@@ -154,7 +154,7 @@ function RootComponent() {
             {/* Mobile: compact dropdown; sm+: full TabToggle */}
             <select
               aria-label="UI color scheme"
-              className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600 sm:hidden"
+              className="hidden shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600 min-[480px]:block sm:hidden"
               onChange={(event) =>
                 setColorSchemePreference(
                   event.target.value as ColorSchemePreference,
