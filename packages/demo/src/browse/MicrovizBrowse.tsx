@@ -3764,7 +3764,7 @@ export const MicrovizBrowse: FC<{
         {/* Ribbon never wraps. One row only. Structural controls pinned, overflow handled intentionally. */}
         <div
           aria-label="Chart filters and actions"
-          className={`${ribbonToolbar()} flex-nowrap sm:px-3`}
+          className={`${ribbonToolbar()} flex-nowrap`}
           role="toolbar"
         >
           {/* LEFT PINNED: Sidebar expand (when collapsed) */}
@@ -3824,7 +3824,7 @@ export const MicrovizBrowse: FC<{
           {/* RIGHT PINNED: status + inspector (never scrolls, never collapses) */}
           <div className="flex shrink-0 items-center gap-2 pl-2">
             {/* Status metadata - progressively revealed */}
-            <div className="hidden items-center gap-2 text-[11px] text-slate-500 whitespace-nowrap sm:flex dark:text-slate-400">
+            <div className="hidden items-center gap-2 text-[11px] text-slate-500 whitespace-nowrap sm:flex dark:text-slate-400 pr-2">
               <span
                 title={`Shown: ${visibleCharts.length}/${chartCatalog.length}`}
               >

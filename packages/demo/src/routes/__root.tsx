@@ -122,7 +122,7 @@ function RootComponent() {
       <div className="flex h-screen h-[100dvh] flex-col overflow-hidden">
         {/* Header: two-tier on mobile (nav row + config row), single-tier on sm+ */}
         {/* Config row scrolls horizontally if needed—never wraps into a third line */}
-        <header className="flex min-h-11 flex-none flex-wrap items-center gap-2 border-b border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/40 sm:h-11 sm:flex-nowrap sm:gap-3 sm:py-0">
+        <header className="flex min-h-11 items-center gap-2 border-b border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/40 sm:h-11 flex-nowrap sm:gap-3 sm:py-0">
           {/* Row 1: Brand + navigation (always visible) */}
           <div className="flex min-w-0 w-full shrink-0 items-center gap-3 sm:w-auto">
             <h1 className="text-sm font-semibold tracking-tight">microviz</h1>
@@ -150,7 +150,7 @@ function RootComponent() {
           </div>
 
           {/* Row 2 on mobile, inline on sm+: Config controls (scrolls, never wraps) */}
-          <div className="flex min-w-0 w-full flex-nowrap items-center gap-2 overflow-x-auto sm:w-auto sm:flex-1 sm:justify-end [scrollbar-gutter:stable]">
+          <div className="flex min-w-0 w-full items-center gap-2 overflow-x-auto w-autoflex-1 justify-end [scrollbar-gutter:stable]">
             {/* Mobile: compact dropdown; sm+: full TabToggle */}
             <select
               aria-label="UI color scheme"
