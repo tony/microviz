@@ -3789,7 +3789,9 @@ export const MicrovizBrowse: FC<{
               <span className="hidden text-slate-300 xl:inline dark:text-slate-600">
                 ·
               </span>
-              <span className="hidden xl:inline">{computeModeEffective}</span>
+              <span className="hidden xl:inline">
+                {computeModeEffective === "main" ? "main thread" : "worker"}
+              </span>
             </div>
 
             {/* Inspector expand (when collapsed) - always reachable */}
