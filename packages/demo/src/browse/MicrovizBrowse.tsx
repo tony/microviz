@@ -3425,33 +3425,6 @@ export const MicrovizBrowse: FC<{
                     value={renderer}
                   />
 
-                  <ToggleGroup<HtmlFilter>
-                    columns={3}
-                    disabled={renderer !== "html" && renderer !== "html-svg"}
-                    label="HTML compatibility"
-                    onChange={setHtmlFilter}
-                    options={[
-                      { id: "all", label: "All" },
-                      { id: "safe", label: "Safe" },
-                      { id: "broken", label: "Broken" },
-                    ]}
-                    value={htmlFilter}
-                  />
-
-                  <label
-                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-                    title="Show SVG overlay when using HTML + SVG renderer"
-                  >
-                    <input
-                      checked={showHtmlSvgOverlay}
-                      className="accent-blue-500"
-                      disabled={renderer !== "html-svg"}
-                      onChange={(e) => setShowHtmlSvgOverlay(e.target.checked)}
-                      type="checkbox"
-                    />
-                    <span className="text-sm">Show SVG overlay</span>
-                  </label>
-
                   <ToggleGroup<ComputeMode>
                     columns={2}
                     disabled={renderer === "offscreen-canvas"}
@@ -3643,6 +3616,33 @@ export const MicrovizBrowse: FC<{
                     Render
                   </div>
 
+                  <ToggleGroup<HtmlFilter>
+                    columns={3}
+                    disabled={renderer !== "html" && renderer !== "html-svg"}
+                    label="HTML compatibility"
+                    onChange={setHtmlFilter}
+                    options={[
+                      { id: "all", label: "All" },
+                      { id: "safe", label: "Safe" },
+                      { id: "broken", label: "Broken" },
+                    ]}
+                    value={htmlFilter}
+                  />
+
+                  <label
+                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                    title="Show SVG overlay when using HTML + SVG renderer"
+                  >
+                    <input
+                      checked={showHtmlSvgOverlay}
+                      className="accent-blue-500"
+                      disabled={renderer !== "html-svg"}
+                      onChange={(e) => setShowHtmlSvgOverlay(e.target.checked)}
+                      type="checkbox"
+                    />
+                    <span className="text-sm">Show SVG overlay</span>
+                  </label>
+
                   <label
                     className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
                     title="Noise overlay (SVG)"
@@ -3716,7 +3716,7 @@ export const MicrovizBrowse: FC<{
                     )}
                 </div>
 
-                <div className="mt-4 space-y-2">
+                <div className="space-y-2 px-3 pt-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Auto inference preview
                   </div>
