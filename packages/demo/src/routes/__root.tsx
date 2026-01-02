@@ -4,7 +4,7 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   applyResolvedColorScheme,
   type ColorSchemePreference,
@@ -19,6 +19,10 @@ import {
   readMicrovizBackgroundPreference,
   writeMicrovizBackgroundPreference,
 } from "../ui/microvizBg";
+import {
+  MicrovizSettingsContext,
+  type MicrovizSettingsContextValue,
+} from "../ui/MicrovizSettingsContext";
 import {
   applyMicrovizTheme,
   type MicrovizThemePreference,
@@ -103,8 +107,19 @@ function RootComponent() {
     applyMicrovizBackgroundPreference(microvizBackgroundPreference);
   }, [microvizBackgroundPreference]);
 
+  const microvizSettingsValue = useMemo<MicrovizSettingsContextValue>(
+    () => ({
+      microvizBackgroundPreference,
+      microvizThemePreference,
+      setMicrovizBackgroundPreference,
+      setMicrovizThemePreference,
+    }),
+    [microvizBackgroundPreference, microvizThemePreference],
+  );
+
   return (
-    <div className="flex h-screen h-[100dvh] flex-col overflow-hidden">
+    <MicrovizSettingsContext.Provider value={microvizSettingsValue}>
+      <div className="flex h-screen h-[100dvh] flex-col overflow-hidden">
       {/* Header: two-tier on mobile (nav row + config row), single-tier on sm+ */}
       {/* Config row scrolls horizontally if needed—never wraps into a third line */}
       <header className="flex min-h-11 flex-none flex-wrap items-center gap-2 border-b border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/40 sm:h-11 sm:flex-nowrap sm:gap-3 sm:py-0">
@@ -165,45 +180,13 @@ function RootComponent() {
               value={colorSchemePreference}
             />
           </div>
-
-          <select
-            aria-label="Microviz preset"
-            className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-            onChange={(event) =>
-              setMicrovizThemePreference(
-                event.target.value as MicrovizThemePreference,
-              )
-            }
-            title="Microviz preset (Auto follows UI)"
-            value={microvizThemePreference}
-          >
-            <option value="auto">Auto</option>
-            <option value="white">White</option>
-            <option value="g10">G10</option>
-            <option value="g90">G90</option>
-            <option value="g100">G100</option>
-          </select>
-
-          <select
-            aria-label="Microviz background"
-            className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-slate-600"
-            onChange={(event) =>
-              setMicrovizBackgroundPreference(
-                event.target.value as MicrovizBackgroundPreference,
-              )
-            }
-            title="Microviz background"
-            value={microvizBackgroundPreference}
-          >
-            <option value="transparent">Transparent</option>
-            <option value="solid">Solid</option>
-          </select>
         </div>
       </header>
 
       <main className="min-h-0 flex-1 overflow-hidden">
         <Outlet />
       </main>
-    </div>
+      </div>
+    </MicrovizSettingsContext.Provider>
   );
 }
