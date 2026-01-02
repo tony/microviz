@@ -3275,16 +3275,16 @@ export const MicrovizBrowse: FC<{
         side="left"
       >
         <div className="flex h-full flex-col">
-          {/* Single-row icon toolbar header */}
+          {/* Ribbon-style contextual toolbar */}
           <div
             aria-label="Sidebar navigation"
-            className="flex items-center gap-1 border-b border-slate-200/70 bg-white/80 px-2 py-1.5 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
+            className="flex items-center border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
             role="toolbar"
           >
-            {/* Close button */}
+            {/* Close button (separated) */}
             <button
               aria-label="Close sidebar"
-              className="flex h-7 w-7 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="flex h-8 w-8 items-center justify-center text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               onClick={() => handleSidebarCollapsed(true)}
               title="Close sidebar"
               type="button"
@@ -3293,13 +3293,13 @@ export const MicrovizBrowse: FC<{
             </button>
 
             {/* Divider */}
-            <div className="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-600" />
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
 
-            {/* Tab buttons */}
+            {/* Tab segment (flush buttons) */}
             <button
               aria-label="Browse"
               aria-pressed={sidebarTab === "browse"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${sidebarTab === "browse" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${sidebarTab === "browse" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setSidebarTab("browse")}
               title="Browse charts"
               type="button"
@@ -3309,7 +3309,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Settings"
               aria-pressed={sidebarTab === "settings"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${sidebarTab === "settings" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${sidebarTab === "settings" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setSidebarTab("settings")}
               title="Settings"
               type="button"
@@ -3319,7 +3319,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Debug"
               aria-pressed={sidebarTab === "debug"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${sidebarTab === "debug" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${sidebarTab === "debug" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setSidebarTab("debug")}
               title="Debug"
               type="button"
@@ -4011,17 +4011,17 @@ export const MicrovizBrowse: FC<{
         side="right"
       >
         <div className="flex h-full flex-col">
-          {/* Single-row icon toolbar header */}
+          {/* Ribbon-style contextual toolbar */}
           <div
             aria-label="Inspector tabs"
-            className="flex items-center gap-1 border-b border-slate-200/70 bg-white/80 px-2 py-1.5 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
+            className="flex items-center border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70"
             role="toolbar"
           >
-            {/* Tab buttons */}
+            {/* Tab segment (flush buttons) */}
             <button
               aria-label="Model"
               aria-pressed={inspectorTab === "model"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "model" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "model" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setInspectorTab("model")}
               title="Render model"
               type="button"
@@ -4031,7 +4031,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Data"
               aria-pressed={inspectorTab === "data"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "data" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "data" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setInspectorTab("data")}
               title="Inputs"
               type="button"
@@ -4041,7 +4041,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Accessibility"
               aria-pressed={inspectorTab === "a11y"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "a11y" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "a11y" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setInspectorTab("a11y")}
               title="Accessibility"
               type="button"
@@ -4051,7 +4051,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Diagnostics"
               aria-pressed={inspectorTab === "diagnostics"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "diagnostics" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "diagnostics" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setInspectorTab("diagnostics")}
               title="Warnings"
               type="button"
@@ -4061,7 +4061,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Telemetry"
               aria-pressed={inspectorTab === "telemetry"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "telemetry" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "telemetry" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setInspectorTab("telemetry")}
               title="Render telemetry"
               type="button"
@@ -4071,7 +4071,7 @@ export const MicrovizBrowse: FC<{
             <button
               aria-label="Export"
               aria-pressed={inspectorTab === "export"}
-              className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${inspectorTab === "export" ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
+              className={`flex h-8 w-8 items-center justify-center transition-colors ${inspectorTab === "export" ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}
               onClick={() => setInspectorTab("export")}
               title="Export assets"
               type="button"
@@ -4083,12 +4083,12 @@ export const MicrovizBrowse: FC<{
             <div className="flex-1" />
 
             {/* Divider */}
-            <div className="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-600" />
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
 
-            {/* Close button */}
+            {/* Close button (separated) */}
             <button
               aria-label="Close inspector"
-              className="flex h-7 w-7 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="flex h-8 w-8 items-center justify-center text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               onClick={() => handleInspectorCollapsed(true)}
               title="Close inspector"
               type="button"
