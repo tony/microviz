@@ -3681,36 +3681,21 @@ export const MicrovizBrowse: FC<{
         </div>
       </ResizablePane>
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* Floating expand button for sidebar */}
-        {sidebarCollapsed && (
-          <button
-            aria-label="Show sidebar"
-            className="absolute bottom-3 left-0 z-10 flex h-8 w-8 items-center justify-center rounded-r-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 md:bottom-auto md:top-6 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            onClick={() => handleSidebarCollapsed(false)}
-            title="Show sidebar"
-            type="button"
-          >
-            <PanelLeftExpandIcon className="h-5 w-5" />
-          </button>
-        )}
-
-        {/* Floating expand button for inspector */}
-        {inspectorCollapsed && (
-          <button
-            aria-label="Show inspector"
-            className="absolute bottom-3 right-0 z-10 flex h-8 w-8 items-center justify-center rounded-l-md bg-white/90 text-slate-600 shadow-md backdrop-blur transition-colors hover:bg-slate-100 hover:text-slate-900 md:bottom-auto md:top-6 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            onClick={() => handleInspectorCollapsed(false)}
-            title="Show inspector"
-            type="button"
-          >
-            <PanelRightExpandIcon className="h-5 w-5" />
-          </button>
-        )}
-
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="px-4 py-2">
           <div className="flex items-center gap-3 overflow-x-auto [scrollbar-gutter:stable]">
             <div className="flex items-center gap-2 whitespace-nowrap">
+              {sidebarCollapsed && (
+                <button
+                  aria-label="Show sidebar"
+                  className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
+                  onClick={() => handleSidebarCollapsed(false)}
+                  title="Show sidebar"
+                  type="button"
+                >
+                  <PanelLeftExpandIcon className="h-4 w-4" />
+                </button>
+              )}
               <TabToggle
                 container="bordered"
                 label="Chart subtype filter"
@@ -3740,6 +3725,17 @@ export const MicrovizBrowse: FC<{
               )}{" "}
               · {computeModeEffective}
             </div>
+            {inspectorCollapsed && (
+              <button
+                aria-label="Show inspector"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
+                onClick={() => handleInspectorCollapsed(false)}
+                title="Show inspector"
+                type="button"
+              >
+                <PanelRightExpandIcon className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
