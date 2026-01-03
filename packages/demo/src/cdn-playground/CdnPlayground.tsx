@@ -357,7 +357,7 @@ export function CdnPlayground({
 
         {/* Reroll button - show when preset selected OR custom code has randomizable charts */}
         {(urlState.presetId || canRandomize(urlState.code)) && (
-          <RerollButton onClick={handleReroll} />
+          <RerollButton onClick={handleReroll} variant="md" />
         )}
 
         {/* Format toggle - show when preset supports multiple formats */}

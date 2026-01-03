@@ -3457,7 +3457,7 @@ export const MicrovizBrowse: FC<{
                         title="Seed"
                         value={seed}
                       />
-                      <RerollButton onClick={randomizeSeed} />
+                      <RerollButton onClick={randomizeSeed} variant="md" />
                     </div>
                   </div>
 
@@ -3817,7 +3817,7 @@ export const MicrovizBrowse: FC<{
             <RerollButton
               className="shrink-0"
               onClick={randomizeSeed}
-              variant="ribbon"
+              variant="xs"
             />
           </div>
 
