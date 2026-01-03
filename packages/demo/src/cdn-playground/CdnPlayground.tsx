@@ -23,6 +23,43 @@ import {
 import { SmartCopyButton, useSmartCode } from "./SmartCopyButton";
 import { findUnifiedPreset } from "./unified-presets";
 
+/** Copy icon - clipboard with checkmark state */
+function CopyIcon({ copied }: { copied: boolean }) {
+  if (copied) {
+    // Checkmark icon
+    return (
+      <svg
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        viewBox="0 0 24 24"
+      >
+        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  // Clipboard icon
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+    >
+      <rect height="13" rx="2" width="13" x="9" y="9" />
+      <path
+        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export type CdnPlaygroundProps = {
   urlState: CdnPlaygroundState;
   onUrlStateChange: (state: CdnPlaygroundState) => void;
@@ -71,6 +108,19 @@ export function CdnPlayground({
     () => getCdnUrl(urlState.cdnSource),
     [urlState.cdnSource],
   );
+
+  // CDN URL copy state
+  const [cdnCopied, setCdnCopied] = useState(false);
+
+  const handleCopyCdnUrl = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(cdnUrl);
+      setCdnCopied(true);
+      setTimeout(() => setCdnCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy CDN URL:", err);
+    }
+  }, [cdnUrl]);
 
   const handleCodeChange = useCallback(
     (code: string) => {
@@ -362,14 +412,39 @@ export function CdnPlayground({
           Run
         </button>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* CDN URL copy - mobile: button only, desktop: full URL + copy icon */}
+        {/* Mobile: Copy button with text */}
+        <button
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors md:hidden ${
+            cdnCopied
+              ? "bg-green-600 text-white"
+              : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+          }`}
+          onClick={handleCopyCdnUrl}
+          title={cdnUrl}
+          type="button"
+        >
+          <CopyIcon copied={cdnCopied} />
+          {cdnCopied ? "Copied!" : "Copy CDN"}
+        </button>
 
-        {/* Resolved CDN URL display */}
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <code className="max-w-xs truncate rounded bg-slate-100 px-1.5 py-0.5 font-mono dark:bg-slate-700">
+        {/* Desktop: Full URL + copy icon */}
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 text-xs text-slate-500 dark:text-slate-400 md:flex">
+          <code className="truncate rounded bg-slate-100 px-1.5 py-0.5 font-mono dark:bg-slate-700">
             {cdnUrl}
           </code>
+          <button
+            className={`shrink-0 rounded p-1 transition-colors ${
+              cdnCopied
+                ? "text-green-600 dark:text-green-400"
+                : "text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            }`}
+            onClick={handleCopyCdnUrl}
+            title="Copy CDN URL"
+            type="button"
+          >
+            <CopyIcon copied={cdnCopied} />
+          </button>
         </div>
       </div>
 
