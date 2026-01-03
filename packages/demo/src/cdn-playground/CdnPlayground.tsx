@@ -294,6 +294,17 @@ export function CdnPlayground({
           </select>
         </label>
 
+        {/* CDN source selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            CDN
+          </span>
+          <CdnSourcePicker
+            onChange={handleCdnSourceChange}
+            value={urlState.cdnSource}
+          />
+        </div>
+
         {/* Reroll button - show when preset selected OR custom code has randomizable charts */}
         {(urlState.presetId || canRandomize(urlState.code)) && (
           <RerollButton onClick={handleReroll} />
@@ -354,9 +365,8 @@ export function CdnPlayground({
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* CDN URL display */}
-        <div className="hidden items-center gap-2 text-xs text-slate-500 dark:text-slate-400 lg:flex">
-          <span className="font-medium">CDN:</span>
+        {/* Resolved CDN URL display */}
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <code className="max-w-xs truncate rounded bg-slate-100 px-1.5 py-0.5 font-mono dark:bg-slate-700">
             {cdnUrl}
           </code>
@@ -375,19 +385,6 @@ export function CdnPlayground({
           side="left"
         >
           <div className="flex flex-1 flex-col overflow-hidden bg-slate-900">
-            {/* CDN Source Picker - collapsible */}
-            <details className="border-b border-slate-700" open>
-              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-slate-400 hover:bg-slate-800">
-                CDN Source
-              </summary>
-              <div className="px-3 pb-3">
-                <CdnSourcePicker
-                  onChange={handleCdnSourceChange}
-                  value={urlState.cdnSource}
-                />
-              </div>
-            </details>
-
             {/* Code editor */}
             <div className="flex-1 overflow-hidden">
               <CodeEditor

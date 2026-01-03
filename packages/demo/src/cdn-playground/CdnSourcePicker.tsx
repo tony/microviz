@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-  CDN_SOURCE_DESCRIPTIONS,
   CDN_SOURCE_LABELS,
   type CdnSource,
   type CdnSourceType,
-  getCdnUrl,
 } from "./cdnSources";
 
 export type CdnSourcePickerProps = {
@@ -24,7 +22,8 @@ const SOURCE_TYPES: CdnSourceType[] = [
 ];
 
 /**
- * CDN source selector with support for preset sources and custom URLs.
+ * Inline CDN source selector with select dropdown and optional custom URL input.
+ * Designed for toolbar placement.
  */
 export function CdnSourcePicker({
   value,
@@ -57,52 +56,31 @@ export function CdnSourcePicker({
     }
   };
 
-  const resolvedUrl = getCdnUrl(value);
-
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Source type selector */}
-      <div className="flex flex-wrap gap-1">
+    <div className={`flex items-center gap-2 ${className}`}>
+      {/* Source type dropdown */}
+      <select
+        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+        onChange={(e) => handleTypeChange(e.target.value as CdnSourceType)}
+        value={value.type}
+      >
         {SOURCE_TYPES.map((type) => (
-          <button
-            className={`
-              rounded-md px-2.5 py-1 text-xs font-medium transition-colors
-              ${
-                value.type === type
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-              }
-            `}
-            key={type}
-            onClick={() => handleTypeChange(type)}
-            title={CDN_SOURCE_DESCRIPTIONS[type]}
-            type="button"
-          >
+          <option key={type} value={type}>
             {CDN_SOURCE_LABELS[type]}
-          </button>
+          </option>
         ))}
-      </div>
+      </select>
 
-      {/* Custom URL input */}
+      {/* Custom URL input - inline when custom selected */}
       {value.type === "custom" && (
         <input
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="w-48 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           onChange={(e) => handleCustomUrlChange(e.target.value)}
           placeholder="https://example.com/microviz.js"
           type="url"
           value={customUrl}
         />
       )}
-
-      {/* Resolved URL display */}
-      <div className="rounded-md bg-slate-100 px-3 py-2 dark:bg-slate-800">
-        <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          Resolved URL
-        </div>
-        <div className="mt-0.5 break-all font-mono text-xs text-slate-600 dark:text-slate-300">
-          {resolvedUrl || <span className="italic text-slate-400">No URL</span>}
-        </div>
-      </div>
     </div>
   );
 }
