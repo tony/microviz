@@ -1,9 +1,4 @@
-import {
-  createRootRoute,
-  Outlet,
-  useNavigate,
-  useRouterState,
-} from "@tanstack/react-router";
+import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   applyResolvedColorScheme,
@@ -30,6 +25,7 @@ import {
   resolveMicrovizTheme,
   writeMicrovizThemePreference,
 } from "../ui/microvizTheme";
+import { NavTabToggle } from "../ui/NavTabToggle";
 import { TabToggle } from "../ui/TabToggle";
 
 export const Route = createRootRoute({
@@ -37,17 +33,6 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  const navigate = useNavigate();
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
-
-  const currentTab = pathname.startsWith("/gallery")
-    ? "gallery"
-    : pathname.startsWith("/playground")
-      ? "playground"
-      : "browse";
-
   const [colorSchemePreference, setColorSchemePreference] =
     useState<ColorSchemePreference>(() => readColorSchemePreference());
   const [resolvedColorScheme, setResolvedColorScheme] =
@@ -127,25 +112,14 @@ function RootComponent() {
           <div className="flex min-w-0 w-full shrink-0 items-center gap-3 sm:w-auto">
             <h1 className="text-sm font-semibold tracking-tight">microviz</h1>
 
-            <TabToggle
+            <NavTabToggle
               label="Navigation"
-              onChange={(v) =>
-                navigate({
-                  to:
-                    v === "gallery"
-                      ? "/gallery"
-                      : v === "playground"
-                        ? "/playground"
-                        : "/",
-                })
-              }
               options={[
-                { id: "browse", label: "Browse" },
-                { id: "playground", label: "Playground" },
-                { id: "gallery", label: "Gallery" },
+                { id: "browse", label: "Browse", to: "/" },
+                { id: "playground", label: "Playground", to: "/playground" },
+                { id: "gallery", label: "Gallery", to: "/gallery" },
               ]}
               size="sm"
-              value={currentTab}
             />
           </div>
 
