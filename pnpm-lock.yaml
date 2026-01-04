@@ -88,8 +88,8 @@ importers:
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-virtual':
-        specifier: ^3.13.15
-        version: 3.13.15(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^3.13.16
+        version: 3.13.16(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/zod-adapter':
         specifier: ^1.144.0
         version: 1.144.0(@tanstack/react-router@1.144.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(zod@3.25.76)
@@ -1567,8 +1567,8 @@ packages:
       react: '>=16.8'
       react-dom: '>=16.8'
 
-  '@tanstack/react-virtual@3.13.15':
-    resolution: {integrity: sha512-rlpmFOoIE1Xxuh7R8j6wZydit6Q+s4DY+WthsfDgDz7zP1HqDO1fmyP+9Msz3pD6fEN1riNUBBskk+k2yvznxQ==}
+  '@tanstack/react-virtual@3.13.16':
+    resolution: {integrity: sha512-y4xLKvLu6UZWiGdNcgk3yYlzCznYIV0m8dSyUzr3eAC0dHLos5V74qhUHxutYddFGgGU8sWLkp6H5c2RCrsrXw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -1629,8 +1629,8 @@ packages:
     resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
     engines: {node: '>=12'}
 
-  '@tanstack/virtual-core@3.13.15':
-    resolution: {integrity: sha512-8cG3acM2cSIm3h8WxboHARAhQAJbYUhvmadvnN8uz8aziDwrbYb9KiARni+uY2qrLh49ycn+poGoxvtIAKhjog==}
+  '@tanstack/virtual-core@3.13.16':
+    resolution: {integrity: sha512-njazUC8mDkrxWmyZmn/3eXrDcP8Msb3chSr4q6a65RmwdSbMlMCdnOphv6/8mLO7O3Fuza5s4M4DclmvAO5w0w==}
 
   '@tanstack/virtual-file-routes@1.141.0':
     resolution: {integrity: sha512-CJrWtr6L9TVzEImm9S7dQINx+xJcYP/aDkIi6gnaWtIgbZs1pnzsE0yJc2noqXZ+yAOqLx3TBGpBEs9tS0P9/A==}
@@ -5305,9 +5305,9 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
-  '@tanstack/react-virtual@3.13.15(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@tanstack/react-virtual@3.13.16(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@tanstack/virtual-core': 3.13.15
+      '@tanstack/virtual-core': 3.13.16
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
@@ -5390,7 +5390,7 @@ snapshots:
 
   '@tanstack/table-core@8.21.3': {}
 
-  '@tanstack/virtual-core@3.13.15': {}
+  '@tanstack/virtual-core@3.13.16': {}
 
   '@tanstack/virtual-file-routes@1.141.0': {}
 
