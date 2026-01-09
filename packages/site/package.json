@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
-    "@astrojs/starlight": "^0.37.1",
+    "@astrojs/starlight": "^0.37.2",
     "@astrojs/starlight-tailwind": "^4.0.2",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans": "^5.2.8",
@@ -30,7 +30,7 @@
     "@microviz/elements": "workspace:*",
     "@microviz/renderers": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.16.6",
+    "astro": "^5.16.7",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-live": "^4.1.8",
