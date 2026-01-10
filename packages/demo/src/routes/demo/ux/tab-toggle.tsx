@@ -89,8 +89,8 @@ function TabToggleDemoRoute() {
         title="Sizes"
       >
         <div className="flex flex-wrap items-end gap-4">
-          <div className="space-y-1">
-            <span className="text-xs text-slate-500">xs</span>
+          <div className="space-y-1 text-center">
+            <span className="mr-1 select-none text-xs text-slate-500">xs</span>
             <TabToggle
               label="Size xs"
               onChange={() => {}}
@@ -102,8 +102,8 @@ function TabToggleDemoRoute() {
               value="a"
             />
           </div>
-          <div className="space-y-1">
-            <span className="text-xs text-slate-500">sm</span>
+          <div className="space-y-1 text-center">
+            <span className="mr-1 select-none text-xs text-slate-500">sm</span>
             <TabToggle
               label="Size sm"
               onChange={() => {}}
@@ -115,8 +115,8 @@ function TabToggleDemoRoute() {
               value="a"
             />
           </div>
-          <div className="space-y-1">
-            <span className="text-xs text-slate-500">md</span>
+          <div className="space-y-1 text-center">
+            <span className="mr-1 select-none text-xs text-slate-500">md</span>
             <TabToggle
               label="Size md"
               onChange={() => {}}
